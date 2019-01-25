@@ -191,6 +191,13 @@ df <- df %>% select(GEOID, sort(current_vars())) %>%
 df <- df %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
   mutate_if(is.numeric, funs(ifelse(is.na(.), -99999, .)))
 
+# Slice unwanted tracts
+slicer <- c("42045980000", "42017980000", "42101980800",
+            "42101980300", "42101980500", "42101980400",
+            "42101980900", "42101980700", "42101980600",
+            "42101005000")
+df <- df %>% filter(!(GEOID %in% slicer))
+
 # Export result
 write_csv(df, here("outputs", "ipd.csv"))
 
