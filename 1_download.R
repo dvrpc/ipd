@@ -1,112 +1,153 @@
-require(tidycensus); require(tidyverse); require(sf); require(here); require(stringr)
+## SETUP
+# Dependencies
+require(tidycensus); require(tidyverse); require(here)
 
-st_dev_breaks <- function(x, i){
+# Functions
+st_dev_breaks <- function(x, i, na.rm = TRUE){
   half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
-                      seq(1, i, by = 2))
+                         seq(1, i, by = 2))
   if((i %% 2) == 1) {
     half_st_dev_breaks <- unlist(lapply(half_st_dev_count,
-                                     function(i) (0.5 * i * sd(x)) + mean(x)))
-    half_st_dev_breaks[[1]] <- ifelse(min(x) < half_st_dev_breaks[[1]],
-                                   min(x), half_st_dev_breaks[[1]])
-    half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
-                                       max(x), half_st_dev_breaks[[i + 1]])
+                                        function(i) (0.5 * i * sd(x, na.rm = TRUE)) + mean(x, na.rm = TRUE)))
+    half_st_dev_breaks[[1]] <- ifelse(min(x, na.rm = TRUE) < half_st_dev_breaks[[1]],
+                                      min(x, na.rm = TRUE), half_st_dev_breaks[[1]])
+    half_st_dev_breaks[[i + 1]] <- ifelse(max(x, na.rm = TRUE) > half_st_dev_breaks[[i + 1]],
+                                          max(x, na.rm = TRUE), half_st_dev_breaks[[i + 1]])
   } else {
     half_st_dev_breaks <- NA
   }
   return(half_st_dev_breaks)
 }
+move_last <- function(df, last_col) {
+  match(c(setdiff(names(df), last_col), last_col), names(df))
+}
 
-summary_tables <- get_acs(geography = "tract", state = "DC",
-                          variables = c(LI_U = "S1701_C01_001",
-                                        LI_C = "S1701_C01_042",
-                                        F_U = "S0101_C01_001",
-                                        F_C = "S0101_C03_001",
-                                        D_U = "S1810_C01_001",
-                                        D_C = "S1810_C02_001",
-                                        OA_U = "S1601_C01_001",
-                                        # LEP_U = "S1601_C01_001", # Redundant downloads not allowed
-                                        LEP_C = "S1601_C05_001"),
-                          output = "wide") %>%
-  select(-NAME) %>%
-  mutate(LEP_UE = OA_UE, LEP_UM = OA_UM)
-detailed_tables <- get_acs(geography = "tract", state = "DC",
-                           variables = c(EM_U = "B03002_001",
-                                         EM_C = "B03002_012",
-                                         # Y_U = "B03002_001", # Redundant downloads not allowed
-                                         Y_C = "B09001_001",
-                                         FB_U = "B05012_001",
-                                         FB_C = "B05012_003"),
-                           output = "wide") %>%
-  select(-NAME) %>%
-  mutate(Y_UE = EM_UE, Y_UM = EM_UM)
-data_profiles <- get_acs(geography = "tract", state = "DC",
-                         variables = c(OA_CE = "DP05_0025E"),
-                         output = "wide") %>%
-  rename(OA_CM = DP05_0025M) %>%
-  select(-NAME)
+## DOWNLOADS
+# API Calls
+# For counts (universes and estimates)
+# EXCEPTION 1: API does not allow redundant downloads; universes are duplicated after download
+# EXCEPTION 2: Desired RM_CE = RM_UE - RM_CE; computed after download. Makes estimate correct but MOE wrong
+s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+                    variables = c(LI_U = "S1701_C01_001",
+                                  LI_C = "S1701_C01_042",
+                                  F_U = "S0101_C01_001",
+                                  F_C = "S0101_C03_001",
+                                  D_U = "S1810_C01_001",
+                                  D_C = "S1810_C02_001",
+                                  OA_U = "S1601_C01_001",
+                                  # LEP_U = "S1601_C01_001", # Redundant download
+                                  LEP_C = "S1601_C05_001")) %>%
+  select(-NAME) %>% mutate(LEP_UE = OA_UE, LEP_UM = OA_UM)
+d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+                    variables = c(EM_U = "B03002_001",
+                                  EM_C = "B03002_012",
+                                  # Y_U = "B03002_001", # Redundant download
+                                  Y_C = "B09001_001",
+                                  FB_U = "B05012_001",
+                                  FB_C = "B05012_003",
+                                  RM_U = "B02001_001",
+                                  RM_C = "B02001_002")) %>%
+  mutate(Y_UE = EM_UE, Y_UM = EM_UM, x = RM_UE - RM_CE) %>%
+  select(-NAME, -RM_CE) %>% 
+  rename(RM_CE = x)
+dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+                     variables = c(OA_CE = "DP05_0025E")) %>%
+  rename(OA_CM = DP05_0025M) %>% select(-NAME)
 
-dl <- left_join(summary_tables, detailed_tables) %>%
-  left_join(., data_profiles)
+# For available percentages
+s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+                   variables = c(D_P = "S1810_C03_001",
+                                 OA_P = "S0101_C01_028",
+                                 LEP_P = "S1601_C06_001")) %>% select(-NAME)
+dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+                         variables = c(F_P = "DP05_0003PE")) %>%
+  rename(F_PE = F_P, F_PM = DP05_0003PM) %>% select(-NAME)
 
-# Throw vars in list so we can apply same functions in one go
-sub <- list()
-sub[[1]] <- dl %>% select(ends_with("UE"))
-sub[[2]] <- dl %>% select(ends_with("UM"))
-sub[[3]] <- dl %>% select(ends_with("CE"))
-sub[[4]] <- dl %>% select(ends_with("CM"))
+# Combine downloads into merged files
+# Subset for DVRPC region
+keep_cty <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
+dl_counts <- left_join(s_counts, d_counts) %>%
+  left_join(., dp_counts) %>%
+  filter(str_sub(GEOID, 1, 5) %in% keep_cty)
+dl_percs <- left_join(s_percs, dp_percs) %>%
+  filter(str_sub(GEOID, 1, 5) %in% keep_cty)
 
-# Compute percentages and pct moes for all variables
+## CALCULATIONS
+# Split `dl_counts` into list for processing
+# Sort column names for consistency
+# `comp` = "component parts"
+comp <- list()
+comp[[1]] <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
+comp[[2]] <- dl_counts %>% select(ends_with("UM")) %>% select(sort(current_vars()))
+comp[[3]] <- dl_counts %>% select(ends_with("CE")) %>% select(sort(current_vars()))
+comp[[4]] <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars()))
+
+# Compute percentages and associated MOEs
 pct_matrix <- NULL
 pct_moe_matrix <- NULL
-for (m in 1:8){
-  pct <- unlist(sub[[3]][,m] / sub[[1]][,m])
+for (m in 1:length(comp[[1]])){
+  pct <- unlist(comp[[3]][,m] / comp[[1]][,m] * 100)
+  pct <- round(pct, digits = 3)
   pct_matrix <- cbind(pct_matrix, pct)
   moe <- NULL
-  for (l in 1:length(sub[[1]]$LI_UE)){
-    moe_indiv <- as.numeric(moe_prop(sub[[3]][l,m], sub[[1]][l,m], sub[[4]][l,m], sub[[2]][l,m]))
+  for (l in 1:length(comp[[1]]$LI_UE)){
+    moe_indiv <- as.numeric(moe_prop(comp[[3]][l,m], comp[[1]][l,m], comp[[4]][l,m], comp[[2]][l,m])) * 100
+    moe_indiv <- round(moe_indiv, digits = 3)
     moe <- append(moe, moe_indiv)
   }
   pct_moe_matrix <- cbind(pct_moe_matrix, moe)
 }
-# pct has estimated percentages and pct_moe has associated MOEs for all variables
+
+# Result: `pct` and `pct_moe` have percentages and associated MOEs
 pct <- as_tibble(pct_matrix)
-names(pct) <- str_replace(names(sub[[1]]), "_UE", "_PctEst")
+names(pct) <- str_replace(names(comp[[1]]), "_UE", "_PctEst")
 pct_moe <- as_tibble(pct_moe_matrix)
-names(pct_moe) <- str_replace(names(sub[[1]]), "_UE", "_PctMOE")
+names(pct_moe) <- str_replace(names(comp[[1]]), "_UE", "_PctMOE")
 
-# append to original df
-dl <- bind_cols(dl, pct) %>%
-  bind_cols(., pct_moe) %>%
-  select(-ends_with("UM"), -ends_with("UE"))
+# EXCEPTION 1: If estimated percentage == 0 & MOE == 0; MOE = 0.1
+# This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
+overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = T)
+pct_moe[overwrite_locations] <- 0
 
-# BEFORE ASSIGN RANK, must substitute pcts and pct MOEs available from AFF.
+# EXCEPTION 2: Substitute percentages and associated MOEs when available from AFF
+pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
+                      OA_PctEst = dl_percs$OA_PE,
+                      LEP_PctEst = dl_percs$LEP_PE,
+                      F_PctEst = dl_percs$F_PE)
+pct_moe <- pct_moe %>% mutate(D_PctMOE = dl_percs$D_PM,
+                              OA_PctMOE = dl_percs$OA_PM,
+                              LEP_PctMOE = dl_percs$LEP_PM,
+                              F_PctMOE = dl_percs$F_PM)
 
-# Compute rank
-sub[[5]] <- dl %>% select(ends_with("PctEst"))
+# (FUTURE) EXCEPTION 3: Use variance replicates to compute RM_CntMOE and RM_PctMOE
+
+# Compute percentile
+# Add percentages to `comp`; sort column names for consistency
+comp[[5]] <- pct %>% select(sort(current_vars()))
 
 percentile_matrix <- NULL
-for (m in 1:8){
-  pct <- unlist(sub[[5]][,m])
-  rank <- ecdf(pct)(pct)
+for (m in 1:length(comp[[1]])){
+  p <- unlist(comp[[5]][,m])
+  rank <- ecdf(p)(p) * 100
+  rank <- round(rank, digits = 3)
   percentile_matrix <- cbind(percentile_matrix, rank)
 }
-percentile <- as_tibble(percentile_matrix)
-names(percentile) <- str_replace(names(sub[[1]]), "_UE", "_Rank")
 
-# append to original df
-dl <- bind_cols(dl, percentile)
+# Result: `percentile` has rank
+percentile <- as_tibble(percentile_matrix)
+names(percentile) <- str_replace(names(comp[[1]]), "_UE", "_Rank")
 
 # Compute IPD score and classification
-# Manual adjustments required:
-# If pct estimate = 0 and falls in bin #1, move to bin #0
-# For 0/almost 0 pop tracts, apply value of -99999 to numeric fields, "no data" to text fields
+# EXCEPTION BURIED IN LOOP: If pct estimate = 0 and falls in bin #1, move to bin #0
 score_matrix <- NULL
 class_matrix <- NULL
-for (m in 1:8){
-  pct <- unlist(sub[[5]][,m])
-  breaks <- st_dev_breaks(pct, 5)
-  score <- (cut(pct, labels = FALSE, breaks = breaks,
+for (m in 1:length(comp[[1]])){
+  p <- unlist(comp[[5]][,m])
+  breaks <- st_dev_breaks(p, 5, na.rm = TRUE)
+  score <- (cut(p, labels = FALSE, breaks = breaks,
                 include.lowest = TRUE, right = TRUE)) - 1
+  overwrite_locations <- which(score == 0 & p == 0)
+  score[overwrite_locations] <- 0
   class <- case_when(score == 0 ~ "Well Below Average",
                      score == 1 ~ "Below Average",
                      score == 2 ~ "Average",
@@ -115,56 +156,49 @@ for (m in 1:8){
   score_matrix <- cbind(score_matrix, score)
   class_matrix <- cbind(class_matrix, class)
 }
-score <- as_tibble(score_matrix)
-names(score) <- str_replace(names(sub[[1]]), "_UE", "_Score")
-class <- as_tibble(class_matrix)
-names(class) <- str_replace(names(sub[[1]]), "_UE", "_Class")
 
-# append to original df
-dl <- bind_cols(dl, score) %>%
+# Result: `score` and `class` have IPD scores and associated descriptions
+score <- as_tibble(score_matrix)
+names(score) <- str_replace(names(comp[[1]]), "_UE", "_Score")
+class <- as_tibble(class_matrix)
+names(class) <- str_replace(names(comp[[1]]), "_UE", "_Class")
+
+# Compute total IPD score
+score <- score %>% mutate(IPD_Score = rowSums(.))
+
+## CLEANING
+# Merge all information into a single df
+df <- bind_cols(dl_counts, pct) %>%
+  bind_cols(., pct_moe) %>%
+  bind_cols(., percentile) %>%
+  bind_cols(., score) %>%
   bind_cols(., class)
 
 # Rename columns
-names(dl) <- str_replace(names(dl), "_CE", "_CntEst")
-names(dl) <- str_replace(names(dl), "_CM", "_CntMOE")
+names(df) <- str_replace(names(df), "_CE", "_CntEst")
+names(df) <- str_replace(names(df), "_CM", "_CntMOE")
+df <- df %>% mutate(U_TPopEst = F_UE, U_TPopMOE = F_UM, U_Pop6Est = LEP_UE,
+                    U_Pop6MOE = LEP_UM, U_PPovEst = LI_UE, U_PPovMOE = LI_UM,
+                    U_PNICEst = D_UE, U_PNICMOE = D_UM) %>%
+  select(-ends_with("UE"), -ends_with("UM"))
 
-# Reorder, alphabetical
-final <- dl %>% 
-  select(GEOID, sort(current_vars()))
+# Reorder columns
+df <- df %>% select(GEOID, sort(current_vars())) %>%
+  select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE", "U_Pop6Est",
+                        "U_Pop6MOE", "U_PPovEst", "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 
-# Tabulate sum scores
-totals <- final %>% select(ends_with("Score")) %>%
-  mutate(IPD_Score = rowSums(.)) %>%
-  select(IPD_Score)
+# Replace NA with NoData if character and -99999 if numeric
+df <- df %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
+  mutate_if(is.numeric, funs(ifelse(is.na(.), -99999, .)))
 
-final <- bind_cols(final, totals)
+# Export result
+write_csv(df, here("outputs", "ipd.csv"))
 
-# Export
-write_csv(final, here("outputs", "ipd.csv"))
-
-# W I S H  L I S T
-# We appear to still be missing a variable
-# Universes actually appear at *end* of "dream schema," oops--don't drop 'em
-# Variance replicate tables? B02001
-# Adjustments for bin placement and flagging zeroes noted above. Has to do with bounds of bin 0 entirely negative
+# A wish list remains:
 # Summary tables. For each indicator:
 #     All bin breaks
 #     Count of tracts that fall in each bin
 #     5 number summary, sd, half-sd
 #     County means
 
-# if estimated percentage == 0 & MOE == 0; make MOE = 0.1?
-
 # Communicating statistically significant differences between census tracts (NOT one at a time)
-
-# Current nodata tracts?
-# 42045980000
-# 42017980000
-# 42101980800
-# 42101980300
-# 42101980500
-# 42101980400
-# 42101980900
-# 42101980700
-# 42101980600
-# 42101005000
