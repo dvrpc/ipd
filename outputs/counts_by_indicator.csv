@@ -1,0 +1,43 @@
+Variable,Classification,Count
+D_Class,Above Average,255
+D_Class,Average,551
+D_Class,Below Average,426
+D_Class,NoData,1
+D_Class,Well Above Average,102
+D_Class,Well Below Average,34
+EM_Class,Above Average,95
+EM_Class,Average,790
+EM_Class,Below Average,385
+EM_Class,Well Above Average,99
+F_Class,Above Average,269
+F_Class,Average,738
+F_Class,Below Average,266
+F_Class,Well Above Average,57
+F_Class,Well Below Average,39
+FB_Class,Above Average,181
+FB_Class,Average,573
+FB_Class,Below Average,502
+FB_Class,Well Above Average,113
+LEP_Class,Above Average,115
+LEP_Class,Average,649
+LEP_Class,Below Average,485
+LEP_Class,Well Above Average,120
+LI_Class,Above Average,207
+LI_Class,Average,430
+LI_Class,Below Average,571
+LI_Class,NoData,1
+LI_Class,Well Above Average,160
+OA_Class,Above Average,253
+OA_Class,Average,552
+OA_Class,Below Average,426
+OA_Class,Well Above Average,109
+OA_Class,Well Below Average,29
+RM_Class,Above Average,163
+RM_Class,Average,408
+RM_Class,Below Average,605
+RM_Class,Well Above Average,193
+Y_Class,Above Average,280
+Y_Class,Average,652
+Y_Class,Below Average,270
+Y_Class,Well Above Average,83
+Y_Class,Well Below Average,84
