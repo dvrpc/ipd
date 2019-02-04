@@ -3,24 +3,7 @@
 require(tidycensus); require(tidyverse); require(here)
 
 # Functions
-st_dev_breaks <- function(x, i, na.rm = TRUE){
-  half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
-                         seq(1, i, by = 2))
-  if((i %% 2) == 1) {
-    half_st_dev_breaks <- unlist(lapply(half_st_dev_count,
-                                        function(i) (0.5 * i * sd(x, na.rm = TRUE)) + mean(x, na.rm = TRUE)))
-    half_st_dev_breaks[[1]] <- ifelse(min(x, na.rm = TRUE) < half_st_dev_breaks[[1]],
-                                      min(x, na.rm = TRUE), half_st_dev_breaks[[1]])
-    half_st_dev_breaks[[i + 1]] <- ifelse(max(x, na.rm = TRUE) > half_st_dev_breaks[[i + 1]],
-                                          max(x, na.rm = TRUE), half_st_dev_breaks[[i + 1]])
-  } else {
-    half_st_dev_breaks <- NA
-  }
-  return(half_st_dev_breaks)
-}
-move_last <- function(df, last_col) {
-  match(c(setdiff(names(df), last_col), last_col), names(df))
-}
+source("functions.R")
 
 ## DOWNLOADS
 # API Calls
@@ -31,10 +14,11 @@ s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                     variables = c(LI_U = "S1701_C01_001",
                                   LI_C = "S1701_C01_042",
                                   F_U = "S0101_C01_001",
-                                  F_C = "S0101_C03_001",
+                                  F_C = "S0101_C05_001",
                                   D_U = "S1810_C01_001",
                                   D_C = "S1810_C02_001",
                                   OA_U = "S1601_C01_001",
+                                  OA_C = "S0101_C01_030",
                                   # LEP_U = "S1601_C01_001", # Redundant download
                                   LEP_C = "S1601_C05_001")) %>%
   select(-NAME) %>% mutate(LEP_UE = OA_UE, LEP_UM = OA_UM)
@@ -50,24 +34,20 @@ d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
   mutate(Y_UE = EM_UE, Y_UM = EM_UM, x = RM_UE - RM_CE) %>%
   select(-NAME, -RM_CE) %>% 
   rename(RM_CE = x)
-dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                     variables = c(OA_CE = "DP05_0025E")) %>%
-  rename(OA_CM = DP05_0025M) %>% select(-NAME)
 
 # For available percentages
 s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                    variables = c(D_P = "S1810_C03_001",
-                                 OA_P = "S0101_C01_028",
+                                 OA_P = "S0101_C02_030",
                                  LEP_P = "S1601_C06_001")) %>% select(-NAME)
 dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                         variables = c(F_P = "DP05_0003PE")) %>%
+                    variables = c(F_P = "DP05_0003PE")) %>%
   rename(F_PE = F_P, F_PM = DP05_0003PM) %>% select(-NAME)
 
 # Combine downloads into merged files
 # Subset for DVRPC region
 keep_cty <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 dl_counts <- left_join(s_counts, d_counts) %>%
-  left_join(., dp_counts) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
 dl_percs <- left_join(s_percs, dp_percs) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
@@ -200,12 +180,3 @@ df <- df %>% filter(!(GEOID %in% slicer))
 
 # Export result
 write_csv(df, here("outputs", "ipd.csv"))
-
-# A wish list remains:
-# Summary tables. For each indicator:
-#     All bin breaks
-#     Count of tracts that fall in each bin
-#     5 number summary, sd, half-sd
-#     County means
-
-# Communicating statistically significant differences between census tracts (NOT one at a time)
