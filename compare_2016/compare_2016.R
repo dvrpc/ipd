@@ -1,20 +1,16 @@
-## SETUP
-# Dependencies
+# SECTION 1: Compute 2016 IPD just as you would compute 2017
+# SECTION 2: Compare to the 2016 online data
+# SECTION 3: Test for differences in OA PctEst between 2016 script data and 2016 online data
+#-------------------------------------------------------------------------------------------
+# SECTION 1: Compute 2016 IPD just as you would compute 2017
 require(tidycensus); require(tidyverse); require(here)
-
-# Functions
 source("functions.R")
-
-## DOWNLOADS
-# API Calls
-# For counts (universes and estimates)
-# EXCEPTION 1: API does not allow redundant downloads; universes are duplicated after download
-# EXCEPTION 2: Desired RM_CE = RM_UE - RM_CE; computed after download. Makes estimate correct but MOE wrong
 s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+                    year = 2016,
                     variables = c(LI_U = "S1701_C01_001",
                                   LI_C = "S1701_C01_042",
                                   F_U = "S0101_C01_001",
-                                  F_C = "S0101_C05_001",
+                                  F_C = "S0101_C03_001",
                                   D_U = "S1810_C01_001",
                                   D_C = "S1810_C02_001",
                                   # OA_U = "S0101_C01_001", # Redundant download
@@ -22,6 +18,7 @@ s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                                   LEP_C = "S1601_C05_001")) %>%
   select(-NAME) %>% mutate(OA_UE = F_UE, OA_UM = F_UM)
 d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+                    year = 2016,
                     variables = c(EM_U = "B03002_001",
                                   EM_C = "B03002_012",
                                   # Y_U = "B03002_001", # Redundant download
@@ -34,38 +31,29 @@ d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
   select(-NAME, -RM_CE) %>% 
   rename(RM_CE = x)
 dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                     variables = c(OA_CE = "DP05_0029E")) %>%
+                     year = 2016,
+                     variables = c(OA_CE = "DP05_0025E")) %>%
   rename(OA_CM = DP05_0025M) %>% select(-NAME)
-
-# For available percentages
 s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+                   year = 2016,
                    variables = c(D_P = "S1810_C03_001",
-                                 OA_P = "S0101_C02_030",
+                                 OA_P = "S0101_C02_028",
                                  LEP_P = "S1601_C06_001")) %>% select(-NAME)
 dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+                    year = 2016,
                     variables = c(F_P = "DP05_0003PE")) %>%
   rename(F_PE = F_P, F_PM = DP05_0003PM) %>% select(-NAME)
-
-# Combine downloads into merged files
-# Subset for DVRPC region
 keep_cty <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 dl_counts <- left_join(s_counts, d_counts) %>%
   left_join(., dp_counts) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
 dl_percs <- left_join(s_percs, dp_percs) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
-
-## CALCULATIONS
-# Split `dl_counts` into list for processing
-# Sort column names for consistency
-# `comp` = "component parts"
 comp <- list()
 comp[[1]] <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
 comp[[2]] <- dl_counts %>% select(ends_with("UM")) %>% select(sort(current_vars()))
 comp[[3]] <- dl_counts %>% select(ends_with("CE")) %>% select(sort(current_vars()))
 comp[[4]] <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars()))
-
-# Compute percentages and associated MOEs
 pct_matrix <- NULL
 pct_moe_matrix <- NULL
 for (m in 1:length(comp[[1]])){
@@ -80,19 +68,12 @@ for (m in 1:length(comp[[1]])){
   }
   pct_moe_matrix <- cbind(pct_moe_matrix, moe)
 }
-
-# Result: `pct` and `pct_moe` have percentages and associated MOEs
 pct <- as_tibble(pct_matrix)
 names(pct) <- str_replace(names(comp[[1]]), "_UE", "_PctEst")
 pct_moe <- as_tibble(pct_moe_matrix)
 names(pct_moe) <- str_replace(names(comp[[1]]), "_UE", "_PctMOE")
-
-# EXCEPTION 1: If estimated percentage == 0 & MOE == 0; MOE = 0.1
-# This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
 overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
 pct_moe[overwrite_locations] <- 0
-
-# EXCEPTION 2: Substitute percentages and associated MOEs when available from AFF
 pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
                       OA_PctEst = dl_percs$OA_PE,
                       LEP_PctEst = dl_percs$LEP_PE,
@@ -101,13 +82,7 @@ pct_moe <- pct_moe %>% mutate(D_PctMOE = dl_percs$D_PM,
                               OA_PctMOE = dl_percs$OA_PM,
                               LEP_PctMOE = dl_percs$LEP_PM,
                               F_PctMOE = dl_percs$F_PM)
-
-# (FUTURE) EXCEPTION 3: Use variance replicates to compute RM_CntMOE and RM_PctMOE
-
-# Compute percentile
-# Add percentages to `comp`; sort column names for consistency
 comp[[5]] <- pct %>% select(sort(current_vars()))
-
 percentile_matrix <- NULL
 for (m in 1:length(comp[[1]])){
   p <- unlist(comp[[5]][,m])
@@ -115,13 +90,8 @@ for (m in 1:length(comp[[1]])){
   rank <- round(rank, digits = 3)
   percentile_matrix <- cbind(percentile_matrix, rank)
 }
-
-# Result: `percentile` has rank
 percentile <- as_tibble(percentile_matrix)
 names(percentile) <- str_replace(names(comp[[1]]), "_UE", "_Rank")
-
-# Compute IPD score and classification
-# EXCEPTION BURIED IN LOOP: If pct estimate = 0 and falls in bin #1, move to bin #0
 score_matrix <- NULL
 class_matrix <- NULL
 for (m in 1:length(comp[[1]])){
@@ -139,47 +109,64 @@ for (m in 1:length(comp[[1]])){
   score_matrix <- cbind(score_matrix, score)
   class_matrix <- cbind(class_matrix, class)
 }
-
-# Result: `score` and `class` have IPD scores and associated descriptions
 score <- as_tibble(score_matrix)
 names(score) <- str_replace(names(comp[[1]]), "_UE", "_Score")
 class <- as_tibble(class_matrix)
 names(class) <- str_replace(names(comp[[1]]), "_UE", "_Class")
-
-# Compute total IPD score
 score <- score %>% mutate(IPD_Score = rowSums(.))
-
-## CLEANING
-# Merge all information into a single df
 df <- bind_cols(dl_counts, pct) %>%
   bind_cols(., pct_moe) %>%
   bind_cols(., percentile) %>%
   bind_cols(., score) %>%
   bind_cols(., class)
-
-# Rename columns
 names(df) <- str_replace(names(df), "_CE", "_CntEst")
 names(df) <- str_replace(names(df), "_CM", "_CntMOE")
 df <- df %>% mutate(U_TPopEst = F_UE, U_TPopMOE = F_UM, U_Pop6Est = LEP_UE,
                     U_Pop6MOE = LEP_UM, U_PPovEst = LI_UE, U_PPovMOE = LI_UM,
                     U_PNICEst = D_UE, U_PNICMOE = D_UM) %>%
   select(-ends_with("UE"), -ends_with("UM"))
-
-# Reorder columns
 df <- df %>% select(GEOID, sort(current_vars())) %>%
   select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE", "U_Pop6Est",
                         "U_Pop6MOE", "U_PPovEst", "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
-
-# Replace NA with NoData if character and -99999 if numeric
 df <- df %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
   mutate_if(is.numeric, funs(ifelse(is.na(.), -99999, .)))
-
-# Slice unwanted tracts
 slicer <- c("42045980000", "42017980000", "42101980800",
             "42101980300", "42101980500", "42101980400",
             "42101980900", "42101980700", "42101980600",
             "42101005000")
 df <- df %>% filter(!(GEOID %in% slicer))
+write_csv(df, here("compare_2016", "ipd_2016.csv"))
 
-# Export result
-write_csv(df, here("outputs", "ipd.csv"))
+# SECTION 2: Compare to the 2016 online data
+# Everything quite similar EXCEPT OA_PctEst
+original <- read_csv(here("compare_2016", "DVRPC_2016_Indicators_of_Potential_Disadvantage.csv"))
+updated <- df
+orig_est <- original %>% select(GEOID10, ends_with("PctEst")) %>%
+  mutate_at(vars("GEOID10"), as.character) %>%
+  mutate_if(is.numeric, funs(. * 100))
+upd_est <- updated %>% select(GEOID, ends_with("PctEst"))
+names(upd_est) <- paste0(names(upd_est), "_n")
+merg_est <- left_join(orig_est, upd_est, by = c("GEOID10" = "GEOID_n")) %>%
+  select(GEOID10, sort(current_vars()))
+write_csv(merg_est, here("compare_2016", "test_compare_2016.csv"))
+
+# SECTION 3: Test for differences in OA PctEst between 2016 script data and 2016 online data
+# H1: Numerators are different
+# REJECT. Numerators are same
+# H2: Denominators are different
+# REJECT. Denominators are same
+# H3: Percentages are different
+# YES. 2016 online data computes by division; 2016 script downloads
+new_counts <- df %>% select(GEOID, OA_CntEst, OA_PctEst) %>%
+  rename(OA_CntEst_n = OA_CntEst,
+         OA_PctEst_n = OA_PctEst)
+old_counts <- read_csv(here("compare_2016", "DVRPC_2016_Indicators_of_Potential_Disadvantage.csv")) %>%
+  select("GEOID10", "OA_CntEst", "OA_PctEst", "U_TPopEst") %>%
+  mutate_at(vars(GEOID10), as.character)
+matching_counts <- left_join(new_counts, old_counts, by = c("GEOID" = "GEOID10")) %>%
+  mutate(test_pct = OA_CntEst / U_TPopEst)
+s0101 <- read_csv(here("compare_2016", "ACS_16_5YR_S0101_with_ann.csv")) %>%
+  mutate_at(vars(GEO.id2), as.character) %>%
+  select(GEO.id2, HC01_VC37)
+left_join(matching_counts, aff_dp05, by = c("GEOID" = "GEO.id2"))
+write_csv(matching_counts, here("compare_2016", "track_down_oa_diffs.csv"))
