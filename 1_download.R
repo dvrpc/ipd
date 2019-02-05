@@ -40,7 +40,7 @@ dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
 # For available percentages
 s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                    variables = c(D_P = "S1810_C03_001",
-                                 OA_P = "S0101_C02_030",
+                                 OA_P = "S0101_C01_030",
                                  LEP_P = "S1601_C06_001")) %>% select(-NAME)
 dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                     variables = c(F_P = "DP05_0003PE")) %>%
@@ -69,8 +69,9 @@ comp[[4]] <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars(
 pct_matrix <- NULL
 pct_moe_matrix <- NULL
 for (m in 1:length(comp[[1]])){
-  pct <- unlist(comp[[3]][,m] / comp[[1]][,m] * 100)
+  pct <- unlist(comp[[3]][,m] / comp[[1]][,m])
   pct <- round(pct, digits = 3)
+  pct <- pct * 100
   pct_matrix <- cbind(pct_matrix, pct)
   moe <- NULL
   for (l in 1:length(comp[[1]]$LI_UE)){

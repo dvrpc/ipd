@@ -37,7 +37,7 @@ dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
 s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                    year = 2016,
                    variables = c(D_P = "S1810_C03_001",
-                                 OA_P = "S0101_C02_028",
+                                 OA_P = "S0101_C01_028",
                                  LEP_P = "S1601_C06_001")) %>% select(-NAME)
 dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                     year = 2016,
@@ -57,8 +57,9 @@ comp[[4]] <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars(
 pct_matrix <- NULL
 pct_moe_matrix <- NULL
 for (m in 1:length(comp[[1]])){
-  pct <- unlist(comp[[3]][,m] / comp[[1]][,m] * 100)
+  pct <- unlist(comp[[3]][,m] / comp[[1]][,m])
   pct <- round(pct, digits = 3)
+  pct <- pct * 100
   pct_matrix <- cbind(pct_matrix, pct)
   moe <- NULL
   for (l in 1:length(comp[[1]]$LI_UE)){
@@ -138,7 +139,6 @@ df <- df %>% filter(!(GEOID %in% slicer))
 write_csv(df, here("compare_2016", "ipd_2016.csv"))
 
 # SECTION 2: Compare to the 2016 online data
-# Everything quite similar EXCEPT OA_PctEst
 original <- read_csv(here("compare_2016", "DVRPC_2016_Indicators_of_Potential_Disadvantage.csv"))
 updated <- df
 orig_est <- original %>% select(GEOID10, ends_with("PctEst")) %>%
@@ -149,24 +149,3 @@ names(upd_est) <- paste0(names(upd_est), "_n")
 merg_est <- left_join(orig_est, upd_est, by = c("GEOID10" = "GEOID_n")) %>%
   select(GEOID10, sort(current_vars()))
 write_csv(merg_est, here("compare_2016", "test_compare_2016.csv"))
-
-# SECTION 3: Test for differences in OA PctEst between 2016 script data and 2016 online data
-# H1: Numerators are different
-# REJECT. Numerators are same
-# H2: Denominators are different
-# REJECT. Denominators are same
-# H3: Percentages are different
-# YES. 2016 online data computes by division; 2016 script downloads
-new_counts <- df %>% select(GEOID, OA_CntEst, OA_PctEst) %>%
-  rename(OA_CntEst_n = OA_CntEst,
-         OA_PctEst_n = OA_PctEst)
-old_counts <- read_csv(here("compare_2016", "DVRPC_2016_Indicators_of_Potential_Disadvantage.csv")) %>%
-  select("GEOID10", "OA_CntEst", "OA_PctEst", "U_TPopEst") %>%
-  mutate_at(vars(GEOID10), as.character)
-matching_counts <- left_join(new_counts, old_counts, by = c("GEOID" = "GEOID10")) %>%
-  mutate(test_pct = OA_CntEst / U_TPopEst)
-s0101 <- read_csv(here("compare_2016", "ACS_16_5YR_S0101_with_ann.csv")) %>%
-  mutate_at(vars(GEO.id2), as.character) %>%
-  select(GEO.id2, HC01_VC37)
-left_join(matching_counts, aff_dp05, by = c("GEOID" = "GEO.id2"))
-write_csv(matching_counts, here("compare_2016", "track_down_oa_diffs.csv"))
