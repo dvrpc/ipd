@@ -35,7 +35,7 @@ d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
   rename(RM_CE = x)
 dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                      variables = c(OA_CE = "DP05_0029E")) %>%
-  rename(OA_CM = DP05_0025M) %>% select(-NAME)
+  rename(OA_CM = DP05_0029M) %>% select(-NAME)
 
 # For available percentages
 s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
@@ -69,23 +69,20 @@ comp[[4]] <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars(
 pct_matrix <- NULL
 pct_moe_matrix <- NULL
 for (m in 1:length(comp[[1]])){
-  pct <- unlist(comp[[3]][,m] / comp[[1]][,m])
-  pct <- round(pct, digits = 3)
-  pct <- pct * 100
+  pct <- unlist(comp[[3]][,m] / comp[[1]][,m]) * 100
   pct_matrix <- cbind(pct_matrix, pct)
   moe <- NULL
   for (l in 1:length(comp[[1]]$LI_UE)){
     moe_indiv <- as.numeric(moe_prop(comp[[3]][l,m], comp[[1]][l,m], comp[[4]][l,m], comp[[2]][l,m])) * 100
-    moe_indiv <- round(moe_indiv, digits = 3)
     moe <- append(moe, moe_indiv)
   }
   pct_moe_matrix <- cbind(pct_moe_matrix, moe)
 }
 
 # Result: `pct` and `pct_moe` have percentages and associated MOEs
-pct <- as_tibble(pct_matrix)
+pct <- as_tibble(pct_matrix) %>% mutate_all(round, 1)
 names(pct) <- str_replace(names(comp[[1]]), "_UE", "_PctEst")
-pct_moe <- as_tibble(pct_moe_matrix)
+pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 1)
 names(pct_moe) <- str_replace(names(comp[[1]]), "_UE", "_PctMOE")
 
 # EXCEPTION 1: If estimated percentage == 0 & MOE == 0; MOE = 0.1
@@ -112,8 +109,8 @@ comp[[5]] <- pct %>% select(sort(current_vars()))
 percentile_matrix <- NULL
 for (m in 1:length(comp[[1]])){
   p <- unlist(comp[[5]][,m])
-  rank <- ecdf(p)(p) * 100
-  rank <- round(rank, digits = 3)
+  rank <- ecdf(p)(p)
+  rank <- round(rank, digits = 2)
   percentile_matrix <- cbind(percentile_matrix, rank)
 }
 

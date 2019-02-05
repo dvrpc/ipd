@@ -1,5 +1,5 @@
 # Dependencies
-require(tidycensus); require(tidyverse); require(here)
+require(tidycensus); require(tidyverse); require(here); require(summarytools)
 
 # Functions
 source("functions.R")
@@ -34,12 +34,9 @@ export_breaks <- as_tibble(export_breaks)
 
 # mean, min, max, 1 st dev
 pcts <- ipd %>% select(ends_with("PctEst"))
-summary_data <- apply(pcts, 2, summary)
-for(i in 1:length(summary_data)){
-  summary_data[[i]]$Variable <- names(summary_data)[i]
-}
-export_summary <- map_dfr(summary_data, `[`,
-                          c("Variable", "min_val", "median_val", "mean_val", "sd_val", "max_val"))
+summary_data <- apply(pcts, 2, description)
+export_summary <- as_tibble(summary_data) %>%
+  mutate_all(round, 2)
 
 # Population-weighted county means for each indicator
 pcts <- ipd %>% select(GEOID, ends_with("PctEst"), U_TPopEst) %>%
@@ -59,6 +56,7 @@ export_means <- pcts %>% group_by(cty) %>%
                             cty == "091" ~ "Montgomery",
                             cty == "101" ~ "Philadelphia")) %>%
   select(County, current_vars()) %>% select(-cty)
+
 # Export
 write_csv(export_counts, here("outputs", "counts_by_indicator.csv"))
 write_csv(export_breaks, here("outputs", "breaks_by_indicator.csv"))

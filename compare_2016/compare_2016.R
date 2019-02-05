@@ -1,6 +1,6 @@
 # SECTION 1: Compute 2016 IPD just as you would compute 2017
 # SECTION 2: Compare to the 2016 online data
-# SECTION 3: Test for differences in OA PctEst between 2016 script data and 2016 online data
+# SECTION 3: Compare MOEs
 #-------------------------------------------------------------------------------------------
 # SECTION 1: Compute 2016 IPD just as you would compute 2017
 require(tidycensus); require(tidyverse); require(here)
@@ -63,8 +63,9 @@ for (m in 1:length(comp[[1]])){
   pct_matrix <- cbind(pct_matrix, pct)
   moe <- NULL
   for (l in 1:length(comp[[1]]$LI_UE)){
-    moe_indiv <- as.numeric(moe_prop(comp[[3]][l,m], comp[[1]][l,m], comp[[4]][l,m], comp[[2]][l,m])) * 100
+    moe_indiv <- as.numeric(moe_prop(comp[[3]][l,m], comp[[1]][l,m], comp[[4]][l,m], comp[[2]][l,m]))
     moe_indiv <- round(moe_indiv, digits = 3)
+    moe_indiv <- moe_indiv * 100
     moe <- append(moe, moe_indiv)
   }
   pct_moe_matrix <- cbind(pct_moe_matrix, moe)
@@ -149,3 +150,15 @@ names(upd_est) <- paste0(names(upd_est), "_n")
 merg_est <- left_join(orig_est, upd_est, by = c("GEOID10" = "GEOID_n")) %>%
   select(GEOID10, sort(current_vars()))
 write_csv(merg_est, here("compare_2016", "test_compare_2016.csv"))
+
+# SECTION 2: Compare to the 2016 online data
+original <- read_csv(here("compare_2016", "DVRPC_2016_Indicators_of_Potential_Disadvantage.csv"))
+updated <- df
+orig_moe <- original %>% select(GEOID10, ends_with("PctMOE")) %>%
+  mutate_at(vars("GEOID10"), as.character) %>%
+  mutate_if(is.numeric, funs(. * 100))
+upd_moe <- updated %>% select(GEOID, ends_with("PctMOE"))
+names(upd_moe) <- paste0(names(upd_moe), "_n")
+merg_moe <- left_join(orig_moe, upd_moe, by = c("GEOID10" = "GEOID_n")) %>%
+  select(GEOID10, sort(current_vars()))
+write_csv(merg_moe, here("compare_2016", "test_compare_2016_moe.csv"))
