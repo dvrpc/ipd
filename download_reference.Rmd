@@ -8,105 +8,118 @@ output: pdf_document
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
 # Setup
 ## Dependencies
+Packages required to run this script.
 ```{r packages, message = FALSE}
 require(tidycensus); require(tidyverse); require(here)
 ```
 ## Functions
-1. For a given vector of numbers `x` and a number of bins `i`, `st_dev_breaks` computes the bin breaks starting at $-0.5 \cdot st dev$ and $0.5 \cdot st dev$. For the purposes of IPD analysis, `i = 5`, and `st_dev_breaks` calculates the minimum, $-1.5 \cdot st dev$, $-0.5 \cdot st dev$, $0.5 \cdot st dev$, $1.5 \cdot st dev$, and maximum values. These values are later used to slice the vector into five bins.
-2. `move_last` moves a column or vector of columns to the last position in a tibble or data frame.
+Load custom functions from `functions.R`. For more on the functions, see `functions_reference.Rmd`.
 ```{r functions}
-st_dev_breaks <- function(x, i, na.rm = TRUE){
-  half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
-                         seq(1, i, by = 2))
-  if((i %% 2) == 1) {
-    half_st_dev_breaks <- sapply(half_st_dev_count,
-                                 function(i)(0.5 * i * sd(x)) + mean(x))
-    half_st_dev_breaks[[1]] <- ifelse(min(x) < half_st_dev_breaks[[1]],
-                                      min(x), half_st_dev_breaks[[1]])
-    half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
-                                          max(x), half_st_dev_breaks[[i + 1]])
-  } else {
-    half_st_dev_breaks <- NA
-  }
-  return(half_st_dev_breaks)
-}
-move_last <- function(df, last_col) {
-  match(c(setdiff(names(df), last_col), last_col), names(df))
-}
+source("functions.R")
 ```
+## Fields
+The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. The table below shows the name of each indicator; its abbreviation used in scripts; and its universe, count, and percentage field, if available. Because the schemata of ACS tables can change with every update, these field names are applicable only to 2013-2017 ACS 5-Year Estimates.
 
+Some percentage fields are empty. This is okay: we will compute the percentages when they are not directly available from the ACS.
+
+Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as the count for Racial Minority. Technically, the desired count is B02001_001 $-$ B02001_002, aka the universe minus the downloaded count. This is computed after download, making a correct estimate and an incorrect MOE.
+
+| Indicator | Abbreviation | Universe | Count | Percentage |
+|:----------|:------------:|:--------:|:-----:|:----------:|
+| Youth | Y | B03002_001 | B09001_001 | N/A |
+| Older Adults | OA | S0101_C01_001 | DP05_0029E | S0101_C01_030 |
+| Female | F | S0101_C01_001 | S0101_C05_001 | DP05_0003PE |
+| Racial Minority | RM | B02001_001 | B02001_002 | N/A |
+| Ethnic Minority | EM | B03002_001 | B03002_012 | N/A |
+| Foreign-Born | FB | B05012_001 | B05012_003 | N/A |
+| Limited English Proficiency | LEP | S1601_C01_001 | S1601_C05_001 | S1601_C06_001 |
+| Disabled | D | S1810_C01_001 | S1810_C02_001 | S1810_C03_001 |
+| Low-Income | LI | S1701_C01_001 | S1701_C01_042 | N/A |
+
+While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out at the top of this script. This is by design: because of the annual changes in ACS data schemata, the user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit Census Developers [(link)](https://www.census.gov/developers/) and select the corresponding API.
+```{r fields}
+youth_universe                       <- "B03002_001"
+youth_count                          <- "B09001_001"
+youth_percent                        <- NULL
+older_adults_universe                <- "S0101_C01_001"
+older_adults_count                   <- "DP05_0029E"
+older_adults_percent                 <- "S0101_C01_030"
+female_universe                      <- "S0101_C01_001"
+female_count                         <- "S0101_C05_001"
+female_percent                       <- "DP05_0003PE"
+racial_minority_universe             <- "B02001_001"
+racial_minority_count                <- "B02001_002"
+racial_minority_percent              <- NULL
+ethnic_minority_universe             <- "B03002_001"
+ethnic_minority_count                <- "B03002_012"
+ethnic_minority_percent              <- NULL
+foreign_born_universe                <- "B05012_001"
+foreign_born_count                   <- "B05012_003"
+foreign_born_percent                 <- NULL
+limited_english_proficiency_universe <- "S1601_C01_001"
+limited_english_proficiency_count    <- "S1601_C05_001"
+limited_english_proficiency_percent  <- "S1601_C06_001"
+disabled_universe                    <- "S1810_C01_001"
+disabled_count                       <- "S1810_C02_001"
+disabled_percent                     <- "S1810_C03_001"
+low_income_universe                  <- "S1701_C01_001"
+low_income_count                     <- "S1701_C01_042"
+low_income_percent                   <- NULL
+```
 # Downloads
-## API Calls for counts (universes and estimates)
-Download all necessary tables for count data for IPD's nine indicators. Below is a brief overview of the indicators, abbreviations used in data processing, and ACS 5-Year Estimate source tables. *Warning*: The ACS sometimes changes its data schemata for tables. When working with updated ACS estimates, revisit each field name in the Census API and make sure you are downloading the fields you want.
+## API Calls for counts (universes and counts)
+Download counts and percentages for each of IPD's nine indicators.
 
-| Indicator | Abbreviation | Table | Universe | Estimate |
-|:----------|:------------:|:-----:|:--------:|:--------:|
-| Youth | Y | B09001 | B03002_001 | B09001_001 |
-| Older Adults | OA | DP05 | S0101_C01_001 | DP05_0029E |
-| Female | F | S0101 | S0101_C01_001 | S0101_C05_001 |
-| Racial Minority | RM | B02001 | B02001_001 | B02001_002 |
-| Ethnic Minority | EM | B03002 | B03002_001 | B03002_012 | 
-| Foreign-Born | FB | B05012 | B05012_001 | B05012_003 |
-| Limited English Proficiency | LEP | S1601 | S1601_C01_001 | S1601_C05_001 |
-| Disabled | D | S1810 | S1810_C01_001 | S1810_C02_001 |
-| Low-Income | LI | S1710 | S1701_C01_001 | S1701_C01_042 |
+Input data for IPD comes from several sources, including ACS Subject Tables, Detailed Tables, and Data Profiles. While one can request all the fields for Subject Tables in one batch, mixing requests for two different types (e.g. Subject Tables and Detailed Tables) will result in failure. For this reason, counts are downloaded in three batches: `s_counts` for Subject Tables, `d_counts` for Detailed Tables, and `dp_counts` for Data Profiles.
 
 Note two exceptions embedded in processing:
 
 1. The API does not allow redundant downloads, so universes for Youth and Limited English Proficiency are duplicated after download.
-2. This API call downloads variable B02001_002 ("Estimate; Total: - White alone") as the count, when the desired variable for Racial Minority is technically B02001_001 $-$ B02001_002, aka the universe minus the estimate. This is computed after download, making a correct estimate and an incorrect MOE.
+2. This API call downloads variable B02001_002 ("Estimate; Total: - White alone") as the count, when the desired variable for Racial Minority is technically B02001_001 $-$ B02001_002, aka the universe minus the estimate. This is computed after download and at the bottom of this code chunk: the result is a correct estimate and an incorrect MOE.
 ```{r api_counts, message = FALSE}
 s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                    variables = c(LI_U = "S1701_C01_001",
-                                  LI_C = "S1701_C01_042",
-                                  F_U = "S0101_C01_001",
-                                  F_C = "S0101_C05_001",
-                                  D_U = "S1810_C01_001",
-                                  D_C = "S1810_C02_001",
-                                  # OA_U = "S0101_C01_001", # Redundant download
-                                  LEP_U = "S1601_C01_001",
-                                  LEP_C = "S1601_C05_001")) %>%
+                    variables = c(LI_U = low_income_universe,
+                                  LI_C = low_income_count,
+                                  F_U = female_universe,
+                                  F_C = female_count,
+                                  D_U = disabled_universe,
+                                  D_C = disabled_count,
+                                  # OA_U = older_adults_universe, # Redundant download
+                                  LEP_U = limited_english_proficiency_universe,
+                                  LEP_C = limited_english_proficiency_count)) %>%
   select(-NAME) %>% mutate(OA_UE = F_UE, OA_UM = F_UM)
 d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                    variables = c(EM_U = "B03002_001",
-                                  EM_C = "B03002_012",
-                                  # Y_U = "B03002_001", # Redundant download
-                                  Y_C = "B09001_001",
-                                  FB_U = "B05012_001",
-                                  FB_C = "B05012_003",
-                                  RM_U = "B02001_001",
-                                  RM_C = "B02001_002")) %>%
+                    variables = c(EM_U = ethnic_minority_universe,
+                                  EM_C = ethnic_minority_count,
+                                  # Y_U = youth_universe, # Redundant download
+                                  Y_C = youth_count,
+                                  FB_U = foreign_born_universe,
+                                  FB_C = foreign_born_count,
+                                  RM_U = racial_minority_universe,
+                                  RM_C = racial_minority_count)) %>%
   mutate(Y_UE = EM_UE, Y_UM = EM_UM, x = RM_UE - RM_CE) %>%
   select(-NAME, -RM_CE) %>% 
   rename(RM_CE = x)
 dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                     variables = c(OA_CE = "DP05_0029E")) %>%
+                     variables = c(OA_CE = older_adults_count)) %>%
   rename(OA_CM = DP05_0029M) %>% select(-NAME)
 ```
-
 ## API Calls for percentages (universes and estimates)
-Download percentage tables that are available for three of IPD's nine indicators. We will compute percentages and their associated MOEs for the rest of the dataset later.
+Download percentage tables that are available for four of IPD's nine indicators. We will compute percentages and their associated MOEs for the rest of the dataset later.
 
-| Indicator | Abbreviation | Table | Percentage |
-|:----------|:------------:|:-----:|:----------:|
-| Older Adults | OA | S0101 | S0101_C01_030 |
-| Female | F | DP05 | DP05_0003PE |
-| Limited English Proficiency | LEP | S1601 | S1601_C06_001 |
-| Disabled | D | S1810 | S1810_C03_001 |
-
+The API request limitations are similar to those above. Percentages are downloaded in two batches: `s_perce` for Subject Tables, and `dp_percs` for Data Profiles.
 ```{r api_percs, message = FALSE}
 s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                   variables = c(D_P = "S1810_C03_001",
-                                 OA_P = "S0101_C01_030",
-                                 LEP_P = "S1601_C06_001")) %>% select(-NAME)
+                   variables = c(D_P = disabled_percent,
+                                 OA_P = older_adults_percent,
+                                 LEP_P = limited_english_proficiency_percent)) %>%
+  select(-NAME)
 dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                    variables = c(F_P = "DP05_0003PE")) %>%
+                    variables = c(F_P = female_percent)) %>%
   rename(F_PE = F_P, F_PM = DP05_0003PM) %>% select(-NAME)
 ```
-
 ## Combine downloads into merged files
 Merge downloads into two separate data frames: `dl_counts` for counts and universes, and `dl_percs` for available percentages. Subset data frames for DVRPC's nine-county region.
 ```{r dl_counts_dl_percs, message = FALSE}
@@ -118,53 +131,50 @@ dl_counts <- left_join(s_counts, d_counts) %>%
 dl_percs <- left_join(s_percs, dp_percs) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
 ```
-
 # Calculations
-Split `dl_counts` into a list named `comp` for processing and sort column names for consistency. The order of columns will be important because processing is based on vector position. The name of the list, `comp`, is a nod to the "component parts" of `dl_counts`. For all nine indicators:
+Split `dl_counts` into a list named `comp` for processing and sort column names for consistency. The name of the list, `comp`, is a nod to the "component parts" of `dl_counts`. The structure of `comp` is similar to a four-tab Excel spreadsheet: for example, `comp` is the name of the `.xlsx` file, `uni_est` is a tab for universe estimates, and `uni_est` has nine columns and 1,379 rows, where the column is the IPD indicator and the row is the census tract observation. 
+
+The order of columns will be important because processing is based on vector position. We want to make sure that the first column of every tab corresponds to the Disabled indicator, the second to Ethnic Minority, et cetera. For all nine indicators:
 
 1. Compute percentages and associated MOEs
 2. Compute percentile
 3. Compute IPD score and classification
 4. Compute total IPD score across all nine indicators
-
 ```{r comp}
 comp <- list()
-comp[[1]] <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
-comp[[2]] <- dl_counts %>% select(ends_with("UM")) %>% select(sort(current_vars()))
-comp[[3]] <- dl_counts %>% select(ends_with("CE")) %>% select(sort(current_vars()))
-comp[[4]] <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars()))
+comp$uni_est <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
+comp$uni_moe <- dl_counts %>% select(ends_with("UM")) %>% select(sort(current_vars()))
+comp$count_est <- dl_counts %>% select(ends_with("CE")) %>% select(sort(current_vars()))
+comp$count_moe <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars()))
 ```
-
 ## Compute percentages and associated MOEs
 ### Calculation
-MOEs of the percentage values are obtained using the `tidycensus` function `moe_prop`.
+MOEs of the percentage values are obtained using the `tidycensus` function `moe_prop`. This chunk mentions `r` and `c` several times: continuing the spreadsheet analogy, think of `r` as the row number and `c` as the column number for a given spreadsheet tab.
 ```{r perc}
 pct_matrix <- NULL
 pct_moe_matrix <- NULL
-for (m in 1:length(comp[[1]])){
-  pct <- unlist(comp[[3]][,m] / comp[[1]][,m]) * 100
+for (c in 1:length(comp$uni_est)){
+  pct <- unlist(comp$count_est[,c] / comp$uni_est[,c]) * 100
   pct_matrix <- cbind(pct_matrix, pct)
   moe <- NULL
-  for (l in 1:length(comp[[1]]$LI_UE)){
-    moe_indiv <- as.numeric(moe_prop(comp[[3]][l,m],
-                                     comp[[1]][l,m],
-                                     comp[[4]][l,m],
-                                     comp[[2]][l,m])) * 100
+  for (r in 1:length(comp$uni_est$LI_UE)){
+    moe_indiv <- as.numeric(moe_prop(comp$count_est[r,c],
+                                     comp$uni_est[r,c],
+                                     comp$count_moe[r,c],
+                                     comp$uni_moe[r,c])) * 100
     moe <- append(moe, moe_indiv)
   }
   pct_moe_matrix <- cbind(pct_moe_matrix, moe)
 }
 ```
-
 ### Result
-`pct` and `pct_moe` stores the percentages and associated MOEs for the nine indicator variables.
+`pct` and `pct_moe` stores the percentages and associated MOEs for the nine indicator variables. Results are rounded to the tenths place.
 ```{r perc_res, warning = FALSE}
 pct <- as_tibble(pct_matrix) %>% mutate_all(round, 1)
-names(pct) <- str_replace(names(comp[[1]]), "_UE", "_PctEst")
+names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
 pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 1)
-names(pct_moe) <- str_replace(names(comp[[1]]), "_UE", "_PctMOE")
+names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 ```
-
 ### Exception 1
 If estimated percentage == 0 & MOE == 0, then make MOE = 0.1.
 
@@ -173,7 +183,6 @@ Matrix math: Only overwrite MOE where `pct_matrix` + `pct_moe_matrix` == 0.
 overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
 pct_moe[overwrite_locations] <- 0
 ```
-
 ### Exception 2
 Substitute percentages and associated MOEs when available from American FactFinder. This applies to the Older Adults, Female, Limited English Proficiency, and Disabled variables.
 ```{r perc_excp_2}
@@ -186,50 +195,47 @@ pct_moe <- pct_moe %>% mutate(D_PctMOE = dl_percs$D_PM,
                               LEP_PctMOE = dl_percs$LEP_PM,
                               F_PctMOE = dl_percs$F_PM)
 ```
-
 ### Exception 3
 To be added. Use variance replicates to compute `RM_CntMOE` and `RM_PctMOE`.
 
 ## Compute percentile
 ### Calculation
-Add percentages to `comp`, making sure to first sort column names for consistency. Compute the empirical cumulative distribution function for each of the nine indicator variables.
+Add percentages (an additional spreadsheet tab) to `comp`, making sure to first sort column names for consistency. Compute the empirical cumulative distribution function for each of the nine indicator variables.
 ```{r percentile}
-comp[[5]] <- pct %>% select(sort(current_vars()))
+comp$pct_est <- pct %>% select(sort(current_vars()))
+
 percentile_matrix <- NULL
-for (m in 1:length(comp[[1]])){
-  p <- unlist(comp[[5]][,m])
+for (c in 1:length(comp$uni_est)){
+  p <- unlist(comp$pct_est[,c])
   rank <- ecdf(p)(p)
   percentile_matrix <- cbind(percentile_matrix, rank)
 }
 ```
-
 ### Result
-`percentile` stores the percentile rank for the nine indicator variables.
+`percentile` stores the percentile rank for the nine indicator variables. Results are rounded to the hundredths place.
 ```{r percentile_res, warning = FALSE}
 percentile <- as_tibble(percentile_matrix) %>% mutate_all(round, 2)
-names(percentile) <- str_replace(names(comp[[1]]), "_UE", "_Rank")
+names(percentile) <- str_replace(names(comp$uni_est), "_UE", "_Rank")
 ```
-
 ## Compute IPD score and classification
 Each observation is assigned an IPD score for each indicator. The IPD score for an individual indicator can range from 0 to 4, which corresponds to the following:
 
 | IPD Score | IPD Classification | Standard Deviations |
 |:---------:|:------------------:|:-------------------:|
-| 0 | Well Below Average | `s` $\leq -1.5$ |
-| 1 | Below Average | $-1.5 <$ `s` $\leq -0.5$ |
-| 2 | Average | $-0.5 <$ `s` $\leq 0.5$ |
-| 3 | Above Average | $0.5 <$ `s` $\leq 1.5$ |
-| 4 | Well Above Average | `s` $> 1.5$ |
+| 0 | Well Below Average | s $\leq -1.5$ |
+| 1 | Below Average | $-1.5 <$ s $\leq -0.5$ |
+| 2 | Average | $-0.5 <$ s $\leq 0.5$ |
+| 3 | Above Average | $0.5 <$ s $\leq 1.5$ |
+| 4 | Well Above Average | s $> 1.5$ |
 
 Note an exception buried in processing:
 
 1. If the estimated percentage for an observation == 0 and this observation also falls in Bin 1, move to Bin 0. Locations where this exception apply are stored in `overwrite_locations`.
-
 ```{r score_class}
 score_matrix <- NULL
 class_matrix <- NULL
-for (m in 1:length(comp[[1]])){
-  p <- unlist(comp[[5]][,m])
+for (c in 1:length(comp$uni_est)){
+  p <- unlist(comp$pct_est[,c])
   breaks <- st_dev_breaks(p, 5, na.rm = TRUE)
   score <- (cut(p, labels = FALSE, breaks = breaks,
                 include.lowest = TRUE, right = TRUE)) - 1
@@ -244,22 +250,19 @@ for (m in 1:length(comp[[1]])){
   class_matrix <- cbind(class_matrix, class)
 }
 ```
-
 ### Result
 `score` and `class` store the IPD scores and associated descriptions for the nine indicator variables.
 ```{r score_class_res, warning = FALSE}
 score <- as_tibble(score_matrix)
-names(score) <- str_replace(names(comp[[1]]), "_UE", "_Score")
+names(score) <- str_replace(names(comp$uni_est), "_UE", "_Score")
 class <- as_tibble(class_matrix)
-names(class) <- str_replace(names(comp[[1]]), "_UE", "_Class")
+names(class) <- str_replace(names(comp$uni_est), "_UE", "_Class")
 ```
-
 ## Compute total IPD score across all nine indicators
 Sum the IPD scores for the nine indicator variables to determine the overall IPD score.
 ```{r ipd_score}
 score <- score %>% mutate(IPD_Score = rowSums(.))
 ```
-
 # Cleaning
 Merge all information into a single data frame called `df`.
 ```{r merge}
@@ -270,7 +273,6 @@ df <- bind_cols(dl_counts, pct) %>%
   bind_cols(., class)
 
 ```
-
 Rename columns.
 ```{r rename}
 names(df) <- str_replace(names(df), "_CE", "_CntEst")
@@ -280,20 +282,17 @@ df <- df %>% mutate(U_TPopEst = F_UE, U_TPopMOE = F_UM, U_Pop6Est = LEP_UE,
                     U_PNICEst = D_UE, U_PNICMOE = D_UM) %>%
   select(-ends_with("UE"), -ends_with("UM"))
 ```
-
 Reorder columns.
 ```{r reorder}
 df <- df %>% select(GEOID, sort(current_vars())) %>%
   select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE", "U_Pop6Est",
                         "U_Pop6MOE", "U_PPovEst", "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 ```
-
 Replace `NA` values with `NoData` if character and `-99999` if numeric.
 ```{r replace}
 df <- df %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
   mutate_if(is.numeric, funs(ifelse(is.na(.), -99999, .)))
 ```
-
 Slice unwanted tracts because of low population.
 ```{r slicer}
 slicer <- c("42045980000", "42017980000", "42101980800",
@@ -302,7 +301,6 @@ slicer <- c("42045980000", "42017980000", "42101980800",
             "42101005000")
 df <- df %>% filter(!(GEOID %in% slicer))
 ```
-
 Export result.
 ```{r export}
 write_csv(df, here("outputs", "ipd.csv"))

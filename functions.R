@@ -1,8 +1,6 @@
+# Override function defaults s.t. na.rm = TRUE
 min <- function(x, ..., na.rm = TRUE) {
   base::min(x, ..., na.rm = na.rm)
-}
-median <- function(x, ..., na.rm = TRUE) {
-  base::median(x, ..., na.rm = na.rm)
 }
 mean <- function(x, ..., na.rm = TRUE) {
   base::mean(x, ..., na.rm = na.rm)
@@ -13,7 +11,7 @@ sd <- function(x, ..., na.rm = TRUE) {
 max <- function(x, ..., na.rm = TRUE) {
   base::max(x, ..., na.rm = na.rm)
 }
-
+# Create breaks
 st_dev_breaks <- function(x, i, na.rm = TRUE){
   half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
                          seq(1, i, by = 2))
@@ -28,11 +26,11 @@ st_dev_breaks <- function(x, i, na.rm = TRUE){
   }
   return(half_st_dev_breaks)
 }
-
+# Move column or vector of columns to last position
 move_last <- function(df, last_col) {
   match(c(setdiff(names(df), last_col), last_col), names(df))
 }
-
+# Create summary statistics
 description <- function(i) {
   summarytools::descr(i, na.rm = TRUE, stats = c("min", "med", "mean", "sd", "max"))
 }

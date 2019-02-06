@@ -5,45 +5,74 @@ require(tidycensus); require(tidyverse); require(here)
 # Functions
 source("functions.R")
 
+# Fields
+youth_universe                       <- "B03002_001"
+youth_count                          <- "B09001_001"
+youth_percent                        <- NULL
+older_adults_universe                <- "S0101_C01_001"
+older_adults_count                   <- "DP05_0029E"
+older_adults_percent                 <- "S0101_C01_030"
+female_universe                      <- "S0101_C01_001"
+female_count                         <- "S0101_C05_001"
+female_percent                       <- "DP05_0003PE"
+racial_minority_universe             <- "B02001_001"
+racial_minority_count                <- "B02001_002"
+racial_minority_percent              <- NULL
+ethnic_minority_universe             <- "B03002_001"
+ethnic_minority_count                <- "B03002_012"
+ethnic_minority_percent              <- NULL
+foreign_born_universe                <- "B05012_001"
+foreign_born_count                   <- "B05012_003"
+foreign_born_percent                 <- NULL
+limited_english_proficiency_universe <- "S1601_C01_001"
+limited_english_proficiency_count    <- "S1601_C05_001"
+limited_english_proficiency_percent  <- "S1601_C06_001"
+disabled_universe                    <- "S1810_C01_001"
+disabled_count                       <- "S1810_C02_001"
+disabled_percent                     <- "S1810_C03_001"
+low_income_universe                  <- "S1701_C01_001"
+low_income_count                     <- "S1701_C01_042"
+low_income_percent                   <- NULL
+
 ## DOWNLOADS
 # API Calls
 # For counts (universes and estimates)
 # EXCEPTION 1: API does not allow redundant downloads; universes are duplicated after download
 # EXCEPTION 2: Desired RM_CE = RM_UE - RM_CE; computed after download. Makes estimate correct but MOE wrong
 s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                    variables = c(LI_U = "S1701_C01_001",
-                                  LI_C = "S1701_C01_042",
-                                  F_U = "S0101_C01_001",
-                                  F_C = "S0101_C05_001",
-                                  D_U = "S1810_C01_001",
-                                  D_C = "S1810_C02_001",
-                                  # OA_U = "S0101_C01_001", # Redundant download
-                                  LEP_U = "S1601_C01_001",
-                                  LEP_C = "S1601_C05_001")) %>%
+                    variables = c(LI_U = low_income_universe,
+                                  LI_C = low_income_count,
+                                  F_U = female_universe,
+                                  F_C = female_count,
+                                  D_U = disabled_universe,
+                                  D_C = disabled_count,
+                                  # OA_U = older_adults_universe, # Redundant download
+                                  LEP_U = limited_english_proficiency_universe,
+                                  LEP_C = limited_english_proficiency_count)) %>%
   select(-NAME) %>% mutate(OA_UE = F_UE, OA_UM = F_UM)
 d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                    variables = c(EM_U = "B03002_001",
-                                  EM_C = "B03002_012",
-                                  # Y_U = "B03002_001", # Redundant download
-                                  Y_C = "B09001_001",
-                                  FB_U = "B05012_001",
-                                  FB_C = "B05012_003",
-                                  RM_U = "B02001_001",
-                                  RM_C = "B02001_002")) %>%
+                    variables = c(EM_U = ethnic_minority_universe,
+                                  EM_C = ethnic_minority_count,
+                                  # Y_U = youth_universe, # Redundant download
+                                  Y_C = youth_count,
+                                  FB_U = foreign_born_universe,
+                                  FB_C = foreign_born_count,
+                                  RM_U = racial_minority_universe,
+                                  RM_C = racial_minority_count)) %>%
   mutate(Y_UE = EM_UE, Y_UM = EM_UM, x = RM_UE - RM_CE) %>%
   select(-NAME, -RM_CE) %>% 
   rename(RM_CE = x)
 dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                     variables = c(OA_CE = "DP05_0029E")) %>%
+                     variables = c(OA_CE = older_adults_count)) %>%
   rename(OA_CM = DP05_0029M) %>% select(-NAME)
 
 # For available percentages
 s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                   variables = c(D_P = "S1810_C03_001",
-                                 OA_P = "S0101_C01_030",
-                                 LEP_P = "S1601_C06_001")) %>% select(-NAME)
+                   variables = c(D_P = disabled_percent,
+                                 OA_P = older_adults_percent,
+                                 LEP_P = limited_english_proficiency_percent)) %>% select(-NAME)
 dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                    variables = c(F_P = "DP05_0003PE")) %>%
+                    variables = c(F_P = female_percent)) %>%
   rename(F_PE = F_P, F_PM = DP05_0003PM) %>% select(-NAME)
 
 # Combine downloads into merged files
@@ -60,20 +89,20 @@ dl_percs <- left_join(s_percs, dp_percs) %>%
 # Sort column names for consistency
 # `comp` = "component parts"
 comp <- list()
-comp[[1]] <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
-comp[[2]] <- dl_counts %>% select(ends_with("UM")) %>% select(sort(current_vars()))
-comp[[3]] <- dl_counts %>% select(ends_with("CE")) %>% select(sort(current_vars()))
-comp[[4]] <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars()))
+comp$uni_est <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
+comp$uni_moe <- dl_counts %>% select(ends_with("UM")) %>% select(sort(current_vars()))
+comp$count_est <- dl_counts %>% select(ends_with("CE")) %>% select(sort(current_vars()))
+comp$count_moe <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars()))
 
 # Compute percentages and associated MOEs
 pct_matrix <- NULL
 pct_moe_matrix <- NULL
-for (m in 1:length(comp[[1]])){
-  pct <- unlist(comp[[3]][,m] / comp[[1]][,m]) * 100
+for (c in 1:length(comp$uni_est)){
+  pct <- unlist(comp$count_est[,c] / comp$uni_est[,c]) * 100
   pct_matrix <- cbind(pct_matrix, pct)
   moe <- NULL
-  for (l in 1:length(comp[[1]]$LI_UE)){
-    moe_indiv <- as.numeric(moe_prop(comp[[3]][l,m], comp[[1]][l,m], comp[[4]][l,m], comp[[2]][l,m])) * 100
+  for (r in 1:length(comp$uni_est$LI_UE)){
+    moe_indiv <- as.numeric(moe_prop(comp$count_est[r,c], comp$uni_est[r,c], comp$count_moe[r,c], comp$uni_moe[r,c])) * 100
     moe <- append(moe, moe_indiv)
   }
   pct_moe_matrix <- cbind(pct_moe_matrix, moe)
@@ -81,9 +110,9 @@ for (m in 1:length(comp[[1]])){
 
 # Result: `pct` and `pct_moe` have percentages and associated MOEs
 pct <- as_tibble(pct_matrix) %>% mutate_all(round, 1)
-names(pct) <- str_replace(names(comp[[1]]), "_UE", "_PctEst")
+names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
 pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 1)
-names(pct_moe) <- str_replace(names(comp[[1]]), "_UE", "_PctMOE")
+names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 
 # EXCEPTION 1: If estimated percentage == 0 & MOE == 0; MOE = 0.1
 # This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
@@ -104,26 +133,25 @@ pct_moe <- pct_moe %>% mutate(D_PctMOE = dl_percs$D_PM,
 
 # Compute percentile
 # Add percentages to `comp`; sort column names for consistency
-comp[[5]] <- pct %>% select(sort(current_vars()))
+comp$pct_est <- pct %>% select(sort(current_vars()))
 
 percentile_matrix <- NULL
-for (m in 1:length(comp[[1]])){
-  p <- unlist(comp[[5]][,m])
+for (c in 1:length(comp$uni_est)){
+  p <- unlist(comp$pct_est[,c])
   rank <- ecdf(p)(p)
-  rank <- round(rank, digits = 2)
   percentile_matrix <- cbind(percentile_matrix, rank)
 }
 
 # Result: `percentile` has rank
-percentile <- as_tibble(percentile_matrix)
-names(percentile) <- str_replace(names(comp[[1]]), "_UE", "_Rank")
+percentile <- as_tibble(percentile_matrix) %>% mutate_all(round, 2)
+names(percentile) <- str_replace(names(comp$uni_est), "_UE", "_Rank")
 
 # Compute IPD score and classification
 # EXCEPTION BURIED IN LOOP: If pct estimate = 0 and falls in bin #1, move to bin #0
 score_matrix <- NULL
 class_matrix <- NULL
-for (m in 1:length(comp[[1]])){
-  p <- unlist(comp[[5]][,m])
+for (c in 1:length(comp$uni_est)){
+  p <- unlist(comp$pct_est[,c])
   breaks <- st_dev_breaks(p, 5, na.rm = TRUE)
   score <- (cut(p, labels = FALSE, breaks = breaks,
                 include.lowest = TRUE, right = TRUE)) - 1
@@ -140,9 +168,9 @@ for (m in 1:length(comp[[1]])){
 
 # Result: `score` and `class` have IPD scores and associated descriptions
 score <- as_tibble(score_matrix)
-names(score) <- str_replace(names(comp[[1]]), "_UE", "_Score")
+names(score) <- str_replace(names(comp$uni_est), "_UE", "_Score")
 class <- as_tibble(class_matrix)
-names(class) <- str_replace(names(comp[[1]]), "_UE", "_Class")
+names(class) <- str_replace(names(comp$uni_est), "_UE", "_Class")
 
 # Compute total IPD score
 score <- score %>% mutate(IPD_Score = rowSums(.))
