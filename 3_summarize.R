@@ -26,17 +26,34 @@ export_counts$Classification <- factor(export_counts$Classification,
                                                   "Well Above Average",
                                                   "NoData"))
 export_counts <- arrange(export_counts, Variable, Classification)
+export_counts <- export_counts %>%
+  spread(Classification, Count) %>%
+  mutate_at(vars(`Well Below Average`, NoData), funs(replace_na(., 0))) %>%
+  mutate(TOTAL = rowSums(.[2:6], na.rm = TRUE)) %>%
+  mutate_at(vars(Variable), funs(case_when(. == "D_Class" ~ "Disabled",
+                                           . == "EM_Class" ~ "Ethnic Minority",
+                                           . == "F_Class" ~ "Female",
+                                           . == "FB_Class" ~ "Foreign-Born",
+                                           . == "LEP_Class" ~ "Limited English Proficiency",
+                                           . == "LI_Class" ~ "Low-Income",
+                                           . == "OA_Class" ~ "Older Adults",
+                                           . == "RM_Class" ~ "Racial Minority",
+                                           . == "Y_Class" ~ "Youth")))
 
 # Bin break points
 breaks <- ipd %>% select(ends_with("PctEst"))
 export_breaks <- round(mapply(st_dev_breaks, x = breaks, i = 5, na.rm = TRUE), digits = 3)
-export_breaks <- as_tibble(export_breaks)
+export_breaks <- as_tibble(export_breaks) %>%
+  mutate(Class = c("Minimum Observed OR Break Value", "1", "2", "3", "4", "Maximum Observed OR Break Value")) %>%
+  select(Class, current_vars())
 
 # mean, min, max, 1 st dev
 pcts <- ipd %>% select(ends_with("PctEst"))
 summary_data <- apply(pcts, 2, description)
 export_summary <- as_tibble(summary_data) %>%
-  mutate_all(round, 2)
+  mutate_all(round, 2) %>%
+  mutate(Statistic = c("Minimum", "Median", "Mean", "SD", "Maximum")) %>%
+  select(Statistic, current_vars())
 
 # Population-weighted county means for each indicator
 pcts <- ipd %>% select(GEOID, ends_with("PctEst"), U_TPopEst) %>%

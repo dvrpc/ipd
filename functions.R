@@ -1,15 +1,15 @@
 # Override function defaults s.t. na.rm = TRUE
-min <- function(x, ..., na.rm = TRUE) {
-  base::min(x, ..., na.rm = na.rm)
+min <- function(i, ..., na.rm = TRUE) {
+  base::min(i, ..., na.rm = na.rm)
 }
-mean <- function(x, ..., na.rm = TRUE) {
-  base::mean(x, ..., na.rm = na.rm)
+mean <- function(i, ..., na.rm = TRUE) {
+  base::mean(i, ..., na.rm = na.rm)
 }
-sd <- function(x, ..., na.rm = TRUE) {
-  stats::sd(x, ..., na.rm = na.rm)
+sd <- function(i, ..., na.rm = TRUE) {
+  stats::sd(i, ..., na.rm = na.rm)
 }
-max <- function(x, ..., na.rm = TRUE) {
-  base::max(x, ..., na.rm = na.rm)
+max <- function(i, ..., na.rm = TRUE) {
+  base::max(i, ..., na.rm = na.rm)
 }
 # Create breaks
 st_dev_breaks <- function(x, i, na.rm = TRUE){

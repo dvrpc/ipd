@@ -29,7 +29,7 @@ Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as th
 | Indicator | Abbreviation | Universe | Count | Percentage |
 |:----------|:------------:|:--------:|:-----:|:----------:|
 | Youth | Y | B03002_001 | B09001_001 | N/A |
-| Older Adults | OA | S0101_C01_001 | DP05_0029E | S0101_C01_030 |
+| Older Adults | OA | S0101_C01_001 | S0101_C01_030 | S0101_C02_030 |
 | Female | F | S0101_C01_001 | S0101_C05_001 | DP05_0003PE |
 | Racial Minority | RM | B02001_001 | B02001_002 | N/A |
 | Ethnic Minority | EM | B03002_001 | B03002_012 | N/A |
@@ -44,8 +44,8 @@ youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
 youth_percent                        <- NULL
 older_adults_universe                <- "S0101_C01_001"
-older_adults_count                   <- "DP05_0029E"
-older_adults_percent                 <- "S0101_C01_030"
+older_adults_count                   <- "S0101_C01_030"
+older_adults_percent                 <- "S0101_C02_030"
 female_universe                      <- "S0101_C01_001"
 female_count                         <- "S0101_C05_001"
 female_percent                       <- "DP05_0003PE"
@@ -72,7 +72,7 @@ low_income_percent                   <- NULL
 ## API Calls for counts (universes and counts)
 Download counts and percentages for each of IPD's nine indicators.
 
-Input data for IPD comes from several sources, including ACS Subject Tables, Detailed Tables, and Data Profiles. While one can request all the fields for Subject Tables in one batch, mixing requests for two different types (e.g. Subject Tables and Detailed Tables) will result in failure. For this reason, counts are downloaded in three batches: `s_counts` for Subject Tables, `d_counts` for Detailed Tables, and `dp_counts` for Data Profiles.
+Input data for IPD comes from several sources, including ACS Subject Tables, Detailed Tables, and Data Profiles. While one can request all the fields for Subject Tables in one batch, mixing requests for two different types (e.g. Subject Tables and Detailed Tables) will result in failure. For this reason, counts are downloaded in two batches: `s_counts` for Subject Tables, and `d_counts` for Detailed Tables.
 
 Note two exceptions embedded in processing:
 
@@ -87,6 +87,7 @@ s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                                   D_U = disabled_universe,
                                   D_C = disabled_count,
                                   # OA_U = older_adults_universe, # Redundant download
+                                  OA_C = older_adults_count,
                                   LEP_U = limited_english_proficiency_universe,
                                   LEP_C = limited_english_proficiency_count)) %>%
   select(-NAME) %>% mutate(OA_UE = F_UE, OA_UM = F_UM)
@@ -102,14 +103,11 @@ d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
   mutate(Y_UE = EM_UE, Y_UM = EM_UM, x = RM_UE - RM_CE) %>%
   select(-NAME, -RM_CE) %>% 
   rename(RM_CE = x)
-dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                     variables = c(OA_CE = older_adults_count)) %>%
-  rename(OA_CM = DP05_0029M) %>% select(-NAME)
 ```
 ## API Calls for percentages (universes and estimates)
 Download percentage tables that are available for four of IPD's nine indicators. We will compute percentages and their associated MOEs for the rest of the dataset later.
 
-The API request limitations are similar to those above. Percentages are downloaded in two batches: `s_perce` for Subject Tables, and `dp_percs` for Data Profiles.
+The API request limitations are similar to those above. Percentages are downloaded in two batches: `s_percs` for Subject Tables, and `dp_percs` for Data Profiles.
 ```{r api_percs, message = FALSE}
 s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                    variables = c(D_P = disabled_percent,
@@ -126,7 +124,6 @@ Merge downloads into two separate data frames: `dl_counts` for counts and univer
 keep_cty <- c("34005", "34007", "34015", "34021",
               "42017", "42029", "42045", "42091", "42101")
 dl_counts <- left_join(s_counts, d_counts) %>%
-  left_join(., dp_counts) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
 dl_percs <- left_join(s_percs, dp_percs) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
@@ -239,7 +236,7 @@ for (c in 1:length(comp$uni_est)){
   breaks <- st_dev_breaks(p, 5, na.rm = TRUE)
   score <- (cut(p, labels = FALSE, breaks = breaks,
                 include.lowest = TRUE, right = TRUE)) - 1
-  overwrite_locations <- which(score == 0 & p == 0)
+  overwrite_locations <- which(score == 1 & p == 0)
   score[overwrite_locations] <- 0
   class <- case_when(score == 0 ~ "Well Below Average",
                      score == 1 ~ "Below Average",

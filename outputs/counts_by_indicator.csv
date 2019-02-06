@@ -1,43 +1,10 @@
-Variable,Classification,Count
-D_Class,Well Below Average,34
-D_Class,Below Average,426
-D_Class,Average,551
-D_Class,Above Average,255
-D_Class,Well Above Average,102
-D_Class,NoData,1
-EM_Class,Below Average,386
-EM_Class,Average,790
-EM_Class,Above Average,94
-EM_Class,Well Above Average,99
-F_Class,Well Below Average,39
-F_Class,Below Average,266
-F_Class,Average,738
-F_Class,Above Average,269
-F_Class,Well Above Average,57
-FB_Class,Below Average,502
-FB_Class,Average,573
-FB_Class,Above Average,181
-FB_Class,Well Above Average,113
-LEP_Class,Below Average,485
-LEP_Class,Average,649
-LEP_Class,Above Average,115
-LEP_Class,Well Above Average,120
-LI_Class,Below Average,570
-LI_Class,Average,430
-LI_Class,Above Average,208
-LI_Class,Well Above Average,160
-LI_Class,NoData,1
-OA_Class,Well Below Average,18
-OA_Class,Below Average,450
-OA_Class,Average,543
-OA_Class,Above Average,246
-OA_Class,Well Above Average,112
-RM_Class,Below Average,604
-RM_Class,Average,409
-RM_Class,Above Average,163
-RM_Class,Well Above Average,193
-Y_Class,Well Below Average,84
-Y_Class,Below Average,272
-Y_Class,Average,648
-Y_Class,Above Average,282
-Y_Class,Well Above Average,83
+Variable,Well Below Average,Below Average,Average,Above Average,Well Above Average,NoData,TOTAL
+Disabled,34,426,551,255,102,1,1368
+Ethnic Minority,23,363,790,94,99,0,1369
+Female,39,266,738,269,57,0,1369
+Foreign-Born,0,502,573,181,113,0,1369
+Limited English Proficiency,26,459,649,115,120,0,1369
+Low-Income,2,568,430,208,160,1,1368
+Older Adults,29,398,631,222,89,0,1369
+Racial Minority,1,603,409,163,193,0,1369
+Youth,84,272,648,282,83,0,1369

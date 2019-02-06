@@ -10,8 +10,8 @@ youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
 youth_percent                        <- NULL
 older_adults_universe                <- "S0101_C01_001"
-older_adults_count                   <- "DP05_0029E"
-older_adults_percent                 <- "S0101_C01_030"
+older_adults_count                   <- "S0101_C01_030"
+older_adults_percent                 <- "S0101_C02_030"
 female_universe                      <- "S0101_C01_001"
 female_count                         <- "S0101_C05_001"
 female_percent                       <- "DP05_0003PE"
@@ -47,6 +47,7 @@ s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                                   D_U = disabled_universe,
                                   D_C = disabled_count,
                                   # OA_U = older_adults_universe, # Redundant download
+                                  OA_C = older_adults_count,
                                   LEP_U = limited_english_proficiency_universe,
                                   LEP_C = limited_english_proficiency_count)) %>%
   select(-NAME) %>% mutate(OA_UE = F_UE, OA_UM = F_UM)
@@ -62,9 +63,6 @@ d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
   mutate(Y_UE = EM_UE, Y_UM = EM_UM, x = RM_UE - RM_CE) %>%
   select(-NAME, -RM_CE) %>% 
   rename(RM_CE = x)
-dp_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
-                     variables = c(OA_CE = older_adults_count)) %>%
-  rename(OA_CM = DP05_0029M) %>% select(-NAME)
 
 # For available percentages
 s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
@@ -79,7 +77,6 @@ dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
 # Subset for DVRPC region
 keep_cty <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 dl_counts <- left_join(s_counts, d_counts) %>%
-  left_join(., dp_counts) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
 dl_percs <- left_join(s_percs, dp_percs) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
@@ -155,7 +152,7 @@ for (c in 1:length(comp$uni_est)){
   breaks <- st_dev_breaks(p, 5, na.rm = TRUE)
   score <- (cut(p, labels = FALSE, breaks = breaks,
                 include.lowest = TRUE, right = TRUE)) - 1
-  overwrite_locations <- which(score == 0 & p == 0)
+  overwrite_locations <- which(score == 1 & p == 0)
   score[overwrite_locations] <- 0
   class <- case_when(score == 0 ~ "Well Below Average",
                      score == 1 ~ "Below Average",
