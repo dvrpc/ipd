@@ -126,7 +126,14 @@ pct_moe <- pct_moe %>% mutate(D_PctMOE = dl_percs$D_PM,
                               LEP_PctMOE = dl_percs$LEP_PM,
                               F_PctMOE = dl_percs$F_PM)
 
-# (FUTURE) EXCEPTION 3: Use variance replicates to compute RM_CntMOE and RM_PctMOE
+# EXCEPTION 3: Use variance replicates to compute RM_CntMOE and RM_PctMOE
+if(TRUE %in% (list.files(here("outputs")) == "rm_moe.csv")){
+  rm_moe <- read_csv(here("outputs", "rm_moe.csv")) %>%
+    mutate_at(vars(GEOID), as.character)
+  # Sort in GEOID processing order as above
+  re_sort <- left_join(dl_counts, rm_moe) %>% select(RM_PctMOE) %>% pull(.)
+  pct_moe <- pct_moe %>% mutate(RM_PctMOE = re_sort)
+}
 
 # Compute percentile
 # Add percentages to `comp`; sort column names for consistency
