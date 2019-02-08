@@ -15,24 +15,17 @@ var_rep <- bind_rows(nj_var_rep, pa_var_rep) %>%
   mutate_at(vars(GEOID), funs(str_sub(., 8, 18))) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty) %>%
   select(-TBLID, -NAME, -ORDER, -moe, -CME, -SE) %>%
-  filter(TITLE %in% c("Total:",
-                      "Black or African American alone",
+  filter(TITLE %in% c("Black or African American alone",
                       "American Indian and Alaska Native alone",
                       "Asian alone",
                       "Native Hawaiian and Other Pacific Islander alone",
                       "Some other race alone",
                       "Two or more races:"))
-# Subset out denominators
-denom <- var_rep %>%
-  filter(TITLE == "Total:") %>%
-  select(-GEOID, -TITLE)
-names(denom) <- paste(names(denom), "d", sep = "_")
-# Compute numerators
-num <- var_rep %>% filter(TITLE != "Total:") %>%
+# Sum up subfields
+num <- var_rep %>% 
   group_by(GEOID) %>%
   summarise_if(is.numeric, funs(sum)) %>%
   select(-GEOID)
-# Compute MOEs of numerators
 estim <- num %>% select(estimate)
 individual_replicate <- num %>% select(-estimate)
 # Grab GEOIDs to append to results
