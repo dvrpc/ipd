@@ -1,3 +1,4 @@
+require(here); require(tidyverse)
 # Next things:
 # Must use varreps to compute MOEs for counts.
 # The divergence may be that old scripts computed MOEs for counts
@@ -36,28 +37,24 @@ num <- var_rep %>% filter(TITLE != "Total:") %>%
   group_by(GEOID) %>%
   summarise_if(is.numeric, funs(sum)) %>%
   select(-GEOID)
-# Compute percentages
-pct_fun <- function(n, d) n/d*100
-pct <- mapply(pct_fun, num, denom) %>% as_tibble(.)
-# Compute MOEs of percentages
-estim <- pct %>% select(estimate)
-individual_replicate <- pct %>% select(-estimate)
+# Compute MOEs of numerators
+estim <- num %>% select(estimate)
+individual_replicate <- num %>% select(-estimate)
 # Grab GEOIDs to append to results
 id <- var_rep %>% select(GEOID) %>% distinct(.) %>% pull(.)
 sqdiff_fun <- function(v, e) (v-e)^2
 sqdiff <- mapply(sqdiff_fun, individual_replicate, estim) 
 sum_sqdiff <- rowSums(sqdiff)
 variance <- 0.05 * sum_sqdiff
-moe <- round(sqrt(variance) * 1.645, 1)
+moe <- round(sqrt(variance) * 1.645, 0)
 
 export_moe <- cbind(id, moe) %>%
   as_tibble(.) %>%
-  rename(GEOID = id, RM_PctMOE_n = moe)
+  rename(GEOID = id, RM_CntMOE_n = moe)
 
 web <- read_csv(here("compare_2016", "DVRPC_2016_Indicators_of_Potential_Disadvantage.csv")) %>%
-  select(GEOID10, RM_PctMOE) %>%
-  mutate_at(vars(GEOID10), as.character) %>%
-  mutate_at(vars(RM_PctMOE), funs(. * 100))
+  select(GEOID10, RM_CntMOE) %>%
+  mutate_at(vars(GEOID10), as.character)
 
 left_join(export_moe, web, by = c("GEOID" = "GEOID10")) %>%
   write_csv(., here("compare_2016", "rm_moe.csv"))

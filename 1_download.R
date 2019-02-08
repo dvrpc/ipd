@@ -82,6 +82,16 @@ dl_percs <- left_join(s_percs, dp_percs) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
 
 ## CALCULATIONS
+# EXCEPTION 1: Use variance replicates to compute RM_CntMOE
+# Substitute it in before splitting
+if(TRUE %in% (list.files(here("outputs")) == "rm_moe.csv")){
+  rm_moe <- read_csv(here("outputs", "rm_moe.csv")) %>%
+    mutate_at(vars(GEOID), as.character)
+  dl_counts <- dl_counts %>% left_join(., rm_moe) %>%
+    select(-RM_CM) %>%
+    rename(RM_CM = RM_CntMOE)
+} 
+
 # Split `dl_counts` into list for processing
 # Sort column names for consistency
 # `comp` = "component parts"
@@ -111,12 +121,12 @@ names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
 pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 1)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 
-# EXCEPTION 1: If estimated percentage == 0 & MOE == 0; MOE = 0.1
+# EXCEPTION 2: If estimated percentage == 0 & MOE == 0; MOE = 0.1
 # This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
 overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
 pct_moe[overwrite_locations] <- 0
 
-# EXCEPTION 2: Substitute percentages and associated MOEs when available from AFF
+# EXCEPTION 3: Substitute percentages and associated MOEs when available from AFF
 pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
                       OA_PctEst = dl_percs$OA_PE,
                       LEP_PctEst = dl_percs$LEP_PE,
@@ -125,15 +135,6 @@ pct_moe <- pct_moe %>% mutate(D_PctMOE = dl_percs$D_PM,
                               OA_PctMOE = dl_percs$OA_PM,
                               LEP_PctMOE = dl_percs$LEP_PM,
                               F_PctMOE = dl_percs$F_PM)
-
-# EXCEPTION 3: Use variance replicates to compute RM_CntMOE and RM_PctMOE
-if(TRUE %in% (list.files(here("outputs")) == "rm_moe.csv")){
-  rm_moe <- read_csv(here("outputs", "rm_moe.csv")) %>%
-    mutate_at(vars(GEOID), as.character)
-  # Sort in GEOID processing order as above
-  re_sort <- left_join(dl_counts, rm_moe) %>% select(RM_PctMOE) %>% pull(.)
-  pct_moe <- pct_moe %>% mutate(RM_PctMOE = re_sort)
-}
 
 # Compute percentile
 # Add percentages to `comp`; sort column names for consistency
@@ -158,7 +159,7 @@ for (c in 1:length(comp$uni_est)){
   p <- unlist(comp$pct_est[,c])
   breaks <- st_dev_breaks(p, 5, na.rm = TRUE)
   score <- (cut(p, labels = FALSE, breaks = breaks,
-                include.lowest = TRUE, right = TRUE)) - 1
+                include.lowest = TRUE, right = FALSE)) - 1
   overwrite_locations <- which(score == 1 & p == 0)
   score[overwrite_locations] <- 0
   class <- case_when(score == 0 ~ "Well Below Average",
