@@ -17,8 +17,8 @@ st_dev_breaks <- function(x, i, na.rm = TRUE){
                          seq(1, i, by = 2))
   if((i %% 2) == 1) {
     half_st_dev_breaks <- sapply(half_st_dev_count, function(i) (0.5 * i * sd(x)) + mean(x))
-    half_st_dev_breaks[[1]] <- ifelse(min(x) < half_st_dev_breaks[[1]],
-                                      min(x), half_st_dev_breaks[[1]])
+    half_st_dev_breaks[[1]] <- 0
+    half_st_dev_breaks[[2]] <- ifelse(half_st_dev_breaks[[2]] < 0, 0.001, half_st_dev_breaks[[2]])
     half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
                                           max(x), half_st_dev_breaks[[i + 1]])
   } else {

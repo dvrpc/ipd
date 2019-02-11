@@ -48,7 +48,8 @@ dl_counts <- left_join(s_counts, d_counts) %>%
   left_join(., dp_counts) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
 dl_percs <- left_join(s_percs, dp_percs) %>%
-  filter(str_sub(GEOID, 1, 5) %in% keep_cty)
+  filter(str_sub(GEOID, 1, 5) %in% keep_cty) %>%
+  mutate_if(is.numeric, funs(. / 100))
 if(TRUE %in% (list.files(here("compare_2016")) == "rm_moe.csv")){
   rm_moe <- read_csv(here("compare_2016", "rm_moe.csv")) %>%
     mutate_at(vars(GEOID), as.character)
@@ -56,6 +57,12 @@ if(TRUE %in% (list.files(here("compare_2016")) == "rm_moe.csv")){
     select(-RM_CM) %>%
     rename(RM_CM = RM_CntMOE)
 }
+slicer <- c("42045980000", "42017980000", "42101980800",
+            "42101980300", "42101980500", "42101980400",
+            "42101980900", "42101980700", "42101980600",
+            "42101005000")
+dl_counts <- dl_counts %>% filter(!(GEOID %in% slicer))
+dl_percs <- dl_percs %>% filter(!(GEOID %in% slicer))
 comp <- list()
 comp$uni_est <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
 comp$uni_moe <- dl_counts %>% select(ends_with("UM")) %>% select(sort(current_vars()))
@@ -64,18 +71,18 @@ comp$count_moe <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_
 pct_matrix <- NULL
 pct_moe_matrix <- NULL
 for (c in 1:length(comp$uni_est)){
-  pct <- unlist(comp$count_est[,c] / comp$uni_est[,c]) * 100
+  pct <- unlist(comp$count_est[,c] / comp$uni_est[,c])
   pct_matrix <- cbind(pct_matrix, pct)
   moe <- NULL
   for (r in 1:length(comp$uni_est$LI_UE)){
-    moe_indiv <- as.numeric(moe_prop(comp$count_est[r,c], comp$uni_est[r,c], comp$count_moe[r,c], comp$uni_moe[r,c])) * 100
+    moe_indiv <- as.numeric(moe_prop(comp$count_est[r,c], comp$uni_est[r,c], comp$count_moe[r,c], comp$uni_moe[r,c]))
     moe <- append(moe, moe_indiv)
   }
   pct_moe_matrix <- cbind(pct_moe_matrix, moe)
 }
-pct <- as_tibble(pct_matrix) %>% mutate_all(round, 1)
+pct <- as_tibble(pct_matrix) %>% mutate_all(round, 3)
 names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
-pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 1)
+pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 3)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
 pct_moe[overwrite_locations] <- 0
@@ -103,10 +110,11 @@ for (c in 1:length(comp$uni_est)){
   p <- unlist(comp$pct_est[,c])
   breaks <- st_dev_breaks(p, 5, na.rm = TRUE)
   break_storage[c,] <- breaks
-  score <- (cut(p, labels = FALSE, breaks = breaks,
-                include.lowest = TRUE, right = FALSE)) - 1
-  overwrite_locations <- which(score == 1 & p == 0)
-  score[overwrite_locations] <- 0
+  score <- case_when(p < breaks[2] ~ 0,
+                     p >= breaks[2] & p < breaks[3] ~ 1,
+                     p >= breaks[3] & p < breaks[4] ~ 2,
+                     p >= breaks[4] & p < breaks[5] ~ 3,
+                     p >= breaks[5] ~ 4)
   class <- case_when(score == 0 ~ "Well Below Average",
                      score == 1 ~ "Below Average",
                      score == 2 ~ "Average",
@@ -137,51 +145,21 @@ df <- df %>% select(GEOID, sort(current_vars())) %>%
                         "U_Pop6MOE", "U_PPovEst", "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 df <- df %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
   mutate_if(is.numeric, funs(ifelse(is.na(.), -99999, .)))
-slicer <- c("42045980000", "42017980000", "42101980800",
-            "42101980300", "42101980500", "42101980400",
-            "42101980900", "42101980700", "42101980600",
-            "42101005000")
-df <- df %>% filter(!(GEOID %in% slicer))
 write_csv(df, here("compare_2016", "ipd_2016.csv"))
 
 # Compare PctEst and PctMOE to 2016 webmap download
 web <- read_csv(here("compare_2016", "DVRPC_2016_Indicators_of_Potential_Disadvantage.csv")) %>%
-  mutate_at(vars("GEOID10"), as.character) %>%
-  mutate_if(is.numeric, funs(. * 100))
-web_est <- web %>% select(GEOID10, ends_with("PctEst"))
-web_count <- web %>% select(GEOID10, ends_with("CntEst")) %>%
-  mutate_if(is.numeric, funs(. / 100))
-web_moe <- web %>% select(GEOID10, ends_with("PctMOE"))
-web_cnt_moe <- web %>% select(GEOID10, ends_with("CntMOE")) %>%
-  mutate_if(is.numeric, funs(. / 100))
-web_pctile <- web %>% select(GEOID10, ends_with("Pctile")) %>%
-  mutate_if(is.numeric, funs(. / 100))
-web_score <- web %>% select(GEOID10, ends_with("Score")) %>%
-  mutate_if(is.numeric, funs(. / 100))
-script_est <- df %>% select(GEOID, ends_with("PctEst"))
-names(script_est)[2:10] <- paste(names(script_est)[2:10], "n", sep = "_")
-script_count <- df %>% select(GEOID, ends_with("CntEst"))
-names(script_count)[2:10] <- paste(names(script_count)[2:10], "n", sep = "_")
-script_moe <- df %>% select(GEOID, ends_with("PctMOE"))
-names(script_moe)[2:10] <- paste(names(script_moe)[2:10], "n", sep = "_")
-script_cnt_moe <- df %>% select(GEOID, ends_with("CntMOE"))
-names(script_cnt_moe)[2:10] <- paste(names(script_cnt_moe)[2:10], "n", sep = "_")
-script_pctile <- df %>% select(GEOID, ends_with("Rank"))
-names(script_pctile)[2:10] <- paste(names(script_pctile)[2:10], "n", sep = "_")
-script_score <- df %>% select(GEOID, ends_with("Score"))
-names(script_score)[2:10] <- paste(names(script_score)[2:10], "n", sep = "_")
-compare_estimates <- left_join(web_est, script_est, by = c("GEOID10" = "GEOID")) %>%
+  mutate_at(vars("GEOID10"), as.character)
+new_data <- df
+names(new_data) <- paste(names(new_data), "n", sep = "_")
+compare <- left_join(web, new_data, by = c("GEOID10" = "GEOID_n")) %>%
   select(GEOID10, sort(current_vars()))
-compare_counts <- left_join(web_count, script_count, by = c("GEOID10" = "GEOID")) %>%
-  select(GEOID10, sort(current_vars()))
-compare_moes <- left_join(web_moe, script_moe, by = c("GEOID10" = "GEOID")) %>%
-  select(GEOID10, sort(current_vars()))
-compare_cnt_moes <- left_join(web_cnt_moe, script_cnt_moe, by = c("GEOID10" = "GEOID")) %>%
-  select(GEOID10, sort(current_vars()))
-compare_pctile <- left_join(web_pctile, script_pctile, by = c("GEOID10" = "GEOID")) %>%
-  select(GEOID10, sort(current_vars()))
-compare_score <- left_join(web_score, script_score, by = c("GEOID10" = "GEOID")) %>%
-  select(GEOID10, sort(current_vars()))
+compare_estimates <- compare %>% select(GEOID10, contains("PctEst"))
+compare_counts <- compare %>% select(GEOID10, contains("CntEst"))
+compare_moes <- compare %>% select(GEOID10, contains("PctMOE"))
+compare_cnt_moes <- compare %>% select(GEOID10, contains("CntMOE"))
+compare_pctile <- compare %>% select(GEOID10, contains("Pctile"), contains("Rank"))
+compare_score <- compare %>% select(GEOID10, contains("Score"))
 
 write_csv(compare_estimates, here("compare_2016", "test_compare_2016_pct.csv"))
 write_csv(compare_counts, here("compare_2016", "test_compare_2016_count.csv"))
