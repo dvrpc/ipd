@@ -1,5 +1,5 @@
 ---
-title: "The mechanics of `functions.R`"
+title: "Functions Reference"
 author: "Addison Larson"
 date: "2/6/2019"
 output: pdf_document
@@ -8,6 +8,8 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+Probably is smarter to integrate this into top of other `.Rmd` even though it is intended to keep `functions.R` as a separate script.
+
 # Functions
 Some of these functions are long and are called in multiple scripts. This file is meant to group all functions together and reduce the amount of code overall.
 
@@ -28,16 +30,15 @@ max <- function(i, ..., na.rm = TRUE) {
 }
 ```
 ## Create custom half-standard deviation breaks
-I like to call this IPD's "bespoke classification scheme." For a given vector of numbers `x` and a number of bins `i`, `st_dev_breaks` computes the bin breaks starting at $-0.5 \cdot st dev$ and $0.5 \cdot st dev$. For the purposes of IPD analysis, `i = 5`, and `st_dev_breaks` calculates the minimum, $-1.5 \cdot st dev$, $-0.5 \cdot st dev$, $0.5 \cdot st dev$, $1.5 \cdot st dev$, and maximum values. These values are later used to slice the vector into five bins.
+I like to call this IPD's "bespoke classification scheme." For a given vector of numbers `x` and a number of bins `i`, `st_dev_breaks` computes the bin breaks starting at $-0.5 \cdot st dev$ and $0.5 \cdot st dev$. For the purposes of IPD analysis, `i = 5`, and `st_dev_breaks` calculates the minimum, $-1.5 \cdot st dev$, $-0.5 \cdot st dev$, $0.5 \cdot st dev$, $1.5 \cdot st dev$, and maximum values. These values are later used to slice the vector into five bins. **Note** that all minima are coerced to equal zero and that if the first bin break is negative (this happens when our data have a large spread), then it is coerced to be equal to 0.001.
 ```{r st_dev_breaks}
 st_dev_breaks <- function(x, i, na.rm = TRUE){
   half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
                          seq(1, i, by = 2))
   if((i %% 2) == 1) {
-    half_st_dev_breaks <- sapply(half_st_dev_count,
-                                 function(i)(0.5 * i * sd(x)) + mean(x))
-    half_st_dev_breaks[[1]] <- ifelse(min(x) < half_st_dev_breaks[[1]],
-                                      min(x), half_st_dev_breaks[[1]])
+    half_st_dev_breaks <- sapply(half_st_dev_count, function(i) (0.5 * i * sd(x)) + mean(x))
+    half_st_dev_breaks[[1]] <- 0
+    half_st_dev_breaks[[2]] <- ifelse(half_st_dev_breaks[[2]] < 0, 0.001, half_st_dev_breaks[[2]])
     half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
                                           max(x), half_st_dev_breaks[[i + 1]])
   } else {
