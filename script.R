@@ -110,7 +110,7 @@ id <- var_rep %>% select(GEOID) %>% distinct(.) %>% pull(.)
 sqdiff <- mapply(sqdiff_fun, individual_replicate, estim) 
 sum_sqdiff <- rowSums(sqdiff)
 variance <- 0.05 * sum_sqdiff
-moe <- round(sqrt(variance) * 1.645, 0)
+moe <- round(sqrt(variance) * 1.645, 0) # Do you really want 0 here?
 # Export
 rm_moe <- cbind(id, moe) %>%
   as_tibble(.) %>%
@@ -209,8 +209,7 @@ pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 3)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 # EXCEPTION 3: If estimated percentage == 0 & MOE == 0; MOE = 0.1
 # This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
-# ...why do we even do this?
-overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
+overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE) # Why do we do this?
 pct_moe[overwrite_locations] <- 0.1
 # EXCEPTION 4: Substitute percentages and associated MOEs when available from AFF
 pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
@@ -283,8 +282,8 @@ ipd <- ipd %>% mutate(U_TPopEst = F_UE, U_TPopMOE = F_UM, U_Pop6Est = LEP_UE,
   select(-ends_with("UE"), -ends_with("UM"))
 # Reorder columns
 ipd <- ipd %>% select(GEOID, sort(current_vars())) %>%
-  select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE", "U_Pop6Est",
-                        "U_Pop6MOE", "U_PPovEst", "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
+  select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE", "U_Pop6Est", "U_Pop6MOE",
+                        "U_PPovEst", "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 # Append unwanted tracts back onto dataset
 slicer <- enframe(slicer, name = NULL, value = "GEOID")
 ipd <- rbind.fill(ipd, slicer)
