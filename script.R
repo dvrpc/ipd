@@ -70,6 +70,8 @@ description <- function(i) {
   des <- c(des[1:4], des[4] / 2, des[5])
   return(des)
 }
+# Squared difference for variance replicates
+sqdiff_fun <- function(v, e) (v - e) ^ 2
 
 ## VARIANCE REPLICATES
 # Download files
@@ -105,7 +107,6 @@ estim <- num %>% select(estimate)
 individual_replicate <- num %>% select(-estimate)
 # Grab GEOIDs to append to results
 id <- var_rep %>% select(GEOID) %>% distinct(.) %>% pull(.)
-sqdiff_fun <- function(v, e) (v - e)^2
 sqdiff <- mapply(sqdiff_fun, individual_replicate, estim) 
 sum_sqdiff <- rowSums(sqdiff)
 variance <- 0.05 * sum_sqdiff
@@ -210,7 +211,7 @@ names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 # This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
 # ...why do we even do this?
 overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
-pct_moe[overwrite_locations] <- 0
+pct_moe[overwrite_locations] <- 0.1
 # EXCEPTION 4: Substitute percentages and associated MOEs when available from AFF
 pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
                       OA_PctEst = dl_percs$OA_PE,
@@ -286,7 +287,7 @@ ipd <- ipd %>% select(GEOID, sort(current_vars())) %>%
                         "U_Pop6MOE", "U_PPovEst", "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 # Append unwanted tracts back onto dataset
 slicer <- enframe(slicer, name = NULL, value = "GEOID")
-ipd <- plyr::rbind.fill(ipd, slicer)
+ipd <- rbind.fill(ipd, slicer)
 # Replace NA with NoData if character and -99999 if numeric
 ipd <- ipd %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
   mutate_if(is.numeric, funs(ifelse(is.na(.), -99999, .)))
@@ -297,7 +298,7 @@ ipd_summary <- ipd
 ipd_summary[ipd_summary == -99999] <- NA
 # Count of tracts that fall in each bin
 counts <- ipd_summary %>% select(ends_with("Class"))
-export_counts <- apply(counts, 2, function(x) plyr::count(x))
+export_counts <- apply(counts, 2, function(i) plyr::count(i))
 for(i in 1:length(export_counts)){
   export_counts[[i]]$var <- names(export_counts)[i]
 }
