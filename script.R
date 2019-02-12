@@ -1,8 +1,6 @@
 ## SETUP
 # Dependencies
-library(tidycensus); library(tidyverse); library(here); library(summarytools)
-# Functions
-source("functions.R")
+library(plyr); library(tidycensus); library(tidyverse); library(here); library(summarytools)
 # Fields
 youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
@@ -31,11 +29,54 @@ disabled_percent                     <- "S1810_C03_001"
 low_income_universe                  <- "S1701_C01_001"
 low_income_count                     <- "S1701_C01_042"
 low_income_percent                   <- NULL
+# Year
+ipd_year <- 2017
+# Functions
+# Override function defaults s.t. na.rm = TRUE
+min <- function(i, ..., na.rm = TRUE) {
+  base::min(i, ..., na.rm = na.rm)
+}
+mean <- function(i, ..., na.rm = TRUE) {
+  base::mean(i, ..., na.rm = na.rm)
+}
+sd <- function(i, ..., na.rm = TRUE) {
+  stats::sd(i, ..., na.rm = na.rm)
+}
+max <- function(i, ..., na.rm = TRUE) {
+  base::max(i, ..., na.rm = na.rm)
+}
+# Create breaks
+st_dev_breaks <- function(x, i, na.rm = TRUE){
+  half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
+                         seq(1, i, by = 2))
+  if((i %% 2) == 1) {
+    half_st_dev_breaks <- sapply(half_st_dev_count, function(i) (0.5 * i * sd(x)) + mean(x))
+    half_st_dev_breaks[[1]] <- 0
+    half_st_dev_breaks[[2]] <- ifelse(half_st_dev_breaks[[2]] < 0, 0.001, half_st_dev_breaks[[2]])
+    half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
+                                          max(x), half_st_dev_breaks[[i + 1]])
+  } else {
+    half_st_dev_breaks <- NA
+  }
+  return(half_st_dev_breaks)
+}
+# Move column or vector of columns to last position
+move_last <- function(df, last_col) {
+  match(c(setdiff(names(df), last_col), last_col), names(df))
+}
+# Create summary statistics
+description <- function(i) {
+  des <- as.numeric(summarytools::descr(i, na.rm = TRUE, stats = c("min", "med", "mean", "sd", "max")))
+  des <- c(des[1:4], des[4] / 2, des[5])
+  return(des)
+}
 
 ## VARIANCE REPLICATES
 # Download files
-nj_url <- "https://www2.census.gov/programs-surveys/acs/replicate_estimates/2017/data/5-year/140/B02001_34.csv.gz"
-pa_url <- "https://www2.census.gov/programs-surveys/acs/replicate_estimates/2017/data/5-year/140/B02001_42.csv.gz"
+nj_url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
+                 ipd_year, "/data/5-year/140/B02001_34.csv.gz")
+pa_url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
+                 ipd_year, "/data/5-year/140/B02001_42.csv.gz")
 nj_temp <- tempfile()
 download.file(nj_url, nj_temp)
 nj_var_rep <- read_csv(gzfile(nj_temp))
@@ -58,29 +99,27 @@ var_rep <- bind_rows(nj_var_rep, pa_var_rep) %>%
 # Sum up subfields
 num <- var_rep %>% 
   group_by(GEOID) %>%
-  summarise_if(is.numeric, funs(sum)) %>%
+  summarize_if(is.numeric, funs(sum)) %>%
   select(-GEOID)
 estim <- num %>% select(estimate)
 individual_replicate <- num %>% select(-estimate)
 # Grab GEOIDs to append to results
 id <- var_rep %>% select(GEOID) %>% distinct(.) %>% pull(.)
-sqdiff_fun <- function(v, e) (v-e)^2
+sqdiff_fun <- function(v, e) (v - e)^2
 sqdiff <- mapply(sqdiff_fun, individual_replicate, estim) 
 sum_sqdiff <- rowSums(sqdiff)
 variance <- 0.05 * sum_sqdiff
 moe <- round(sqrt(variance) * 1.645, 0)
 # Export
-export_moe <- cbind(id, moe) %>%
+rm_moe <- cbind(id, moe) %>%
   as_tibble(.) %>%
-  rename(GEOID = id, RM_CntMOE = moe) %>%
-  write_csv(., here("outputs", "rm_moe.csv"))
-
+  rename(GEOID = id, RM_CntMOE = moe)
 ## DOWNLOADS
 # API Calls
 # For counts and universes
 # EXCEPTION 1: API does not allow redundant downloads; universes are duplicated after download
 # EXCEPTION 2: Desired RM_CE = RM_UE - RM_CE; computed after download. Makes estimate correct but MOE wrong
-s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide", year = ipd_year,
                     variables = c(LI_U = low_income_universe,
                                   LI_C = low_income_count,
                                   F_U = female_universe,
@@ -92,7 +131,7 @@ s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
                                   LEP_U = limited_english_proficiency_universe,
                                   LEP_C = limited_english_proficiency_count)) %>%
   select(-NAME) %>% mutate(OA_UE = F_UE, OA_UM = F_UM)
-d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide", year = ipd_year,
                     variables = c(EM_U = ethnic_minority_universe,
                                   EM_C = ethnic_minority_count,
                                   # Y_U = youth_universe, # Redundant download
@@ -105,16 +144,15 @@ d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide",
   select(-NAME, -RM_CE) %>% 
   rename(RM_CE = x)
 # For available percentages
-s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide", year = ipd_year,
                    variables = c(D_P = disabled_percent,
                                  OA_P = older_adults_percent,
                                  LEP_P = limited_english_proficiency_percent)) %>% select(-NAME)
-dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide",
+dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide", year = ipd_year,
                     variables = c(F_P = female_percent)) %>%
   rename(F_PE = F_P, F_PM = DP05_0003PM) %>% select(-NAME)
 # Combine downloads into merged files
 # Subset for DVRPC region
-keep_cty <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 dl_counts <- left_join(s_counts, d_counts) %>%
   filter(str_sub(GEOID, 1, 5) %in% keep_cty)
 dl_percs <- left_join(s_percs, dp_percs) %>%
@@ -124,12 +162,11 @@ dl_percs <- left_join(s_percs, dp_percs) %>%
 ## CALCULATIONS
 # EXCEPTION 1: Use variance replicates to compute RM_CntMOE
 # Substitute it in before splitting
-if(TRUE %in% (list.files(here("outputs")) == "rm_moe.csv")){
-  rm_moe <- read_csv(here("outputs", "rm_moe.csv")) %>%
-    mutate_at(vars(GEOID), as.character)
+if(exists("rm_moe")){
   dl_counts <- dl_counts %>% left_join(., rm_moe) %>%
     select(-RM_CM) %>%
-    rename(RM_CM = RM_CntMOE)
+    rename(RM_CM = RM_CntMOE) %>%
+    mutate_at(vars(RM_CM), as.numeric)
 } 
 # EXCEPTION 2: Slice unwanted tracts
 # Slice unwanted tracts. This affects standard deviation
@@ -171,6 +208,7 @@ pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 3)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 # EXCEPTION 3: If estimated percentage == 0 & MOE == 0; MOE = 0.1
 # This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
+# ...why do we even do this?
 overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
 pct_moe[overwrite_locations] <- 0
 # EXCEPTION 4: Substitute percentages and associated MOEs when available from AFF
@@ -255,9 +293,10 @@ ipd <- ipd %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
 
 ## SUMMARY TABLES
 # Replace -99999 with NA for our purposes
-ipd[ipd == -99999] <- NA
+ipd_summary <- ipd
+ipd_summary[ipd_summary == -99999] <- NA
 # Count of tracts that fall in each bin
-counts <- ipd %>% select(ends_with("Class"))
+counts <- ipd_summary %>% select(ends_with("Class"))
 export_counts <- apply(counts, 2, function(x) plyr::count(x))
 for(i in 1:length(export_counts)){
   export_counts[[i]]$var <- names(export_counts)[i]
@@ -275,8 +314,8 @@ export_counts$Classification <- factor(export_counts$Classification,
 export_counts <- arrange(export_counts, Variable, Classification)
 export_counts <- export_counts %>%
   spread(Classification, Count) %>%
-  mutate_at(vars(`Well Below Average`, NoData), funs(replace_na(., 0))) %>%
-  mutate(TOTAL = rowSums(.[2:6], na.rm = TRUE)) %>%
+  mutate_all(funs(replace_na(., 0))) %>%
+  mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE)) %>%
   mutate_at(vars(Variable), funs(case_when(. == "D_Class" ~ "Disabled",
                                            . == "EM_Class" ~ "Ethnic Minority",
                                            . == "F_Class" ~ "Female",
@@ -287,37 +326,44 @@ export_counts <- export_counts %>%
                                            . == "RM_Class" ~ "Racial Minority",
                                            . == "Y_Class" ~ "Youth")))
 # Bin break points
-breaks <- ipd %>% select(ends_with("PctEst"))
+breaks <- ipd_summary %>% select(ends_with("PctEst")) %>% mutate_all(funs(. / 100))
 export_breaks <- round(mapply(st_dev_breaks, x = breaks, i = 5, na.rm = TRUE), digits = 3)
 export_breaks <- as_tibble(export_breaks) %>%
   mutate(Class = c("Min", "1", "2", "3", "4", "Max")) %>%
   select(Class, current_vars())
 # Minimum, median, mean, standard deviation, maximum
-pcts <- ipd %>% select(ends_with("PctEst"))
+pcts <- ipd_summary %>% select(ends_with("PctEst"))
 summary_data <- apply(pcts, 2, description)
 export_summary <- as_tibble(summary_data) %>%
   mutate_all(round, 2) %>%
-  mutate(Statistic = c("Minimum", "Median", "Mean", "SD", "Maximum")) %>%
+  mutate(Statistic = c("Minimum", "Median", "Mean", "SD", "Half-SD", "Maximum")) %>%
   select(Statistic, current_vars())
 # Population-weighted county means for each indicator
-pcts <- ipd %>% select(GEOID, ends_with("PctEst"), U_TPopEst) %>%
-  mutate(cty = str_sub(GEOID, 3, 5)) %>%
-  select(-GEOID)
-export_means <- pcts %>% group_by(cty) %>%
-  summarize_all(funs(weighted.mean(., U_TPopEst, na.rm = TRUE))) %>%
-  # summarize_all(funs(mean(., na.rm = TRUE))) %>%
-  mutate_if(is.numeric, ~round(., 3)) %>%
-  mutate(County = case_when(cty == "005" ~ "Burlington",
-                            cty == "007" ~ "Camden",
-                            cty == "015" ~ "Gloucester",
-                            cty == "021" ~ "Mercer",
-                            cty == "017" ~ "Bucks",
-                            cty == "029" ~ "Chester",
-                            cty == "045" ~ "Delaware",
-                            cty == "091" ~ "Montgomery",
-                            cty == "101" ~ "Philadelphia")) %>%
-  select(County, current_vars()) %>% select(-cty)
-
+export_means <- dl_counts %>% select(GEOID, ends_with("UE"), ends_with("CE")) %>%
+  select(GEOID, sort(current_vars())) %>%
+  mutate(County = str_sub(GEOID, 3, 5)) %>%
+  select(-GEOID) %>%
+  group_by(County) %>%
+  summarize(D_PctEst = sum(D_CE) / sum(D_UE),
+            EM_PctEst = sum(EM_CE) / sum(EM_UE),
+            F_PctEst = sum(F_CE) / sum(F_UE),
+            FB_PctEst = sum(FB_CE) / sum(FB_UE),
+            LEP_PctEst = sum(LEP_CE) / sum(LEP_UE),
+            LI_PctEst = sum(LI_CE) / sum(LI_UE),
+            OA_PctEst = sum(OA_CE) / sum(OA_UE),
+            RM_PctEst = sum(RM_CE) / sum(RM_UE),
+            Y_PctEst = sum(Y_CE) / sum(Y_UE)) %>%
+  mutate_if(is.numeric, funs(. * 100)) %>%
+  mutate_if(is.numeric, round, 1) %>%
+  mutate_at(vars(County), funs(case_when(. == "005" ~ "Burlington",
+                                         . == "007" ~ "Camden",
+                                         . == "015" ~ "Gloucester",
+                                         . == "021" ~ "Mercer",
+                                         . == "017" ~ "Bucks",
+                                         . == "029" ~ "Chester",
+                                         . == "045" ~ "Delaware",
+                                         . == "091" ~ "Montgomery",
+                                         . == "101" ~ "Philadelphia")))
 ## EXPORT
 write_csv(ipd, here("outputs", "ipd.csv"))
 write_csv(export_counts, here("outputs", "counts_by_indicator.csv"))
