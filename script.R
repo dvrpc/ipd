@@ -231,7 +231,7 @@ for (c in 1:length(comp$uni_est)){
 }
 # Result: `percentile` has rank
 percentile <- as_tibble(percentile_matrix) %>% mutate_all(round, 2)
-names(percentile) <- str_replace(names(comp$uni_est), "_UE", "_Rank")
+names(percentile) <- str_replace(names(comp$uni_est), "_UE", "_Pctile")
 # Compute IPD score and classification
 score_matrix <- NULL
 class_matrix <- NULL

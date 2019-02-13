@@ -36,7 +36,7 @@ Script outputs
     + Margin of error (MOE) associated with the count (`CntMOE`)
     + Estimated percentage of residents for each indicator (`PctEst`)
     + MOE associated with the percentage (`PctMOE`)
-    + Rank (percentile) of the percentage as compared to the study area, ranging from 0 to 1 (`Rank`)
+    + Percentile as compared to the study area, ranging from 0 to 1 (`Pctile`)
     + IPD score of the percentage, ranging from 0 to 4 (`Score`)
     + Text explanation and equivalent of the IPD score (`Class`)
     + Overall IPD score (`IPD_Score`)
@@ -343,7 +343,7 @@ head(dl_percs)
 For all nine indicators, Section 4 computes:
 
 a. Percentages and their MOEs
-b. Rank (Percentile)
+b. Percentile
 c. IPD Score and Classification
 d. Total IPD Score
 
@@ -411,7 +411,7 @@ head(pct)
 head(pct_moe)
 ```
 
-## 5. Rank (Percentile)
+## 5. Percentile
 ### Calculation
 Add percentages (an additional spreadsheet tab) to `comp`, making sure to first sort column names for consistency. Compute the empirical cumulative distribution function for each of the nine indicator variables.
 ```{r percentile}
@@ -424,10 +424,10 @@ for (c in 1:length(comp$uni_est)){
 }
 ```
 ### Result
-`percentile` stores the rank (percentile) for the nine indicator variables. Results are rounded to the hundredths place.
+`percentile` stores the percentile for the nine indicator variables. Results are rounded to the hundredths place.
 ```{r percentile_res, warning = FALSE}
 percentile <- as_tibble(percentile_matrix) %>% mutate_all(round, 2)
-names(percentile) <- str_replace(names(comp$uni_est), "_UE", "_Rank")
+names(percentile) <- str_replace(names(comp$uni_est), "_UE", "_Pctile")
 ```
 
 Here are the first few lines of `percentile`:
