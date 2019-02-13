@@ -1,6 +1,7 @@
 ## SETUP
 # Dependencies
-library(plyr); library(tidycensus); library(tidyverse); library(here); library(summarytools)
+library(plyr); library(here); library(sf); library(summarytools);
+library(tidycensus); library(tidyverse); library(tigris)
 # Fields
 youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
@@ -31,8 +32,12 @@ low_income_count                     <- "S1701_C01_042"
 low_income_percent                   <- NULL
 # Year
 ipd_year <- 2017
+# States
+ipd_states <- c("NJ", "PA")
+# Counties
+ipd_counties <- c("34005", "34007", "34015", "34021",
+                  "42017", "42029", "42045", "42091", "42101")
 # Functions
-# Override function defaults s.t. na.rm = TRUE
 min <- function(i, ..., na.rm = TRUE) {
   base::min(i, ..., na.rm = na.rm)
 }
@@ -45,14 +50,16 @@ sd <- function(i, ..., na.rm = TRUE) {
 max <- function(i, ..., na.rm = TRUE) {
   base::max(i, ..., na.rm = na.rm)
 }
-# Create breaks
 st_dev_breaks <- function(x, i, na.rm = TRUE){
   half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
                          seq(1, i, by = 2))
   if((i %% 2) == 1) {
-    half_st_dev_breaks <- sapply(half_st_dev_count, function(i) (0.5 * i * sd(x)) + mean(x))
+    half_st_dev_breaks <- sapply(half_st_dev_count,
+                                 function(i) (0.5 * i * sd(x)) + mean(x))
     half_st_dev_breaks[[1]] <- 0
-    half_st_dev_breaks[[2]] <- ifelse(half_st_dev_breaks[[2]] < 0, 0.001, half_st_dev_breaks[[2]])
+    half_st_dev_breaks[[2]] <- ifelse(half_st_dev_breaks[[2]] < 0,
+                                      0.001,
+                                      half_st_dev_breaks[[2]])
     half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
                                           max(x), half_st_dev_breaks[[i + 1]])
   } else {
@@ -60,37 +67,34 @@ st_dev_breaks <- function(x, i, na.rm = TRUE){
   }
   return(half_st_dev_breaks)
 }
-# Move column or vector of columns to last position
 move_last <- function(df, last_col) {
   match(c(setdiff(names(df), last_col), last_col), names(df))
 }
-# Create summary statistics
 description <- function(i) {
-  des <- as.numeric(summarytools::descr(i, na.rm = TRUE, stats = c("min", "med", "mean", "sd", "max")))
+  des <- as.numeric(descr(i, na.rm = TRUE,
+                          stats = c("min", "med", "mean", "sd", "max")))
   des <- c(des[1:4], des[4] / 2, des[5])
   return(des)
 }
-# Squared difference for variance replicates
-sqdiff_fun <- function(v, e) (v - e) ^ 2
-
 ## VARIANCE REPLICATES
-# Download files
-nj_url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
-                 ipd_year, "/data/5-year/140/B02001_34.csv.gz")
-pa_url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
-                 ipd_year, "/data/5-year/140/B02001_42.csv.gz")
-nj_temp <- tempfile()
-download.file(nj_url, nj_temp)
-nj_var_rep <- read_csv(gzfile(nj_temp))
-pa_temp <- tempfile()
-download.file(pa_url, pa_temp)
-pa_var_rep <- read_csv(gzfile(pa_temp))
-# Merge and subset for DVRPC region
-keep_cty <- c("34005", "34007", "34015", "34021",
-              "42017", "42029", "42045", "42091", "42101")
-var_rep <- bind_rows(nj_var_rep, pa_var_rep) %>%
+ipd_states_numeric <- fips_codes %>%
+  filter(state %in% ipd_states) %>%
+  select(state_code) %>% pull(.)
+var_rep <- NULL
+for (i in 1:length(ipd_states)){
+  url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
+                ipd_year,
+                "/data/5-year/140/B02001_",
+                ipd_states_numeric[i],
+                ".csv.gz")
+  temp <- tempfile()
+  download.file(url, temp)
+  var_rep_i <- read_csv(gzfile(temp))
+  var_rep <- rbind(var_rep, var_rep_i)
+}
+var_rep <- var_rep %>%
   mutate_at(vars(GEOID), funs(str_sub(., 8, 18))) %>%
-  filter(str_sub(GEOID, 1, 5) %in% keep_cty) %>%
+  filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
   select(-TBLID, -NAME, -ORDER, -moe, -CME, -SE) %>%
   filter(TITLE %in% c("Black or African American alone",
                       "American Indian and Alaska Native alone",
@@ -98,20 +102,18 @@ var_rep <- bind_rows(nj_var_rep, pa_var_rep) %>%
                       "Native Hawaiian and Other Pacific Islander alone",
                       "Some other race alone",
                       "Two or more races:"))
-# Sum up subfields
 num <- var_rep %>% 
   group_by(GEOID) %>%
   summarize_if(is.numeric, funs(sum)) %>%
   select(-GEOID)
 estim <- num %>% select(estimate)
 individual_replicate <- num %>% select(-estimate)
-# Grab GEOIDs to append to results
 id <- var_rep %>% select(GEOID) %>% distinct(.) %>% pull(.)
+sqdiff_fun <- function(v, e) (v - e) ^ 2
 sqdiff <- mapply(sqdiff_fun, individual_replicate, estim) 
 sum_sqdiff <- rowSums(sqdiff)
 variance <- 0.05 * sum_sqdiff
-moe <- round(sqrt(variance) * 1.645, 0) # Do you really want 0 here?
-# Export
+moe <- round(sqrt(variance) * 1.645, 0)
 rm_moe <- cbind(id, moe) %>%
   as_tibble(.) %>%
   rename(GEOID = id, RM_CntMOE = moe)
@@ -120,7 +122,8 @@ rm_moe <- cbind(id, moe) %>%
 # For counts and universes
 # EXCEPTION 1: API does not allow redundant downloads; universes are duplicated after download
 # EXCEPTION 2: Desired RM_CE = RM_UE - RM_CE; computed after download. Makes estimate correct but MOE wrong
-s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide", year = ipd_year,
+s_counts <- get_acs(geography = "tract", state = ipd_states,
+                    output = "wide", year = ipd_year,
                     variables = c(LI_U = low_income_universe,
                                   LI_C = low_income_count,
                                   F_U = female_universe,
@@ -131,8 +134,10 @@ s_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide", year
                                   OA_C = older_adults_count,
                                   LEP_U = limited_english_proficiency_universe,
                                   LEP_C = limited_english_proficiency_count)) %>%
-  select(-NAME) %>% mutate(OA_UE = F_UE, OA_UM = F_UM)
-d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide", year = ipd_year,
+  select(-NAME) %>%
+  mutate(OA_UE = F_UE, OA_UM = F_UM)
+d_counts <- get_acs(geography = "tract", state = ipd_states,
+                    output = "wide", year = ipd_year,
                     variables = c(EM_U = ethnic_minority_universe,
                                   EM_C = ethnic_minority_count,
                                   # Y_U = youth_universe, # Redundant download
@@ -145,33 +150,34 @@ d_counts <- get_acs(geography = "tract", state = c(34,42), output = "wide", year
   select(-NAME, -RM_CE) %>% 
   rename(RM_CE = x)
 # For available percentages
-s_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide", year = ipd_year,
+s_percs <- get_acs(geography = "tract", state = ipd_states,
+                   output = "wide", year = ipd_year,
                    variables = c(D_P = disabled_percent,
                                  OA_P = older_adults_percent,
-                                 LEP_P = limited_english_proficiency_percent)) %>% select(-NAME)
-dp_percs <- get_acs(geography = "tract", state = c(34,42), output = "wide", year = ipd_year,
+                                 LEP_P = limited_english_proficiency_percent)) %>%
+  select(-NAME)
+dp_percs <- get_acs(geography = "tract", state = ipd_states,
+                    output = "wide", year = ipd_year,
                     variables = c(F_P = female_percent)) %>%
-  rename(F_PE = F_P, F_PM = DP05_0003PM) %>% select(-NAME)
-# Combine downloads into merged files
+  rename(F_PE = F_P, F_PM = DP05_0003PM) %>%
+  select(-NAME)
 # Subset for DVRPC region
 dl_counts <- left_join(s_counts, d_counts) %>%
-  filter(str_sub(GEOID, 1, 5) %in% keep_cty)
+  filter(str_sub(GEOID, 1, 5) %in% ipd_counties)
 dl_percs <- left_join(s_percs, dp_percs) %>%
-  filter(str_sub(GEOID, 1, 5) %in% keep_cty) %>%
+  filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
   mutate_if(is.numeric, funs(. / 100))
-
 ## CALCULATIONS
 # EXCEPTION 1: Use variance replicates to compute RM_CntMOE
 # Substitute it in before splitting
 if(exists("rm_moe")){
-  dl_counts <- dl_counts %>% left_join(., rm_moe) %>%
+  dl_counts <- dl_counts %>%
     select(-RM_CM) %>%
+    left_join(., rm_moe) %>%
     rename(RM_CM = RM_CntMOE) %>%
     mutate_at(vars(RM_CM), as.numeric)
-} 
-# EXCEPTION 2: Slice unwanted tracts
-# Slice unwanted tracts. This affects standard deviation
-# so must be done now
+}
+# EXCEPTION 2: Slice low-population tracts
 slicer <- c("42045980000", "42017980000", "42101980800",
             "42101980300", "42101980500", "42101980400",
             "42101980900", "42101980700", "42101980600",
@@ -209,7 +215,7 @@ pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 3)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 # EXCEPTION 3: If estimated percentage == 0 & MOE == 0; MOE = 0.1
 # This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
-overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE) # Why do we do this?
+overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
 pct_moe[overwrite_locations] <- 0.1
 # EXCEPTION 4: Substitute percentages and associated MOEs when available from AFF
 pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
@@ -258,7 +264,6 @@ class <- as_tibble(class_matrix)
 names(class) <- str_replace(names(comp$uni_est), "_UE", "_Class")
 # Compute total IPD score
 score <- score %>% mutate(IPD_Score = rowSums(.))
-
 ## CLEANING
 # Move `pct` and `pct_moe` back into 0-100 range
 pct <- pct %>%
@@ -276,21 +281,29 @@ ipd <- bind_cols(dl_counts, pct) %>%
 # Rename columns
 names(ipd) <- str_replace(names(ipd), "_CE", "_CntEst")
 names(ipd) <- str_replace(names(ipd), "_CM", "_CntMOE")
-ipd <- ipd %>% mutate(U_TPopEst = F_UE, U_TPopMOE = F_UM, U_Pop6Est = LEP_UE,
-                    U_Pop6MOE = LEP_UM, U_PPovEst = LI_UE, U_PPovMOE = LI_UM,
-                    U_PNICEst = D_UE, U_PNICMOE = D_UM) %>%
+ipd <- ipd %>% mutate(STATEFP = str_sub(GEOID, 1, 2),
+                      COUNTYFP = str_sub(GEOID, 3, 5),
+                      NAME = str_sub(GEOID, 6, 11),
+                      U_TPopEst = F_UE,
+                      U_TPopMOE = F_UM,
+                      U_Pop6Est = LEP_UE,
+                      U_Pop6MOE = LEP_UM,
+                      U_PPovEst = LI_UE,
+                      U_PPovMOE = LI_UM,
+                      U_PNICEst = D_UE,
+                      U_PNICMOE = D_UM) %>%
   select(-ends_with("UE"), -ends_with("UM"))
 # Reorder columns
-ipd <- ipd %>% select(GEOID, sort(current_vars())) %>%
-  select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE", "U_Pop6Est", "U_Pop6MOE",
-                        "U_PPovEst", "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
-# Append unwanted tracts back onto dataset
+ipd <- ipd %>% select(GEOID, STATEFP, COUNTYFP, NAME, sort(current_vars())) %>%
+  select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE",
+                        "U_Pop6Est", "U_Pop6MOE", "U_PPovEst",
+                        "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
+# Append low-population tracts back onto dataset
 slicer <- enframe(slicer, name = NULL, value = "GEOID")
-ipd <- rbind.fill(ipd, slicer)
+ipd <- plyr::rbind.fill(ipd, slicer)
 # Replace NA with NoData if character and -99999 if numeric
 ipd <- ipd %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
   mutate_if(is.numeric, funs(ifelse(is.na(.), -99999, .)))
-
 ## SUMMARY TABLES
 # Replace -99999 with NA for our purposes
 ipd_summary <- ipd
@@ -303,6 +316,12 @@ for(i in 1:length(export_counts)){
 }
 export_counts <- map_dfr(export_counts, `[`, c("var", "x", "freq"))
 # Format export
+counts <- ipd_summary %>% select(ends_with("Class"))
+export_counts <- apply(counts, 2, function(i) plyr::count(i))
+for(i in 1:length(export_counts)){
+  export_counts[[i]]$var <- names(export_counts)[i]
+}
+export_counts <- map_dfr(export_counts, `[`, c("var", "x", "freq"))
 colnames(export_counts) <- c("Variable", "Classification", "Count")
 export_counts$Classification <- factor(export_counts$Classification,
                                        levels = c("Well Below Average",
@@ -315,16 +334,7 @@ export_counts <- arrange(export_counts, Variable, Classification)
 export_counts <- export_counts %>%
   spread(Classification, Count) %>%
   mutate_all(funs(replace_na(., 0))) %>%
-  mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE)) %>%
-  mutate_at(vars(Variable), funs(case_when(. == "D_Class" ~ "Disabled",
-                                           . == "EM_Class" ~ "Ethnic Minority",
-                                           . == "F_Class" ~ "Female",
-                                           . == "FB_Class" ~ "Foreign-Born",
-                                           . == "LEP_Class" ~ "Limited English Proficiency",
-                                           . == "LI_Class" ~ "Low-Income",
-                                           . == "OA_Class" ~ "Older Adults",
-                                           . == "RM_Class" ~ "Racial Minority",
-                                           . == "Y_Class" ~ "Youth")))
+  mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE))
 # Bin break points
 breaks <- ipd_summary %>% select(ends_with("PctEst")) %>% mutate_all(funs(. / 100))
 export_breaks <- round(mapply(st_dev_breaks, x = breaks, i = 5, na.rm = TRUE), digits = 3)
@@ -341,7 +351,7 @@ export_summary <- as_tibble(summary_data) %>%
 # Population-weighted county means for each indicator
 export_means <- dl_counts %>% select(GEOID, ends_with("UE"), ends_with("CE")) %>%
   select(GEOID, sort(current_vars())) %>%
-  mutate(County = str_sub(GEOID, 3, 5)) %>%
+  mutate(County = str_sub(GEOID, 1, 5)) %>%
   select(-GEOID) %>%
   group_by(County) %>%
   summarize(D_PctEst = sum(D_CE) / sum(D_UE),
@@ -354,17 +364,20 @@ export_means <- dl_counts %>% select(GEOID, ends_with("UE"), ends_with("CE")) %>
             RM_PctEst = sum(RM_CE) / sum(RM_UE),
             Y_PctEst = sum(Y_CE) / sum(Y_UE)) %>%
   mutate_if(is.numeric, funs(. * 100)) %>%
-  mutate_if(is.numeric, round, 1) %>%
-  mutate_at(vars(County), funs(case_when(. == "005" ~ "Burlington",
-                                         . == "007" ~ "Camden",
-                                         . == "015" ~ "Gloucester",
-                                         . == "021" ~ "Mercer",
-                                         . == "017" ~ "Bucks",
-                                         . == "029" ~ "Chester",
-                                         . == "045" ~ "Delaware",
-                                         . == "091" ~ "Montgomery",
-                                         . == "101" ~ "Philadelphia")))
+  mutate_if(is.numeric, round, 1)
 ## EXPORT
+options(tigris_use_cache = TRUE, tigris_class = "sf")
+st <- str_sub(ipd_counties, 1, 2)
+cty <- str_sub(ipd_counties, 3, 5)
+trct <- map2(st, cty, ~{tracts(state = .x,
+                               county = .y,
+                               #cb = TRUE,
+                               year = ipd_year)}) %>%
+  rbind_tigris() %>%
+  st_transform(., 26918) %>%
+  select(GEOID) %>%
+  left_join(., ipd)
+st_write(trct, here("outputs", "ipd.shp"), delete_dsn = TRUE, quiet = TRUE)
 write_csv(ipd, here("outputs", "ipd.csv"))
 write_csv(export_counts, here("outputs", "counts_by_indicator.csv"))
 write_csv(export_breaks, here("outputs", "breaks_by_indicator.csv"))
