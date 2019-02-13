@@ -428,8 +428,9 @@ dl_percs <- left_join(s_percs, dp_percs) %>%
 Before computing percentages and percentage MOEs, import the count MOE for the Racial Minority variable computed from variance replicates. If `rm_moe` exists, then this chunk will substitute the correct count MOE in `dl_counts`; if not, this chunk will do nothing.
 ```{r perc_excp_1, message = FALSE}
 if(exists("rm_moe")){
-  dl_counts <- dl_counts %>% left_join(., rm_moe) %>%
+  dl_counts <- dl_counts %>%
     select(-RM_CM) %>%
+    left_join(., rm_moe) %>%
     rename(RM_CM = RM_CntMOE) %>%
     mutate_at(vars(RM_CM), as.numeric)
 }
