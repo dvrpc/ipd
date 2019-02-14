@@ -643,9 +643,9 @@ Each observation is assigned an IPD score for each indicator. The IPD score for 
 | IPD Score | IPD Classification | Standard Deviations |
 |:---------:|:------------------:|:-------------------:|
 | 0 | Well Below Average | x $< -1.5stdev$ |
-| 1 | Below Average | $-1.5stdev\leq$ x $<-0.5stdev$ |
-| 2 | Average | $-0.5stdev\leq$ x $<0.5stdev$ |
-| 3 | Above Average | $0.5stdev\leq$ x $<1.5stdev$ |
+| 1 | Below Average | $-1.5stdev \leq$ x $<-0.5stdev$ |
+| 2 | Average | $-0.5stdev \leq$ x $<0.5stdev$ |
+| 3 | Above Average | $0.5stdev \leq$ x $<1.5stdev$ |
 | 4 | Well Above Average | x $\geq1.5stdev$ |
 
 ### 6c.i. Calculation {#six_c_i}
