@@ -3,33 +3,33 @@
 library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris)
 # Fields
-youth_universe                       <- "B03002_001"
-youth_count                          <- "B09001_001"
-youth_percent                        <- NULL
-older_adults_universe                <- "S0101_C01_001"
-older_adults_count                   <- "S0101_C01_030"
-older_adults_percent                 <- "S0101_C02_030"
-female_universe                      <- "S0101_C01_001"
-female_count                         <- "S0101_C05_001"
-female_percent                       <- "DP05_0003PE"
-racial_minority_universe             <- "B02001_001"
-racial_minority_count                <- "B02001_002"
-racial_minority_percent              <- NULL
-ethnic_minority_universe             <- "B03002_001"
-ethnic_minority_count                <- "B03002_012"
-ethnic_minority_percent              <- NULL
-foreign_born_universe                <- "B05012_001"
-foreign_born_count                   <- "B05012_003"
-foreign_born_percent                 <- NULL
-limited_english_proficiency_universe <- "S1601_C01_001"
-limited_english_proficiency_count    <- "S1601_C05_001"
-limited_english_proficiency_percent  <- "S1601_C06_001"
 disabled_universe                    <- "S1810_C01_001"
 disabled_count                       <- "S1810_C02_001"
 disabled_percent                     <- "S1810_C03_001"
+ethnic_minority_universe             <- "B03002_001"
+ethnic_minority_count                <- "B03002_012"
+ethnic_minority_percent              <- NA
+female_universe                      <- "S0101_C01_001"
+female_count                         <- "S0101_C05_001"
+female_percent                       <- "DP05_0003PE"
+foreign_born_universe                <- "B05012_001"
+foreign_born_count                   <- "B05012_003"
+foreign_born_percent                 <- NA
+limited_english_proficiency_universe <- "S1601_C01_001"
+limited_english_proficiency_count    <- "S1601_C05_001"
+limited_english_proficiency_percent  <- "S1601_C06_001"
 low_income_universe                  <- "S1701_C01_001"
 low_income_count                     <- "S1701_C01_042"
-low_income_percent                   <- NULL
+low_income_percent                   <- NA
+older_adults_universe                <- "S0101_C01_001"
+older_adults_count                   <- "S0101_C01_030"
+older_adults_percent                 <- "S0101_C02_030"
+racial_minority_universe             <- "B02001_001"
+racial_minority_count                <- "B02001_002"
+racial_minority_percent              <- NA
+youth_universe                       <- "B03002_001"
+youth_count                          <- "B09001_001"
+youth_percent                        <- NA
 # Year
 ipd_year <- 2017
 # States
@@ -79,7 +79,7 @@ description <- function(i) {
 ## VARIANCE REPLICATES
 ipd_states_numeric <- fips_codes %>%
   filter(state %in% ipd_states) %>%
-  select(state_code) %>% pull(.)
+  select(state_code) %>% distinct(.) %>% pull(.)
 var_rep <- NULL
 for (i in 1:length(ipd_states)){
   url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
@@ -118,58 +118,150 @@ rm_moe <- cbind(id, moe) %>%
   as_tibble(.) %>%
   rename(GEOID = id, RM_CntMOE = moe)
 ## DOWNLOADS
-# API Calls
-# For counts and universes
-# EXCEPTION 1: API does not allow redundant downloads; universes are duplicated after download
-# EXCEPTION 2: Desired RM_CE = RM_UE - RM_CE; computed after download. Makes estimate correct but MOE wrong
-s_counts <- get_acs(geography = "tract", state = ipd_states,
-                    output = "wide", year = ipd_year,
-                    variables = c(LI_U = low_income_universe,
-                                  LI_C = low_income_count,
-                                  F_U = female_universe,
-                                  F_C = female_count,
-                                  D_U = disabled_universe,
-                                  D_C = disabled_count,
-                                  # OA_U = older_adults_universe, # Redundant download
-                                  OA_C = older_adults_count,
-                                  LEP_U = limited_english_proficiency_universe,
-                                  LEP_C = limited_english_proficiency_count)) %>%
-  select(-NAME) %>%
-  mutate(OA_UE = F_UE, OA_UM = F_UM)
-d_counts <- get_acs(geography = "tract", state = ipd_states,
-                    output = "wide", year = ipd_year,
-                    variables = c(EM_U = ethnic_minority_universe,
-                                  EM_C = ethnic_minority_count,
-                                  # Y_U = youth_universe, # Redundant download
-                                  Y_C = youth_count,
-                                  FB_U = foreign_born_universe,
-                                  FB_C = foreign_born_count,
-                                  RM_U = racial_minority_universe,
-                                  RM_C = racial_minority_count)) %>%
-  mutate(Y_UE = EM_UE, Y_UM = EM_UM, x = RM_UE - RM_CE) %>%
-  select(-NAME, -RM_CE) %>% 
-  rename(RM_CE = x)
-# For available percentages
-s_percs <- get_acs(geography = "tract", state = ipd_states,
-                   output = "wide", year = ipd_year,
-                   variables = c(D_P = disabled_percent,
-                                 OA_P = older_adults_percent,
-                                 LEP_P = limited_english_proficiency_percent)) %>%
-  select(-NAME)
-dp_percs <- get_acs(geography = "tract", state = ipd_states,
-                    output = "wide", year = ipd_year,
-                    variables = c(F_P = female_percent)) %>%
-  rename(F_PE = F_P, F_PM = DP05_0003PM) %>%
-  select(-NAME)
+# Counts and universes
+counts <- c(disabled_count, disabled_universe,
+            ethnic_minority_count, ethnic_minority_universe,
+            female_count, female_universe,
+            foreign_born_count, foreign_born_universe,
+            limited_english_proficiency_count, limited_english_proficiency_universe,
+            low_income_count, low_income_universe,
+            older_adults_count, older_adults_universe,
+            racial_minority_count, racial_minority_universe,
+            youth_count, youth_universe)
+counts_ids <- c("D_C", "D_U", "EM_C", "EM_U", "F_C", "F_U",
+                "FB_C", "FB_U", "LEP_C", "LEP_U", "LI_C", "LI_U",
+                "OA_C", "OA_U", "RM_C", "RM_U", "Y_C", "Y_U")
+# Zip count API variables and their appropriate abbreviations together
+counts_calls <- tibble(id = counts_ids, api = counts) %>%
+  drop_na(.)
+# Separate into different types of API requests
+s_calls <- counts_calls %>%
+  filter(str_sub(api, 1, 1) == "S")
+d_calls <- counts_calls %>%
+  filter(str_sub(api, 1, 1) == "B")
+dp_calls <- counts_calls %>%
+  filter(str_sub(api, 1, 1) == "D")
+# Make requests; if variables exist for this type, dl and append
+dl_counts <- NULL
+if(length(s_calls$id > 0)){
+  s_counts <- get_acs(geography = "tract",
+                      state = ipd_states,
+                      output = "wide",
+                      year = ipd_year,
+                      variables = s_calls$api) %>%
+    select(-NAME)
+  dl_counts <- bind_cols(dl_counts, s_counts)
+}
+if(length(d_calls$id > 0)){
+  d_counts <- get_acs(geography = "tract",
+                      state = ipd_states,
+                      output = "wide",
+                      year = ipd_year,
+                      variables = d_calls$api) %>%
+    select(-NAME)
+  dl_counts <- left_join(dl_counts, d_counts)
+}
+if(length(dp_calls$id > 0)){
+  dp_counts <- get_acs(geography = "tract",
+                       state = ipd_states,
+                       output = "wide",
+                       year = ipd_year,
+                       variables = dp_calls$api) %>%
+    select(-NAME)
+  dl_counts <- left_join(dl_counts, dp_counts)
+}
+# For DP downloads, make sure counts_calls and dl_counts match
+counts_calls$api <- str_replace(counts_calls$api, "E$", "")
+for(i in 1:length(counts_calls$id)){
+  names(dl_counts) <- str_replace(names(dl_counts),
+                                  counts_calls$api[i],
+                                  counts_calls$id[i])
+}
+# Identify duplicate API columns and create if missing
+duplicate_cols <- counts_calls %>% 
+  group_by(api) %>% 
+  filter(n()>1) %>%
+  summarize(orig = id[1],
+            duplicator = id[2])
+e_paste <- function(i) paste0(i, "E")
+m_paste <- function(i) paste0(i, "M")
+e_rows <- apply(duplicate_cols, 2, e_paste)
+m_rows <- apply(duplicate_cols, 2, m_paste)
+combined_rows <- as_tibble(rbind(e_rows, m_rows)) %>%
+  mutate_all(as.character)
+for(i in 1:length(combined_rows$api)){
+  dl_counts[combined_rows$duplicator[i]] <- dl_counts[combined_rows$orig[i]]
+}
+# Percentages
+percs <- c(disabled_percent,
+           ethnic_minority_percent,
+           female_percent,
+           foreign_born_percent,
+           limited_english_proficiency_percent,
+           low_income_percent,
+           older_adults_percent,
+           racial_minority_percent,
+           youth_percent)
+percs_ids <- c("D_P", "EM_P", "F_P", "FB_P", "LEP_P",
+               "LI_P", "OA_P", "RM_P", "Y_P")
+percs_calls <- tibble(id = percs_ids, api = percs) %>%
+  drop_na(.)
+s_calls <- percs_calls %>%
+  filter(str_sub(api, 1, 1) == "S")
+d_calls <- percs_calls %>%
+  filter(str_sub(api, 1, 1) == "B")
+dp_calls <- percs_calls %>%
+  filter(str_sub(api, 1, 1) == "D")
+dl_percs <- NULL
+if(length(s_calls$id > 0)){
+  s_percs <- get_acs(geography = "tract",
+                     state = ipd_states,
+                     output = "wide",
+                     year = ipd_year,
+                     variables = s_calls$api) %>%
+    select(-NAME)
+  dl_percs <- bind_cols(dl_percs, s_percs)
+}
+if(length(d_calls$id > 0)){
+  d_percs <- get_acs(geography = "tract",
+                     state = ipd_states,
+                     output = "wide",
+                     year = ipd_year,
+                     variables = d_calls$api) %>%
+    select(-NAME)
+  dl_percs <- left_join(dl_percs, d_percs)
+}
+if(length(dp_calls$id > 0)){
+  dp_percs <- get_acs(geography = "tract",
+                      state = ipd_states,
+                      output = "wide",
+                      year = ipd_year,
+                      variables = dp_calls$api) %>%
+    select(-NAME)
+  dl_percs <- left_join(dl_percs, dp_percs)
+}
+# For DP downloads, make sure percs_calls and dl_percs match
+percs_calls$api <- str_replace(percs_calls$api, "PE", "")
+names(dl_percs) <- str_replace(names(dl_percs), "PE", "E")
+names(dl_percs) <- str_replace(names(dl_percs), "PM", "M")
+for(i in 1:length(percs_calls$id)){
+  names(dl_percs) <- str_replace(names(dl_percs),
+                                 percs_calls$api[i],
+                                 percs_calls$id[i])
+}
 # Subset for DVRPC region
-dl_counts <- left_join(s_counts, d_counts) %>%
+# Desired RM_CE = RM_UE - RM_CE
+dl_counts <- dl_counts %>%
   filter(str_sub(GEOID, 1, 5) %in% ipd_counties)
-dl_percs <- left_join(s_percs, dp_percs) %>%
+dl_percs <- dl_percs %>%
   filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
   mutate_if(is.numeric, funs(. / 100))
 ## CALCULATIONS
-# EXCEPTION 1: Use variance replicates to compute RM_CntMOE
-# Substitute it in before splitting
+# Exception 1: RM_CE = RM_UE - RM_CE
+dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
+  select(-RM_CE) %>%
+  rename(RM_CE = x)
+# Exception 2: Substitute in RM_CntMOE
 if(exists("rm_moe")){
   dl_counts <- dl_counts %>%
     select(-RM_CM) %>%
@@ -177,7 +269,7 @@ if(exists("rm_moe")){
     rename(RM_CM = RM_CntMOE) %>%
     mutate_at(vars(RM_CM), as.numeric)
 }
-# EXCEPTION 2: Slice low-population tracts
+# Exception 3: Slice low-population tracts
 slicer <- c("42045980000", "42017980000", "42101980800",
             "42101980300", "42101980500", "42101980400",
             "42101980900", "42101980700", "42101980600",
@@ -213,11 +305,11 @@ pct <- as_tibble(pct_matrix) %>% mutate_all(round, 3)
 names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
 pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 3)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
-# EXCEPTION 3: If estimated percentage == 0 & MOE == 0; MOE = 0.1
+# Exception 4: If estimated percentage == 0 & MOE == 0; MOE = 0.1
 # This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
 overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
 pct_moe[overwrite_locations] <- 0.1
-# EXCEPTION 4: Substitute percentages and associated MOEs when available from AFF
+# Exception 5: Substitute percentages and associated MOEs when available from AFF
 pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
                       OA_PctEst = dl_percs$OA_PE,
                       LEP_PctEst = dl_percs$LEP_PE,
