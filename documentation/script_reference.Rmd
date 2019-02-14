@@ -286,7 +286,7 @@ Download, unzip, and read variance replicate tables for Table B02001. Results ar
 ```{r varrep_download, tidy = TRUE, message = FALSE}
 ipd_states_numeric <- fips_codes %>%
   filter(state %in% ipd_states) %>%
-  select(state_code) %>% pull(.)
+  select(state_code) %>% distinct(.) %>% pull(.)
 var_rep <- NULL
 for (i in 1:length(ipd_states)){
   url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
