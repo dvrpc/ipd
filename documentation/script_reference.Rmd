@@ -1,7 +1,7 @@
 ---
 title: "Technical Reference"
 author: "Addison Larson"
-date: "2/13/2019"
+date: "February 2019"
 output: pdf_document
 ---
 
@@ -20,12 +20,13 @@ knitr::opts_chunk$set(echo = TRUE, tidy.opts = list(width.cutoff = 80), tidy = T
     c. [Year](#two_c)
     d. [States](#two_d)
     e. [Counties](#two_e)
-    f. [Functions](#two_f)
-        1. [Override `base` and `stats` function defaults](#two_f_i)
-        2. [Create custom half-standard deviation breaks](#two_f_ii)
-        3. [*Exception*](#two_f_iii)
-        4. [Move column or vector of columns to last position](#two_f_iv)
-        5. [Summarize data](#two_f_v)
+    f. [Census API key](#two_f)
+    f. [Functions](#two_g)
+        1. [Override `base` and `stats` function defaults](#two_g_i)
+        2. [Create custom half-standard deviation breaks](#two_g_ii)
+        3. [*Exception*](#two_g_iii)
+        4. [Move column or vector of columns to last position](#two_g_iv)
+        5. [Summarize data](#two_g_v)
 3. [Variance replicate table download](#variance_replicate_table_download)
     a. [Download variance replicates from Census website](#three_a)
     b. [Combine and format downloads](#three_b)
@@ -35,10 +36,12 @@ knitr::opts_chunk$set(echo = TRUE, tidy.opts = list(width.cutoff = 80), tidy = T
 5. [ACS estimates download](#acs_estimates_download)
     a. [Fields](#five_a)
     b. [Download counts and universes from Census API](#five_b)
+        1. [*Exception*](#five_b_i)
     c. [Download percentages from Census API](#five_c)
-    d. [Combine and format downloads](#five_d)
+    d. [Format downloads](#five_d)
         1. [*Exception*](#five_d_i)
         2. [*Exception*](#five_d_ii)
+        3. [*Exception*](#five_d_iii)
 6. [ACS estimates calculations](#acs_estimates_calculations)
     a. [Percentages and percentage MOEs](#six_a)
         1. [Calculation](#six_a_i)
@@ -117,41 +120,27 @@ Abbreviations of field names that you'll see in `outputs` *not* comprised of the
 ## 1c. Project structure {#one_c}
 This script uses relative file paths based off the location of `ipd_2017.Rproj`. As long as you download the entire repository, the script should have no trouble locating the correct subfolders. The project is structured as follows:
 
-`ipd_2017`
-
-`|--ipd_2017.Rproj`
-
-`|-- script.R`
-
-`|-- documentation`
-
-`|  |-- discussion.pdf`
-
-`|  |-- getting_started.pdf`
-
-`|  |-- script_reference.pdf`
-
-`|  |-- script_reference.Rmd`
-
-`|--| outputs`
-
-`|  |-- breaks_by_indicator.csv`
-
-`|  |-- counts_by_indicator.csv`
-
-`|  |-- ipd.csv`
-
-`|  |-- ipd.dbf`
-
-`|  |-- ipd.prj`
-
-`|  |-- ipd.shp`
-
-`|  |-- ipd.shx`
-
-`|  |-- mean_by_county.csv`
-
-`|  |-- summary_by_indicator.csv`
+```{r file_structure, eval = FALSE}
+ipd_2017
+|--ipd_2017.Rproj
+|-- script.R
+|-- documentation
+|  |-- discussion.pdf
+|  |-- getting_started.pdf
+|  |-- script_reference.pdf
+|  |-- script_reference.Rmd
+|  |-- variables.csv
+|--| outputs
+|  |-- breaks_by_indicator.csv
+|  |-- counts_by_indicator.csv
+|  |-- ipd.csv
+|  |-- ipd.dbf
+|  |-- ipd.prj
+|  |-- ipd.shp
+|  |-- ipd.shx
+|  |-- mean_by_county.csv
+|  |-- summary_by_indicator.csv
+```
 
 # 2. Setup {#setup}
 ## 2a. Dependencies {#two_a}
@@ -169,45 +158,45 @@ Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as th
 
 | Indicator | Abbreviation | Universe | Count | Percentage |
 |:----------|:------------:|:--------:|:-----:|:----------:|
-| Youth | Y | B03002_001 | B09001_001 | N/A |
-| Older Adults | OA | S0101_C01_001 | S0101_C01_030 | S0101_C02_030 |
-| Female | F | S0101_C01_001 | S0101_C05_001 | DP05_0003PE |
-| Racial Minority | RM | B02001_001 | B02001_002 | N/A |
+| Disabled | D | S1810_C01_001 | S1810_C02_001 | S1810_C03_001 |
 | Ethnic Minority | EM | B03002_001 | B03002_012 | N/A |
+| Female | F | S0101_C01_001 | S0101_C05_001 | DP05_0003PE |
 | Foreign-Born | FB | B05012_001 | B05012_003 | N/A |
 | Limited English Proficiency | LEP | S1601_C01_001 | S1601_C05_001 | S1601_C06_001 |
-| Disabled | D | S1810_C01_001 | S1810_C02_001 | S1810_C03_001 |
 | Low-Income | LI | S1701_C01_001 | S1701_C01_042 | N/A |
+| Older Adults | OA | S0101_C01_001 | S0101_C01_030 | S0101_C02_030 |
+| Racial Minority | RM | B02001_001 | B02001_002 | N/A |
+| Youth | Y | B03002_001 | B09001_001 | N/A |
 
 While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit Census Developers [(link)](https://www.census.gov/developers/) and select the corresponding API.
 ```{r fields}
-youth_universe                       <- "B03002_001"
-youth_count                          <- "B09001_001"
-youth_percent                        <- NULL
-older_adults_universe                <- "S0101_C01_001"
-older_adults_count                   <- "S0101_C01_030"
-older_adults_percent                 <- "S0101_C02_030"
-female_universe                      <- "S0101_C01_001"
-female_count                         <- "S0101_C05_001"
-female_percent                       <- "DP05_0003PE"
-racial_minority_universe             <- "B02001_001"
-racial_minority_count                <- "B02001_002"
-racial_minority_percent              <- NULL
-ethnic_minority_universe             <- "B03002_001"
-ethnic_minority_count                <- "B03002_012"
-ethnic_minority_percent              <- NULL
-foreign_born_universe                <- "B05012_001"
-foreign_born_count                   <- "B05012_003"
-foreign_born_percent                 <- NULL
-limited_english_proficiency_universe <- "S1601_C01_001"
-limited_english_proficiency_count    <- "S1601_C05_001"
-limited_english_proficiency_percent  <- "S1601_C06_001"
 disabled_universe                    <- "S1810_C01_001"
 disabled_count                       <- "S1810_C02_001"
 disabled_percent                     <- "S1810_C03_001"
+ethnic_minority_universe             <- "B03002_001"
+ethnic_minority_count                <- "B03002_012"
+ethnic_minority_percent              <- NA
+female_universe                      <- "S0101_C01_001"
+female_count                         <- "S0101_C05_001"
+female_percent                       <- "DP05_0003PE"
+foreign_born_universe                <- "B05012_001"
+foreign_born_count                   <- "B05012_003"
+foreign_born_percent                 <- NA
+limited_english_proficiency_universe <- "S1601_C01_001"
+limited_english_proficiency_count    <- "S1601_C05_001"
+limited_english_proficiency_percent  <- "S1601_C06_001"
 low_income_universe                  <- "S1701_C01_001"
 low_income_count                     <- "S1701_C01_042"
-low_income_percent                   <- NULL
+low_income_percent                   <- NA
+older_adults_universe                <- "S0101_C01_001"
+older_adults_count                   <- "S0101_C01_030"
+older_adults_percent                 <- "S0101_C02_030"
+racial_minority_universe             <- "B02001_001"
+racial_minority_count                <- "B02001_002"
+racial_minority_percent              <- NA
+youth_universe                       <- "B03002_001"
+youth_count                          <- "B09001_001"
+youth_percent                        <- NA
 ```
 ## 2c. Year {#two_c}
 The data download year.
@@ -225,10 +214,16 @@ The counties in your study area. Note that these are characters of length 5 conc
 ipd_counties <- c("34005", "34007", "34015", "34021",
                   "42017", "42029", "42045", "42091", "42101")
 ```
-## 2f. Functions {#two_f}
+## 2f. Census API Key {#two_f}
+Placeholder if you have never installed an API key before. If this is you, check out `getting_started.pdf` for where to get a Census API key and how to install it.
+```{r api_key}
+# Census API Key
+# census_api_key("YOUR API KEY GOES HERE", install = TRUE)
+```
+## 2g. Functions {#two_g}
 Load custom functions.
 
-### 2f.i. Override `base` and `stats` function defaults {#two_f_i}
+### 2g.i. Override `base` and `stats` function defaults {#two_g_i}
 A time-saver so that it's not required to call `na.rm = TRUE` every time these functions are called.
 ```{r override}
 min <- function(i, ..., na.rm = TRUE) {
@@ -244,10 +239,10 @@ max <- function(i, ..., na.rm = TRUE) {
   base::max(i, ..., na.rm = na.rm)
 }
 ```
-### 2f.ii. Create custom half-standard deviation breaks {#two_f_ii}
+### 2g.ii. Create custom half-standard deviation breaks {#two_g_ii}
 For a given vector of numbers `x` and a number of bins `i`, `st_dev_breaks` computes the bin breaks starting at $-0.5 \cdot st dev$ and $0.5 \cdot st dev$. For the purposes of IPD analysis, `i = 5`, and `st_dev_breaks` calculates the minimum, $-1.5 \cdot st dev$, $-0.5 \cdot st dev$, $0.5 \cdot st dev$, $1.5 \cdot st dev$, and maximum values. These values are later used to slice the vector into five bins.
 
-### 2f.iii. *Exception* {#two_f_iii}
+### 2g.iii. *Exception* {#two_g_iii}
 All minima are coerced to equal zero. If the first bin break is negative, as happens when the data has a large spread and therefore a large standard deviation, then this bin break is coerced to equal 0.001. In these cases, only estimates of 0 percent will be placed in the bottom bin.
 ```{r st_dev_breaks}
 st_dev_breaks <- function(x, i, na.rm = TRUE){
@@ -268,14 +263,14 @@ st_dev_breaks <- function(x, i, na.rm = TRUE){
   return(half_st_dev_breaks)
 }
 ```
-### 2f.iv. Move column or vector of columns to last position {#two_f_iv}
+### 2g.iv. Move column or vector of columns to last position {#two_g_iv}
 The requested schema for IPD data export renames and places all relevant universes in the final columns of the dataset. `move_last` moves a column or vector of columns to the last position in a tibble or data frame.
 ```{r move_last}
 move_last <- function(df, last_col) {
   match(c(setdiff(names(df), last_col), last_col), names(df))
 }
 ```
-### 2f.v. Summarize data {#two_f_v}
+### 2g.v. Summarize data {#two_g_v}
 `description` tailors the exports from `summarytools::descr` to create summary tables with the requested fields.  $\frac{stdev}{2}$ is returned after $stdev$.
 ```{r description}
 description <- function(i) {
@@ -359,74 +354,166 @@ Fields for downloads from the ACS API were discussed in Section 2b.
 ## 5b. Download counts and universes from Census API {#five_b}
 Download counts and percentages for each of IPD's nine indicators. Note that the download is for all census tracts in `ipd_states`.
 
-Input data for IPD comes from ACS Subject Tables, Detailed Tables, and Data Profiles. While one can request all the fields for Subject Tables in one batch, mixing requests for two different types (e.g. Subject Tables and Detailed Tables) will result in failure. For this reason, counts are downloaded in two batches: `s_counts` for Subject Tables, and `d_counts` for Detailed Tables.
+Input data for IPD comes from ACS Subject Tables, Detailed Tables, and Data Profiles. While one can request all the fields for Subject Tables in one batch, mixing requests for two or more different types of tables will result in failure. For this reason, the counts and universe fields supplied by the user in Section 2b are evaluated for their contents and split into three batches: `s_counts` for Subject Tables, `d_counts` for Detailed Tables, and `dp_counts` for Data Profiles.
 
-Each line of the API request lists the variable we want to download and name this download (e.g. `low_income_universe` calls field S1701_C01_001 from the API and names the download `LI_U`). Changing the naming convention, e.g. `LI_U` to `U_LI`, will break this script.
-
-Note two exceptions embedded in processing:
-
-1. The API does not allow redundant downloads, so universes for Older Adults and Youth are duplicated after download. This is why the calls for `OA_U` and `Y_U` are commented out.
-2. This API call downloads variable B02001_002 ("Estimate; Total: - White alone") as the count, when the desired variable for Racial Minority is B02001_001 $-$ B02001_002. The subtraction is computed at the bottom of this code chunk as value `x`, which is renamed to `RM_CE`.
+The chunk below zips the user-defined calls from the API with the preferred script abbreviations into a tibble called `counts_calls` and separates the calls into three batches.
 ```{r api_counts, message = FALSE}
-s_counts <- get_acs(geography = "tract", state = ipd_states,
-                    output = "wide", year = ipd_year,
-                    variables = c(LI_U = low_income_universe,
-                                  LI_C = low_income_count,
-                                  F_U = female_universe,
-                                  F_C = female_count,
-                                  D_U = disabled_universe,
-                                  D_C = disabled_count,
-                                  # OA_U = older_adults_universe, # Redundant download
-                                  OA_C = older_adults_count,
-                                  LEP_U = limited_english_proficiency_universe,
-                                  LEP_C = limited_english_proficiency_count)) %>%
-  select(-NAME) %>%
-  mutate(OA_UE = F_UE, OA_UM = F_UM)
-d_counts <- get_acs(geography = "tract", state = ipd_states,
-                    output = "wide", year = ipd_year,
-                    variables = c(EM_U = ethnic_minority_universe,
-                                  EM_C = ethnic_minority_count,
-                                  # Y_U = youth_universe, # Redundant download
-                                  Y_C = youth_count,
-                                  FB_U = foreign_born_universe,
-                                  FB_C = foreign_born_count,
-                                  RM_U = racial_minority_universe,
-                                  RM_C = racial_minority_count)) %>%
-  mutate(Y_UE = EM_UE, Y_UM = EM_UM, x = RM_UE - RM_CE) %>%
-  select(-NAME, -RM_CE) %>% 
-  rename(RM_CE = x)
+counts <- c(disabled_count, disabled_universe,
+            ethnic_minority_count, ethnic_minority_universe,
+            female_count, female_universe,
+            foreign_born_count, foreign_born_universe,
+            limited_english_proficiency_count, limited_english_proficiency_universe,
+            low_income_count, low_income_universe,
+            older_adults_count, older_adults_universe,
+            racial_minority_count, racial_minority_universe,
+            youth_count, youth_universe)
+counts_ids <- c("D_C", "D_U", "EM_C", "EM_U", "F_C", "F_U",
+                "FB_C", "FB_U", "LEP_C", "LEP_U", "LI_C", "LI_U",
+                "OA_C", "OA_U", "RM_C", "RM_U", "Y_C", "Y_U")
+counts_calls <- tibble(id = counts_ids, api = counts) %>%
+  drop_na(.)
+s_calls <- counts_calls %>%
+  filter(str_sub(api, 1, 1) == "S")
+d_calls <- counts_calls %>%
+  filter(str_sub(api, 1, 1) == "B")
+dp_calls <- counts_calls %>%
+  filter(str_sub(api, 1, 1) == "D")
 ```
+API calls are made separately for ACS Subject Tables, Detailed Tables, and Data Profiles and appended to `dl_counts`. Sometimes there are no requests for a certain type of table; in these situations, the script bypasses a download attempt. Then, information from `counts_calls` is used to rename the downloads to the appropriate abbreviation.
+```{r api_counts_calls, message = FALSE}
+dl_counts <- NULL
+if(length(s_calls$id > 0)){
+  s_counts <- get_acs(geography = "tract",
+                      state = ipd_states,
+                      output = "wide",
+                      year = ipd_year,
+                      variables = s_calls$api) %>%
+    select(-NAME)
+  dl_counts <- bind_cols(dl_counts, s_counts)
+}
+if(length(d_calls$id > 0)){
+  d_counts <- get_acs(geography = "tract",
+                      state = ipd_states,
+                      output = "wide",
+                      year = ipd_year,
+                      variables = d_calls$api) %>%
+    select(-NAME)
+  dl_counts <- left_join(dl_counts, d_counts)
+}
+if(length(dp_calls$id > 0)){
+  dp_counts <- get_acs(geography = "tract",
+                       state = ipd_states,
+                       output = "wide",
+                       year = ipd_year,
+                       variables = dp_calls$api) %>%
+    select(-NAME)
+  dl_counts <- left_join(dl_counts, dp_counts)
+}
+counts_calls$api <- str_replace(counts_calls$api, "E$", "")
+for(i in 1:length(counts_calls$id)){
+  names(dl_counts) <- str_replace(names(dl_counts),
+                                  counts_calls$api[i],
+                                  counts_calls$id[i])
+}
+```
+### 5b.i. *Exception* {#five_b_i}
+
+The API does not allow redundant downloads, so universes for Older Adults and Youth are duplicated after download. `duplicate_cols` identifies duplicate API calls, and `combined_rows` serves as a crosswalk to duplicate and rename fields.
+```{r api_counts_duplicator}
+duplicate_cols <- counts_calls %>% 
+  group_by(api) %>% 
+  filter(n()>1) %>%
+  summarize(orig = id[1],
+            duplicator = id[2])
+e_paste <- function(i) paste0(i, "E")
+m_paste <- function(i) paste0(i, "M")
+e_rows <- apply(duplicate_cols, 2, e_paste)
+m_rows <- apply(duplicate_cols, 2, m_paste)
+combined_rows <- as_tibble(rbind(e_rows, m_rows)) %>%
+  mutate_all(as.character)
+for(i in 1:length(combined_rows$api)){
+  dl_counts[combined_rows$duplicator[i]] <- dl_counts[combined_rows$orig[i]]
+}
+```
+
 ## 5c. Download percentages from Census API {#five_c}
-Download percentage tables that are available for four of IPD's nine indicators. We will compute percentages and their associated MOEs for the rest of the dataset later.
-
-Because of API request limitations, percentages are downloaded in two batches: `s_percs` for Subject Tables, and `dp_percs` for Data Profiles.
+Download percentage tables that are available for four of IPD's nine indicators. We will compute percentages and their associated MOEs for the rest of the dataset later. The procedure is identical to that described in Section 5b.
 ```{r api_percs, message = FALSE}
-s_percs <- get_acs(geography = "tract", state = ipd_states,
-                   output = "wide", year = ipd_year,
-                   variables = c(D_P = disabled_percent,
-                                 OA_P = older_adults_percent,
-                                 LEP_P = limited_english_proficiency_percent)) %>%
-  select(-NAME)
-dp_percs <- get_acs(geography = "tract", state = ipd_states,
-                    output = "wide", year = ipd_year,
-                    variables = c(F_P = female_percent)) %>%
-  rename(F_PE = F_P, F_PM = DP05_0003PM) %>%
-  select(-NAME)
+percs <- c(disabled_percent,
+           ethnic_minority_percent,
+           female_percent,
+           foreign_born_percent,
+           limited_english_proficiency_percent,
+           low_income_percent,
+           older_adults_percent,
+           racial_minority_percent,
+           youth_percent)
+percs_ids <- c("D_P", "EM_P", "F_P", "FB_P", "LEP_P",
+               "LI_P", "OA_P", "RM_P", "Y_P")
+percs_calls <- tibble(id = percs_ids, api = percs) %>%
+  drop_na(.)
+s_calls <- percs_calls %>%
+  filter(str_sub(api, 1, 1) == "S")
+d_calls <- percs_calls %>%
+  filter(str_sub(api, 1, 1) == "B")
+dp_calls <- percs_calls %>%
+  filter(str_sub(api, 1, 1) == "D")
+dl_percs <- NULL
+if(length(s_calls$id > 0)){
+  s_percs <- get_acs(geography = "tract",
+                     state = ipd_states,
+                     output = "wide",
+                     year = ipd_year,
+                     variables = s_calls$api) %>%
+    select(-NAME)
+  dl_percs <- bind_cols(dl_percs, s_percs)
+}
+if(length(d_calls$id > 0)){
+  d_percs <- get_acs(geography = "tract",
+                     state = ipd_states,
+                     output = "wide",
+                     year = ipd_year,
+                     variables = d_calls$api) %>%
+    select(-NAME)
+  dl_percs <- left_join(dl_percs, d_percs)
+}
+if(length(dp_calls$id > 0)){
+  dp_percs <- get_acs(geography = "tract",
+                      state = ipd_states,
+                      output = "wide",
+                      year = ipd_year,
+                      variables = dp_calls$api) %>%
+    select(-NAME)
+  dl_percs <- left_join(dl_percs, dp_percs)
+}
+percs_calls$api <- str_replace(percs_calls$api, "PE", "")
+names(dl_percs) <- str_replace(names(dl_percs), "PE", "E")
+names(dl_percs) <- str_replace(names(dl_percs), "PM", "M")
+for(i in 1:length(percs_calls$id)){
+  names(dl_percs) <- str_replace(names(dl_percs),
+                                 percs_calls$api[i],
+                                 percs_calls$id[i])
+}
 ```
-## 5d. Combine and format downloads {#five_d}
-Merge downloads into two separate data frames: `dl_counts` for counts and universes, and `dl_percs` for available percentages. Subset data frames for DVRPC's nine-county region.
-
-Percentages should be in the range 0 to 1, so all values in `dl_percs` are divided by 100.
+## 5d. Format downloads {#five_d}
+Subset `dl_counts` and `dl_percs` for DVRPC's nine-county region. Percentages should be in the range 0 to 1, so all values in `dl_percs` are divided by 100.
 ```{r dl_counts_dl_percs, message = FALSE}
-dl_counts <- left_join(s_counts, d_counts) %>%
+dl_counts <- dl_counts %>%
   filter(str_sub(GEOID, 1, 5) %in% ipd_counties)
-dl_percs <- left_join(s_percs, dp_percs) %>%
+dl_percs <- dl_percs %>%
   filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
   mutate_if(is.numeric, funs(. / 100))
 ```
 ### 5d.i. *Exception* {#five_d_i}
-Before computing percentages and percentage MOEs, import the count MOE for the Racial Minority variable computed from variance replicates. If `rm_moe` exists, then this chunk will substitute the correct count MOE in `dl_counts`; if not, this chunk will do nothing.
+Note that variable B02001_002 ("Estimate; Total: - White alone") was downloaded as the count for Racial Minority. Compute B02001_001 (Universe) $-$ B02001_002 ("Estimate; Total: - White alone") and substitute for `RM_CE`.
 ```{r perc_excp_1, message = FALSE}
+dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
+  select(-RM_CE) %>%
+  rename(RM_CE = x)
+```
+### 5d.ii. *Exception* {#five_d_ii}
+Before computing percentages and percentage MOEs, import the count MOE for the Racial Minority variable computed from variance replicates. If `rm_moe` exists, then this chunk will substitute the correct count MOE in `dl_counts`; if not, this chunk will do nothing.
+```{r perc_excp_2, message = FALSE}
 if(exists("rm_moe")){
   dl_counts <- dl_counts %>%
     select(-RM_CM) %>%
@@ -435,9 +522,9 @@ if(exists("rm_moe")){
     mutate_at(vars(RM_CM), as.numeric)
 }
 ```
-### 5d.ii. *Exception* {#five_d_ii}
+### 5d.iii. *Exception* {#five_d_iii}
 Half-standard deviations serve as the classification bins for IPD scores, and including zero-population tracts affects computed standard deviation values. Start by removing the 10 census tracts with zero population.
-```{r perc_excp_2}
+```{r perc_excp_3}
 slicer <- c("42045980000", "42017980000", "42101980800",
             "42101980300", "42101980500", "42101980400",
             "42101980900", "42101980700", "42101980600",
@@ -509,13 +596,13 @@ names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 If estimated percentage == 0 & MOE == 0, then make MOE = 0.1.
 
 Matrix math: Only overwrite MOE where `pct_matrix` + `pct_moe_matrix` == 0.
-```{r perc_excp_3}
+```{r perc_excp_4}
 overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
 pct_moe[overwrite_locations] <- 0.1
 ```
 ### 6a.iv. *Exception* {#six_a_iv}
 Substitute percentages and associated MOEs when available from American FactFinder. This applies to the Older Adults, Female, Limited English Proficiency, and Disabled variables.
-```{r perc_excp_4}
+```{r perc_excp_5}
 pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
                       OA_PctEst = dl_percs$OA_PE,
                       LEP_PctEst = dl_percs$LEP_PE,
