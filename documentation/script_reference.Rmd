@@ -1,7 +1,5 @@
 ---
 title: "Technical Reference"
-author: "Addison Larson"
-date: "February 2019"
 output: pdf_document
 ---
 
