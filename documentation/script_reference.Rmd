@@ -251,7 +251,7 @@ st_dev_breaks <- function(x, i, na.rm = TRUE){
                                  function(i) (0.5 * i * sd(x)) + mean(x))
     half_st_dev_breaks[[1]] <- 0
     half_st_dev_breaks[[2]] <- ifelse(half_st_dev_breaks[[2]] < 0,
-                                      0.001,
+                                      0.1,
                                       half_st_dev_breaks[[2]])
     half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
                                           max(x), half_st_dev_breaks[[i + 1]])
@@ -339,7 +339,8 @@ Save the racial minority MOE.
 ```{r varrep_save, message = FALSE}
 rm_moe <- cbind(id, moe) %>%
   as_tibble(.) %>%
-  rename(GEOID = id, RM_CntMOE = moe)
+  rename(GEOID10 = id, RM_CntMOE = moe) %>%
+  mutate_at(vars(RM_CntMOE), as.numeric)
 ```
 Here are the first few lines of `rm_moe`:
 ```{r varrep_preview}
@@ -413,6 +414,8 @@ for(i in 1:length(counts_calls$id)){
                                   counts_calls$api[i],
                                   counts_calls$id[i])
 }
+dl_counts <- dl_counts %>%
+  rename(GEOID10 = GEOID)
 ```
 ### 5b.i. *Exception* {#five_b_i}
 
@@ -492,15 +495,16 @@ for(i in 1:length(percs_calls$id)){
                                  percs_calls$api[i],
                                  percs_calls$id[i])
 }
+dl_percs <- dl_percs %>%
+  rename(GEOID10 = GEOID)
 ```
 ## 5d. Format downloads {#five_d}
 Subset `dl_counts` and `dl_percs` for DVRPC's nine-county region. Percentages should be in the range 0 to 1, so all values in `dl_percs` are divided by 100.
 ```{r dl_counts_dl_percs, message = FALSE}
 dl_counts <- dl_counts %>%
-  filter(str_sub(GEOID, 1, 5) %in% ipd_counties)
+  filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
 dl_percs <- dl_percs %>%
-  filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
-  mutate_if(is.numeric, funs(. / 100))
+  filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
 ```
 ### 5d.i. *Exception* {#five_d_i}
 Note that variable B02001_002 ("Estimate; Total: - White alone") was downloaded as the count for Racial Minority. Compute B02001_001 (Universe) $-$ B02001_002 ("Estimate; Total: - White alone") and substitute for `RM_CE`.
@@ -526,9 +530,9 @@ Half-standard deviations serve as the classification bins for IPD scores, and in
 slicer <- c("42045980000", "42017980000", "42101980800",
             "42101980300", "42101980500", "42101980400",
             "42101980900", "42101980700", "42101980600",
-            "42101005000")
-dl_counts <- dl_counts %>% filter(!(GEOID %in% slicer))
-dl_percs <- dl_percs %>% filter(!(GEOID %in% slicer))
+            "42101005000", "34021002400")
+dl_counts <- dl_counts %>% filter(!(GEOID10 %in% slicer))
+dl_percs <- dl_percs %>% filter(!(GEOID10 %in% slicer))
 ```
 Here are the first few lines of `dl_counts` and `dl_percs`. Notice the naming convention:
 
@@ -585,18 +589,15 @@ for (c in 1:length(comp$uni_est)){
 ### 6a.ii. Result {#six_a_ii}
 `pct` and `pct_moe` stores the percentages and associated MOEs for the nine indicator variables. Results are rounded to the thousandths place.
 ```{r perc_res, warning = FALSE}
-pct <- as_tibble(pct_matrix) %>% mutate_all(round, 3)
+pct <- as_tibble(pct_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_all(round, 1)
 names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
-pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 3)
+pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_all(round, 1)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 ```
 ### 6a.iii. *Exception* {#six_a_iii}
-If estimated percentage == 0 & MOE == 0, then make MOE = 0.1.
-
-Matrix math: Only overwrite MOE where `pct_matrix` + `pct_moe_matrix` == 0.
+If percentage MOE == 0, then make MOE = 0.1. This should be a rare occurence with survey data at the census tract level.
 ```{r perc_excp_4}
-overwrite_locations <- which(pct_matrix + pct_moe_matrix == 0, arr.ind = TRUE)
-pct_moe[overwrite_locations] <- 0.1
+pct_moe <- pct_moe %>% replace(., . == 0, 0.1)
 ```
 ### 6a.iv. *Exception* {#six_a_iv}
 Substitute percentages and associated MOEs when available from American FactFinder. This applies to the Older Adults, Female, Limited English Proficiency, and Disabled variables.
@@ -697,15 +698,6 @@ head(score$IPD_Score)
 # 7. ACS estimates cleaning {#acs_estimates_cleaning}
 There is a specific output format for `ipd.csv`, including column names, column order, flags for missing data, and census tracts with insufficient data. This section ensures conformity with the output formatting.
 
-Transform percentage estimates and their MOEs into values ranging from 0 to 100 instead of 0 to 1 and round to the tenths place.
-```{r hundred}
-pct <- pct %>%
-  mutate_all(funs(. * 100)) %>%
-  mutate_all(round, 1)
-pct_moe <- pct_moe %>%
-  mutate_all(funs(. * 100)) %>%
-  mutate_all(round, 1)
-```
 Merge the percentage estimates, their MOEs, rank (percentile), score, and class tibbles into a single data frame called `ipd`.
 ```{r merge}
 ipd <- bind_cols(dl_counts, pct) %>%
@@ -718,9 +710,9 @@ Rename columns.
 ```{r rename}
 names(ipd) <- str_replace(names(ipd), "_CE", "_CntEst")
 names(ipd) <- str_replace(names(ipd), "_CM", "_CntMOE")
-ipd <- ipd %>% mutate(STATEFP = str_sub(GEOID, 1, 2),
-                      COUNTYFP = str_sub(GEOID, 3, 5),
-                      NAME = str_sub(GEOID, 6, 11),
+ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID10, 1, 2),
+                      COUNTYFP10 = str_sub(GEOID10, 3, 5),
+                      NAME10 = str_sub(GEOID10, 6, 11),
                       U_TPopEst = F_UE,
                       U_TPopMOE = F_UM,
                       U_Pop6Est = LEP_UE,
@@ -733,14 +725,14 @@ ipd <- ipd %>% mutate(STATEFP = str_sub(GEOID, 1, 2),
 ```
 Reorder columns, with `GEOID` and FIPS codes first, the following variables in alphabetical order, and the total IPD score and universes at the end.
 ```{r reorder}
-ipd <- ipd %>% select(GEOID, STATEFP, COUNTYFP, NAME, sort(current_vars())) %>%
+ipd <- ipd %>% select(GEOID10, STATEFP10, COUNTYFP10, NAME10, sort(current_vars())) %>%
   select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE",
                         "U_Pop6Est", "U_Pop6MOE", "U_PPovEst",
                         "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 ```
 At the beginning of processing, we removed 10 census tracts from processing because their populations were equal to zero. Tack these back on to the dataset.
 ```{r tack}
-slicer <- enframe(slicer, name = NULL, value = "GEOID")
+slicer <- enframe(slicer, name = NULL, value = "GEOID10")
 ipd <- plyr::rbind.fill(ipd, slicer)
 ```
 Replace `NA` values with `NoData` if character and `-99999` if numeric.
@@ -787,7 +779,7 @@ export_counts <- export_counts %>%
 ## 8b. Breaks by indicator {#eight_b}
 The bin breaks for each indicator. Select the percentage estimate columns, divide by 100 so that they range from 0 to 1, apply the `st_dev_breaks` function to all percentage values, and export the results.
 ```{r summary_breaks}
-breaks <- ipd_summary %>% select(ends_with("PctEst")) %>% mutate_all(funs(. / 100))
+breaks <- ipd_summary %>% select(ends_with("PctEst"))
 export_breaks <- round(mapply(st_dev_breaks, x = breaks, i = 5, na.rm = TRUE), digits = 3)
 export_breaks <- as_tibble(export_breaks) %>%
   mutate(Class = c("Min", "1", "2", "3", "4", "Max")) %>%
@@ -806,10 +798,10 @@ export_summary <- as_tibble(summary_data) %>%
 ## 8d. County means by indicator {#eight_d}
 Population-weighted means by county and indicator. For the most accurate statistics, aggregate all counts back to the county level and compute percentages. Counties are noted in the same format as the user supplied to `ipd_counties`.
 ```{r summary_county, warning = FALSE, message = FALSE}
-export_means <- dl_counts %>% select(GEOID, ends_with("UE"), ends_with("CE")) %>%
-  select(GEOID, sort(current_vars())) %>%
-  mutate(County = str_sub(GEOID, 1, 5)) %>%
-  select(-GEOID) %>%
+export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) %>%
+  select(GEOID10, sort(current_vars())) %>%
+  mutate(County = str_sub(GEOID10, 1, 5)) %>%
+  select(-GEOID10) %>%
   group_by(County) %>%
   summarize(D_PctEst = sum(D_CE) / sum(D_UE),
             EM_PctEst = sum(EM_CE) / sum(EM_UE),
@@ -837,7 +829,8 @@ trct <- map2(st, cty, ~{tracts(state = .x,
   rbind_tigris() %>%
   st_transform(., 26918) %>%
   select(GEOID) %>%
-  left_join(., ipd)
+  left_join(., ipd, by = c("GEOID" = "GEOID10")) %>%
+  rename(GEOID10 = GEOID)
 ```
 ## 9b. Export files {#nine_b}
 Results are saved in `outputs`.

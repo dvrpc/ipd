@@ -58,7 +58,7 @@ st_dev_breaks <- function(x, i, na.rm = TRUE){
                                  function(i) (0.5 * i * sd(x)) + mean(x))
     half_st_dev_breaks[[1]] <- 0
     half_st_dev_breaks[[2]] <- ifelse(half_st_dev_breaks[[2]] < 0,
-                                      0.001,
+                                      0.1,
                                       half_st_dev_breaks[[2]])
     half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
                                           max(x), half_st_dev_breaks[[i + 1]])
@@ -255,8 +255,7 @@ for(i in 1:length(percs_calls$id)){
 dl_counts <- dl_counts %>%
   filter(str_sub(GEOID, 1, 5) %in% ipd_counties)
 dl_percs <- dl_percs %>%
-  filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
-  mutate_if(is.numeric, funs(. / 100))
+  filter(str_sub(GEOID, 1, 5) %in% ipd_counties)
 ## CALCULATIONS
 # Exception 1: RM_CE = RM_UE - RM_CE
 dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
@@ -302,9 +301,9 @@ for (c in 1:length(comp$uni_est)){
   pct_moe_matrix <- cbind(pct_moe_matrix, moe)
 }
 # Result: `pct` and `pct_moe` have percentages and associated MOEs
-pct <- as_tibble(pct_matrix) %>% mutate_all(round, 3)
+pct <- as_tibble(pct_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_all(round, 1)
 names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
-pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(round, 3)
+pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_all(round, 1)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 # Exception 4: If estimated percentage == 0 & MOE == 0; MOE = 0.1
 # This is matrix math. Only overwrite MOE where pct_matrix + pct_moe_matrix == 0
@@ -393,17 +392,5 @@ new_data <- ipd
 names(new_data) <- paste(names(new_data), "n", sep = "_")
 compare <- left_join(web, new_data, by = c("GEOID10" = "GEOID_n")) %>%
   select(GEOID10, sort(current_vars()))
-compare_estimates <- compare %>% select(GEOID10, contains("PctEst"))
-compare_counts <- compare %>% select(GEOID10, contains("CntEst"))
-compare_moes <- compare %>% select(GEOID10, contains("PctMOE"))
-compare_cnt_moes <- compare %>% select(GEOID10, contains("CntMOE"))
-compare_pctile <- compare %>% select(GEOID10, contains("Pctile"))
 compare_score <- compare %>% select(GEOID10, contains("Score"))
-
-write_csv(compare_estimates, here("compare_2016", "test_compare_2016_pct.csv"))
-write_csv(compare_counts, here("compare_2016", "test_compare_2016_count.csv"))
-write_csv(compare_moes, here("compare_2016", "test_compare_2016_pctMOE.csv"))
-write_csv(compare_cnt_moes, here("compare_2016", "test_compare_2016_cntMOE.csv"))
-write_csv(compare_pctile, here("compare_2016", "test_compare_2016_pctile.csv"))
-write_csv(compare_score, here("compare_2016", "test_compare_2016_score.csv"))
-write_csv(as_tibble(break_storage), here("compare_2016", "test_compare_2016_breaks.csv"))
+write_csv(compare_score, here("compare_2016", "test_compare_2016_score_100.csv"))
