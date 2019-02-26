@@ -68,15 +68,15 @@ knitr::opts_chunk$set(echo = TRUE, tidy.opts = list(width.cutoff = 80), tidy = T
 \pagebreak
 
 # 1. About {#about}
-DVRPC's IPD analysis identifies populations of interest under Title VI of the Civil Rights Act and the Executive Order on Environmental Justice (#12898) using 2013-2017 American Community Survey (ACS) five-year estimates from the U.S. Census Bureau. IPD analysis assists both DVRPC and outside organizations in equity work by identifying populations of interest, including Youth, Older Adults, Female, Racial Minority, Ethnic Minority, Foreign-Born, Limited English Proficiency, Disabled, and Low-Income populations at the census tract level in DVRPC's nine-county region.
+DVRPC's IPD analysis identifies populations of interest under Title VI of the Civil Rights Act and the Executive Order on Environmental Justice (#12898) using 2013-2017 American Community Survey (ACS) five-year estimates from the U.S. Census Bureau. IPD analysis assists both DVRPC and outside organizations in equity work by identifying populations of interest, including youth, older adults, female, racial minority, ethnic minority, foreign-born, limited English proficiency, disabled, and low-income populations at the census tract level in DVRPC's nine-county region.
 
 There are many ways of identifying these populations of interest. This document discusses DVRPC's process, which is automated in an `R` script.
 
 ## 1a. Getting started {#one_a}
-For guidance on software prerequisites and how to run this script, see [`getting_started.pdf`](https://github.com/addisonlarson/ipd_2017/blob/master/documentation/getting_started.pdf).
+For guidance on software prerequisites and how to run this script, see `getting_started.pdf` in the `documentation` folder.
 
 ## 1b. Output abbreviations {#one_b}
-Components of field names that you'll see in `outputs`.
+Components of field names that you'll see in `outputs` and throughout the script.
 
 | Component | Equivalent |
 |:----------|:-----------|
@@ -105,7 +105,7 @@ Abbreviations of field names that you'll see in `outputs` *not* comprised of the
 | STATEFP      | State FIPS Code
 | COUNTYFP     | County FIPS Code
 | NAME         | Census Tract FIPS Code
-| IPD_Score    | Composite Score
+| IPD_Score    | Composite IPD Score
 | U_TPopEst    | Total Population Estimate
 | U_TPopMOE    | Total Population MOE
 | U_Pop6Est    | Population 6+ Estimate
@@ -148,11 +148,11 @@ library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris)
 ```
 ## 2b. Fields {#two_b}
-The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. For each indicator, the table below shows the indicator name, its abbreviation used in the script, its universe, its count, and its percentage field if applicable. Because the schemata of ACS tables can change with every update, these field names are applicable *only* to 2013-2017 ACS 5-Year Estimates.
+The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. For each indicator, the table below shows the indicator name, its abbreviation used in the script, its universe, its count, and its percentage field if applicable. Because the schemata of ACS tables can change with each annual ACS update, these field names are applicable *only* to 2013-2017 ACS Five-Year Estimates.
 
 Some percentage fields are empty. This is okay: we will compute the percentages when they are not directly available from the ACS.
 
-Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as the count for Racial Minority. This is a mathematical shortcut: otherwise, we would need to add several subfields to compute the same estimate. The desired count is B02001_001 (Universe) $-$ B02001_002 ("Estimate; Total: - White alone"). The subtraction is computed after download, making a correct estimate and an incorrect MOE. The correct MOE for the count, as calculated in Section 4, will be appended later.
+Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as the count for Racial Minority. This is a mathematical shortcut: otherwise, we would need to add several subfields to compute the same estimate. The desired count is B02001_001 (Universe) $-$ B02001_002 ("Estimate; Total: - White alone"). The subtraction is computed after download in Section 5d.i., making a correct estimate and an incorrect MOE. The correct MOE for the count, as calculated in Section 4, will be appended later.
 
 | Indicator | Abbreviation | Universe | Count | Percentage |
 |:----------|:------------:|:--------:|:-----:|:----------:|
@@ -166,7 +166,7 @@ Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as th
 | Racial Minority | RM | B02001_001 | B02001_002 | N/A |
 | Youth | Y | B03002_001 | B09001_001 | N/A |
 
-While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit Census Developers [(link)](https://www.census.gov/developers/) and select the corresponding API.
+While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit Census Developers [(link)](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in IPD 2015, 2016, and 2017, see `variables.csv` in the `documentation` folder.
 ```{r fields}
 disabled_universe                    <- "S1810_C01_001"
 disabled_count                       <- "S1810_C02_001"
@@ -202,27 +202,30 @@ The data download year.
 ipd_year <- 2017
 ```
 ## 2d. States {#two_d}
-The data download state or states. Be sure to use the two-character text abbreviation.
+The data download state or states. Use the two-character text abbreviation.
 ```{r states}
 ipd_states <- c("NJ", "PA")
 ```
 ## 2e. Counties {#two_e}
-The counties in your study area. Note that these are characters of length 5 concatenating the 2-digit state FIPS and the 3-digit county FIPS.
+The counties in your study area. Use five-digit characters concatenating the two-digit state and three-digit county FIPS codes.
 ```{r counties}
 ipd_counties <- c("34005", "34007", "34015", "34021",
                   "42017", "42029", "42045", "42091", "42101")
 ```
 ## 2f. Census API Key {#two_f}
-Placeholder if you have never installed an API key before. If this is you, check out `getting_started.pdf` for where to get a Census API key and how to install it.
+Placeholder if you have never installed an API key before. If this is your first time accessing the Census API using `R`, see `getting_started.pdf` in the `documentation` folder.
 ```{r api_key}
 # Census API Key
 # census_api_key("YOUR API KEY GOES HERE", install = TRUE)
 ```
+
+# *THE TYPICAL USER SHOULD NOT HAVE TO EDIT ANYTHING BELOW THIS POINT.*
+
 ## 2g. Functions {#two_g}
 Load custom functions.
 
 ### 2g.i. Override `base` and `stats` function defaults {#two_g_i}
-A time-saver so that it's not required to call `na.rm = TRUE` every time these functions are called.
+A time-saver so that it's not required to call `na.rm = TRUE` every time common functions are called.
 ```{r override}
 min <- function(i, ..., na.rm = TRUE) {
   base::min(i, ..., na.rm = na.rm)
@@ -241,7 +244,7 @@ max <- function(i, ..., na.rm = TRUE) {
 For a given vector of numbers `x` and a number of bins `i`, `st_dev_breaks` computes the bin breaks starting at $-0.5 \cdot st dev$ and $0.5 \cdot st dev$. For the purposes of IPD analysis, `i = 5`, and `st_dev_breaks` calculates the minimum, $-1.5 \cdot st dev$, $-0.5 \cdot st dev$, $0.5 \cdot st dev$, $1.5 \cdot st dev$, and maximum values. These values are later used to slice the vector into five bins.
 
 ### 2g.iii. *Exception* {#two_g_iii}
-All minima are coerced to equal zero. If the first bin break is negative, as happens when the data has a large spread and therefore a large standard deviation, then this bin break is coerced to equal 0.001. In these cases, only estimates of 0 percent will be placed in the bottom bin.
+All minima are coerced to equal zero. If the first bin break ($-1.5 \cdot st dev$) is negative, as happens when the data has a large spread and therefore a large standard deviation, then this bin break is coerced to equal 0.1. In these cases, only estimates of 0 percent will be placed in the bottom bin.
 ```{r st_dev_breaks}
 st_dev_breaks <- function(x, i, na.rm = TRUE){
   half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
@@ -262,14 +265,14 @@ st_dev_breaks <- function(x, i, na.rm = TRUE){
 }
 ```
 ### 2g.iv. Move column or vector of columns to last position {#two_g_iv}
-The requested schema for IPD data export renames and places all relevant universes in the final columns of the dataset. `move_last` moves a column or vector of columns to the last position in a tibble or data frame.
+The requested schema for IPD data export renames and places all relevant universes in the final columns of the dataset. `move_last` moves a column or vector of column names to the last position(s) in a data frame.
 ```{r move_last}
 move_last <- function(df, last_col) {
   match(c(setdiff(names(df), last_col), last_col), names(df))
 }
 ```
 ### 2g.v. Summarize data {#two_g_v}
-`description` tailors the exports from `summarytools::descr` to create summary tables with the requested fields.  $\frac{stdev}{2}$ is returned after $stdev$.
+`description` tailors the exports from `summarytools::descr` to create summary tables with the requested fields.  $0.5 \cdot st dev$ is returned after $stdev$.
 ```{r description}
 description <- function(i) {
   des <- as.numeric(descr(i, na.rm = TRUE,
@@ -279,7 +282,9 @@ description <- function(i) {
 }
 ```
 # 3. Variance replicate table download {#variance_replicate_table_download}
-This will feel out of order, but it's necessary --- the racial minority indicator is created by summing up several subgroups in ACS Table B03002. This means that the MOE for the count has to be computed. While the ACS has issued guidance on computing the MOE by aggregating subgroups, using the approximation formula can artificially deflate the derived MOE. Variance replicate tables are used instead to compute a more accurate MOE. This single column is substituted in for the racial minority count MOE in Section 5. Additional guidance on computing variance replicates is available at this [(link)](https://www2.census.gov/programs-surveys/acs/replicate_estimates/2017/documentation/5-year/2013-2017_Variance_Replicate_Tables_Documentation.pdf?#).
+This will feel out of order, but it's necessary. The racial minority indicator is created by summing up several subgroups in ACS Table B03002. This means that the MOE for the count has to be computed. While the ACS has issued guidance on computing the MOE by aggregating subgroups, using the approximation formula can artificially deflate the derived MOE. Variance replicate tables are used instead to account for covariance and compute a more accurate MOE. The MOE computed from variance replicates is substituted in for the racial minority count MOE in Section 5d.ii.
+
+See the Census Bureau's Variance Replicate Tables Documentation [(link)](https://www.census.gov/programs-surveys/acs/technical-documentation/variance-tables.html) for additional guidance on working with variance replicates.
 
 ## 3a. Download variance replicates from Census website {#three_a}
 Download, unzip, and read variance replicate tables for Table B02001. Results are combined into a single table called `var_rep`.
@@ -316,7 +321,7 @@ var_rep <- var_rep %>%
 ```
 # 4. Variance replicate table processing {#variance_replicate_table_processing}
 ## 4a. Compute racial minority count MOE {#four_a}
-Add up the racial minority counts into a single count per census tract for the estimate and 80 variance replicates. Separate the resulting tibble into the estimates and the variance replicates.
+Add up the racial minority counts into a single count per census tract for the estimate and 80 variance replicates. Separate the resulting data frame into estimates and variance replicates.
 ```{r varrep_subset, message = FALSE}
 num <- var_rep %>% 
   group_by(GEOID) %>%
@@ -355,7 +360,7 @@ Download counts and percentages for each of IPD's nine indicators. Note that the
 
 Input data for IPD comes from ACS Subject Tables, Detailed Tables, and Data Profiles. While one can request all the fields for Subject Tables in one batch, mixing requests for two or more different types of tables will result in failure. For this reason, the counts and universe fields supplied by the user in Section 2b are evaluated for their contents and split into three batches: `s_counts` for Subject Tables, `d_counts` for Detailed Tables, and `dp_counts` for Data Profiles.
 
-The chunk below zips the user-defined calls from the API with the preferred script abbreviations into a tibble called `counts_calls` and separates the calls into three batches.
+The chunk below zips the user-defined calls from the API with the output abbreviations into a data frame called `counts_calls` and separates the calls into three batches.
 ```{r api_counts, message = FALSE}
 counts <- c(disabled_count, disabled_universe,
             ethnic_minority_count, ethnic_minority_universe,
@@ -378,7 +383,7 @@ d_calls <- counts_calls %>%
 dp_calls <- counts_calls %>%
   filter(str_sub(api, 1, 1) == "D")
 ```
-API calls are made separately for ACS Subject Tables, Detailed Tables, and Data Profiles and appended to `dl_counts`. Sometimes there are no requests for a certain type of table; in these situations, the script bypasses a download attempt. Then, information from `counts_calls` is used to rename the downloads to the appropriate abbreviation.
+API calls are made separately for ACS Subject Tables, Detailed Tables, and Data Profiles and appended to `dl_counts`. Sometimes there are no requests for an ACS table type; in these situations, the script bypasses a download attempt. Then, information from `counts_calls` is used to rename the downloads to the appropriate abbreviation.
 ```{r api_counts_calls, message = FALSE}
 dl_counts <- NULL
 if(length(s_calls$id > 0)){
@@ -499,7 +504,7 @@ dl_percs <- dl_percs %>%
   rename(GEOID10 = GEOID)
 ```
 ## 5d. Format downloads {#five_d}
-Subset `dl_counts` and `dl_percs` for DVRPC's nine-county region. Percentages should be in the range 0 to 1, so all values in `dl_percs` are divided by 100.
+Subset `dl_counts` and `dl_percs` for DVRPC's nine-county region. Percentages should range from 0 to 100.
 ```{r dl_counts_dl_percs, message = FALSE}
 dl_counts <- dl_counts %>%
   filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
@@ -507,14 +512,14 @@ dl_percs <- dl_percs %>%
   filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
 ```
 ### 5d.i. *Exception* {#five_d_i}
-Note that variable B02001_002 ("Estimate; Total: - White alone") was downloaded as the count for Racial Minority. Compute B02001_001 (Universe) $-$ B02001_002 ("Estimate; Total: - White alone") and substitute for `RM_CE`.
+Note that variable B02001_002 ("Estimate; Total: - White alone") was downloaded as the count for racial minority. Compute B02001_001 (Universe) $-$ B02001_002 ("Estimate; Total: - White alone") and substitute for `RM_CE`.
 ```{r perc_excp_1, message = FALSE}
 dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
   select(-RM_CE) %>%
   rename(RM_CE = x)
 ```
 ### 5d.ii. *Exception* {#five_d_ii}
-Before computing percentages and percentage MOEs, import the count MOE for the Racial Minority variable computed from variance replicates. If `rm_moe` exists, then this chunk will substitute the correct count MOE in `dl_counts`; if not, this chunk will do nothing.
+Before computing percentages and percentage MOEs, import the count MOE for the racial minority variable computed from variance replicates. If `rm_moe` exists, then this chunk will substitute the correct count MOE in `dl_counts`; if not, this chunk will do nothing.
 ```{r perc_excp_2, message = FALSE}
 if(exists("rm_moe")){
   dl_counts <- dl_counts %>%
@@ -525,7 +530,7 @@ if(exists("rm_moe")){
 }
 ```
 ### 5d.iii. *Exception* {#five_d_iii}
-Half-standard deviations serve as the classification bins for IPD scores, and including zero-population tracts affects computed standard deviation values. Start by removing the 10 census tracts with zero population.
+Half-standard deviations serve as the classification bins for IPD scores, and including zero-population tracts affects computed standard deviation values. Start by removing the 11 census tracts with zero population.
 ```{r perc_excp_3}
 slicer <- c("42045980000", "42017980000", "42101980800",
             "42101980300", "42101980500", "42101980400",
@@ -556,9 +561,9 @@ b. Percentile
 c. IPD score and classification
 d. Composite IPD score
 
-Split `dl_counts` into a list named `comp` for processing and sort column names for consistency. The name of the list, `comp`, is a nod to the "component parts" of `dl_counts`. The structure of `comp` is similar to a four-tab Excel spreadsheet: for example, `comp` is the name of the `.xlsx` file, `uni_est` is a tab for universe estimates, and `uni_est` has nine columns and 1,369 rows, where the column is the IPD indicator and the row is the census tract observation. 
+Split `dl_counts` into a list named `comp` for processing and arrange column names in alphabetical order. The name of the list, `comp`, is a nod to the "component parts" of `dl_counts`. The structure of `comp` is similar to a four-tab Excel spreadsheet: for example, `comp` is the name of the `.xlsx` file, `uni_est` is a tab for universe estimates, and `uni_est` has nine columns and 1,368 rows, where the column is the IPD indicator and the row is the census tract observation. 
 
-The order of columns is important because processing is based on vector position. We want to make sure that the first column of every tab corresponds to the Disabled indicator, the second to Ethnic Minority, et cetera. `select(sort(current_vars()))` organizes columns alphabetically.
+The order of columns is important because processing is based on vector position. We want to make sure that the first column of every tab corresponds to the Disabled indicator, the second to Ethnic Minority, et cetera.
 ```{r comp}
 comp <- list()
 comp$uni_est <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
@@ -587,7 +592,7 @@ for (c in 1:length(comp$uni_est)){
 }
 ```
 ### 6a.ii. Result {#six_a_ii}
-`pct` and `pct_moe` stores the percentages and associated MOEs for the nine indicator variables. Results are rounded to the thousandths place.
+`pct` and `pct_moe` stores the percentages and associated MOEs for the nine indicator variables. Results are rounded to the tenths place and range from 0 to 100.
 ```{r perc_res, warning = FALSE}
 pct <- as_tibble(pct_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_all(round, 1)
 names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
@@ -595,12 +600,12 @@ pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_al
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 ```
 ### 6a.iii. *Exception* {#six_a_iii}
-If percentage MOE == 0, then make MOE = 0.1. This should be a rare occurence with survey data at the census tract level.
+If the percentage MOE equals 0, then overwrite it to equal 0.1. This should be a rare occurence with survey data at the census tract level.
 ```{r perc_excp_4}
 pct_moe <- pct_moe %>% replace(., . == 0, 0.1)
 ```
 ### 6a.iv. *Exception* {#six_a_iv}
-Substitute percentages and associated MOEs when available from American FactFinder. This applies to the Older Adults, Female, Limited English Proficiency, and Disabled variables.
+Substitute percentages and associated MOEs when available. This applies to the older adults, female, limited English proficiency, and disabled variables.
 ```{r perc_excp_5}
 pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
                       OA_PctEst = dl_percs$OA_PE,
@@ -639,18 +644,18 @@ Here are the first few lines of `percentile`:
 head(percentile)
 ```
 ## 6c. IPD score and classification {#six_c}
-Each observation is assigned an IPD score for each indicator. The IPD score for an individual indicator can range from 0 to 4, which corresponds to the following:
+Each observation is assigned an IPD score for each indicator. The IPD score for an individual indicator can range from 0 to 4, which corresponds to the following classification and bin breaks:
 
 | IPD Score | IPD Classification | Standard Deviations |
 |:---------:|:------------------:|:-------------------:|
-| 0 | Well Below Average | x $< -1.5stdev$ |
-| 1 | Below Average | $-1.5stdev \leq$ x $<-0.5stdev$ |
-| 2 | Average | $-0.5stdev \leq$ x $<0.5stdev$ |
-| 3 | Above Average | $0.5stdev \leq$ x $<1.5stdev$ |
-| 4 | Well Above Average | x $\geq1.5stdev$ |
+| 0 | Well Below Average | x $< -1.5 \cdot stdev$ |
+| 1 | Below Average | $-1.5 \cdot stdev \leq$ x $<-0.5 \cdot stdev$ |
+| 2 | Average | $-0.5 \cdot stdev \leq$ x $<0.5 \cdot stdev$ |
+| 3 | Above Average | $0.5 \cdot stdev \leq$ x $<1.5 \cdot stdev$ |
+| 4 | Well Above Average | x $\geq 1.5 \cdot stdev$ |
 
 ### 6c.i. Calculation {#six_c_i}
-Note that we divide *rounded* `PctEst` columns by *unrounded* half-standard deviation breaks.
+The function `st_dev_breaks` is called to compute the bin breaks for each indicator. These breaks determine the IPD score stored in `score`. Note that we divide *rounded* `PctEst` columns by *unrounded* half-standard deviation breaks to compute the `score`. `class` is a textual explanation of the IPD score.
 ```{r score_class}
 score_matrix <- NULL
 class_matrix <- NULL
@@ -686,19 +691,19 @@ head(class)
 ```
 ## 6d. Composite IPD score {#six_d}
 ### 6d.i. Calculation {#six_d_i}
-Sum the IPD scores for the nine indicator variables to determine the overall IPD score.
+Sum the IPD scores for the nine indicator variables to determine the composite IPD score.
 ```{r ipd_score}
 score <- score %>% mutate(IPD_Score = rowSums(.))
 ```
 ### 6d.ii. Result {#six_d_ii}
-Here are the first few records of the composite IPD score that has been appended to `score`:
+Here are the first few records of the composite IPD score:
 ```{r ipd_score_preview}
 head(score$IPD_Score)
 ```
 # 7. ACS estimates cleaning {#acs_estimates_cleaning}
 There is a specific output format for `ipd.csv`, including column names, column order, flags for missing data, and census tracts with insufficient data. This section ensures conformity with the output formatting.
 
-Merge the percentage estimates, their MOEs, rank (percentile), score, and class tibbles into a single data frame called `ipd`.
+Merge the percentage estimates, percentage MOEs, percentile, score, and class data frames into a single data frame called `ipd`.
 ```{r merge}
 ipd <- bind_cols(dl_counts, pct) %>%
   bind_cols(., pct_moe) %>%
@@ -730,7 +735,7 @@ ipd <- ipd %>% select(GEOID10, STATEFP10, COUNTYFP10, NAME10, sort(current_vars(
                         "U_Pop6Est", "U_Pop6MOE", "U_PPovEst",
                         "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 ```
-At the beginning of processing, we removed 10 census tracts from processing because their populations were equal to zero. Tack these back on to the dataset.
+At the beginning of processing, we removed 11 census tracts from processing because their populations were equal to zero. Tack these back on to the dataset.
 ```{r tack}
 slicer <- enframe(slicer, name = NULL, value = "GEOID10")
 ipd <- plyr::rbind.fill(ipd, slicer)
@@ -777,7 +782,7 @@ export_counts <- export_counts %>%
   mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE))
 ```
 ## 8b. Breaks by indicator {#eight_b}
-The bin breaks for each indicator. Select the percentage estimate columns, divide by 100 so that they range from 0 to 1, apply the `st_dev_breaks` function to all percentage values, and export the results.
+The bin breaks for each indicator. Apply the `st_dev_breaks` function to all percentage values and export results.
 ```{r summary_breaks}
 breaks <- ipd_summary %>% select(ends_with("PctEst"))
 export_breaks <- round(mapply(st_dev_breaks, x = breaks, i = 5, na.rm = TRUE), digits = 3)
@@ -796,7 +801,7 @@ export_summary <- as_tibble(summary_data) %>%
   select(Statistic, current_vars())
 ```
 ## 8d. County means by indicator {#eight_d}
-Population-weighted means by county and indicator. For the most accurate statistics, aggregate all counts back to the county level and compute percentages. Counties are noted in the same format as the user supplied to `ipd_counties`.
+Population-weighted means by county and indicator. For the most accurate percentage values, aggregate all counts back to the county level and compute percentages. In the export file, counties are referred to by the five-digit character supplied by the user to `ipd_counties`.
 ```{r summary_county, warning = FALSE, message = FALSE}
 export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) %>%
   select(GEOID10, sort(current_vars())) %>%
@@ -817,7 +822,7 @@ export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) 
 ```
 # 9. Export {#export}
 ## 9a. Append to TIGER/LINE file {#nine_a}
-Using the arguments supplied in `ipd_county`, download the relevant census tracts and append `ipd` to them. Note that if you are running this program for a lot (perhaps dozens) of counties, then it is wise to uncomment `cb = TRUE` and download generalized shapefiles instead of the most detailed ones.
+Using the arguments supplied in `ipd_county`, download the relevant census tracts and append `ipd` to them. Uncommenting `cb = TRUE` will greatly speed processing time by downloading generalized tract boundary shapefiles instead of detailed ones.
 ```{r shapefile, message = FALSE, warning = FALSE}
 options(tigris_use_cache = TRUE, tigris_class = "sf")
 st <- str_sub(ipd_counties, 1, 2)
