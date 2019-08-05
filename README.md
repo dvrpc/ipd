@@ -14,4 +14,4 @@ All outputs are stored in the `outputs` folder, including:
 - `summary_by_indicator.csv`: basic summary stats by indicator
 - `mean_by_county.csv`: population-weighted county means by indicator
 
-Because IPD is updated annually and a proposal to conduct IPD analysis across several metro areas is in the works, this project is written to be both temporally and geographically flexible. Future edits may be made to improve this flexibility.
+This project is written to be both temporally and geographically flexible. Future edits may be made to improve this flexibility.
