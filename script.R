@@ -39,6 +39,7 @@ ipd_counties <- c("34005", "34007", "34015", "34021",
                   "42017", "42029", "42045", "42091", "42101")
 # Census API Key
 # census_api_key("YOUR API KEY GOES HERE", install = TRUE)
+census_api_key("32ab634e1860576b10f68adba98195e69e1ae330", overwrite = TRUE)
 
 # Functions
 min <- function(i, ..., na.rm = TRUE) {
@@ -79,6 +80,11 @@ description <- function(i) {
   des <- c(des[1:4], des[4] / 2, des[5])
   return(des)
 }
+round_0 <- function(i) round(i, 0)
+round_1 <- function(i) round(i, 1)
+round_2 <- function(i) round(i, 2)
+mult_100 <- function(i) i * 100
+
 ## VARIANCE REPLICATES
 ipd_states_numeric <- fips_codes %>%
   filter(state %in% ipd_states) %>%
@@ -96,7 +102,7 @@ for (i in 1:length(ipd_states)){
   var_rep <- rbind(var_rep, var_rep_i)
 }
 var_rep <- var_rep %>%
-  mutate_at(vars(GEOID), funs(str_sub(., 8, 18))) %>%
+  mutate_at(vars(GEOID), ~(str_sub(., 8, 18))) %>%
   filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
   select(-TBLID, -NAME, -ORDER, -moe, -CME, -SE) %>%
   filter(TITLE %in% c("Black or African American alone",
@@ -107,7 +113,7 @@ var_rep <- var_rep %>%
                       "Two or more races:"))
 num <- var_rep %>% 
   group_by(GEOID) %>%
-  summarize_if(is.numeric, funs(sum)) %>%
+  summarize_if(is.numeric, ~ sum(.)) %>%
   select(-GEOID)
 estim <- num %>% select(estimate)
 individual_replicate <- num %>% select(-estimate)
@@ -308,9 +314,9 @@ for (c in 1:length(comp$uni_est)){
   pct_moe_matrix <- cbind(pct_moe_matrix, moe)
 }
 # Result: `pct` and `pct_moe` have percentages and associated MOEs
-pct <- as_tibble(pct_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_all(round, 1)
+pct <- as_tibble(pct_matrix) %>% mutate_all(~ . * 100) %>% mutate_all(round_1)
 names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
-pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_all(round, 1)
+pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(~ . * 100) %>% mutate_all(round_1)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 # Exception 4: If MOE == 0; MOE = 0.1
 pct_moe <- pct_moe %>% replace(., . == 0, 0.1)
@@ -333,7 +339,7 @@ for (c in 1:length(comp$uni_est)){
   percentile_matrix <- cbind(percentile_matrix, rank)
 }
 # Result: `percentile` has rank
-percentile <- as_tibble(percentile_matrix) %>% mutate_all(round, 2)
+percentile <- as_tibble(percentile_matrix) %>% mutate_all(round_2)
 names(percentile) <- str_replace(names(comp$uni_est), "_UE", "_Pctile")
 # Compute IPD score and classification
 score_matrix <- NULL
@@ -392,8 +398,8 @@ ipd <- ipd %>% select(GEOID10, STATEFP10, COUNTYFP10, NAME10, sort(current_vars(
 slicer <- enframe(slicer, name = NULL, value = "GEOID10")
 ipd <- plyr::rbind.fill(ipd, slicer)
 # Replace NA with NoData if character and -99999 if numeric
-ipd <- ipd %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
-  mutate_if(is.numeric, funs(ifelse(is.na(.), -99999, .)))
+ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
+  mutate_if(is.numeric, ~(ifelse(is.na(.), -99999, .)))
 ## SUMMARY TABLES
 # Replace -99999 with NA for our purposes
 ipd_summary <- ipd
@@ -423,7 +429,7 @@ export_counts$Classification <- factor(export_counts$Classification,
 export_counts <- arrange(export_counts, Variable, Classification)
 export_counts <- export_counts %>%
   spread(Classification, Count) %>%
-  mutate_all(funs(replace_na(., 0))) %>%
+  mutate_all(~(replace_na(., 0))) %>%
   mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE))
 # Bin break points
 breaks <- ipd_summary %>% select(ends_with("PctEst"))
@@ -435,7 +441,7 @@ export_breaks <- as_tibble(export_breaks) %>%
 pcts <- ipd_summary %>% select(ends_with("PctEst"))
 summary_data <- apply(pcts, 2, description)
 export_summary <- as_tibble(summary_data) %>%
-  mutate_all(round, 2) %>%
+  mutate_all(round_2) %>%
   mutate(Statistic = c("Minimum", "Median", "Mean", "SD", "Half-SD", "Maximum")) %>%
   select(Statistic, current_vars())
 # Population-weighted county means for each indicator
@@ -453,8 +459,8 @@ export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) 
             OA_PctEst = sum(OA_CE) / sum(OA_UE),
             RM_PctEst = sum(RM_CE) / sum(RM_UE),
             Y_PctEst = sum(Y_CE) / sum(Y_UE)) %>%
-  mutate_if(is.numeric, funs(. * 100)) %>%
-  mutate_if(is.numeric, round, 1)
+  mutate_if(is.numeric, ~ . * 100) %>%
+  mutate_if(is.numeric, round_1)
 ## EXPORT
 options(tigris_use_cache = TRUE, tigris_class = "sf")
 st <- str_sub(ipd_counties, 1, 2)
