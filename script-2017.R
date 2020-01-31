@@ -1,3 +1,5 @@
+# This scripts works for the 2013-2017 ACS data. 
+
 ## SETUP
 # Dependencies
 library(plyr); library(here); library(sf); library(summarytools);
