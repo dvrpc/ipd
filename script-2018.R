@@ -11,9 +11,13 @@ library(tidycensus); library(tidyverse); library(tigris)
 census_api_key("32ab634e1860576b10f68adba98195e69e1ae330", overwrite = TRUE)
 
 # Fields
-disabled_universe                    <- "S1810_C01_001"
-disabled_count                       <- "S1810_C02_001"
-disabled_percent                     <- "S1810_C03_001"
+
+# See https://www.census.gov/data/developers/data-sets/acs-5year.html
+# for the variables for Detailed Tables (B), Subject Tables (S), and Data Profiles (DP)
+
+disabled_universe                    <- "S1810_C01_001"  
+disabled_count                       <- "S1810_C01_001"  
+disabled_percent                     <- "S1810_C03_001"  
 ethnic_minority_universe             <- "B03002_001"
 ethnic_minority_count                <- "B03002_012"
 ethnic_minority_percent              <- NA
@@ -39,7 +43,7 @@ youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
 youth_percent                        <- NA
 
-ipd_year <- 2017
+ipd_year <- 2018
 ipd_states <- c("NJ", "PA")
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 
@@ -117,7 +121,7 @@ for (i in 1:length(ipd_states)){
 var_rep <- var_rep %>%
   mutate_at(vars(GEOID), ~(str_sub(., 8, 18))) %>%
   filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
-  select(-TBLID, -NAME, -ORDER, -moe, -CME, -SE) %>%
+  select(-TBLID, -NAME, -ORDER, -MOE, -CME, -SE) %>%
   filter(TITLE %in% c("Black or African American alone",
                       "American Indian and Alaska Native alone",
                       "Asian alone",
@@ -128,8 +132,8 @@ num <- var_rep %>%
   group_by(GEOID) %>%
   summarize_if(is.numeric, ~ sum(.)) %>%
   select(-GEOID)
-estim <- num %>% select(estimate)
-individual_replicate <- num %>% select(-estimate)
+estim <- num %>% select(ESTIMATE)
+individual_replicate <- num %>% select(-ESTIMATE)
 id <- var_rep %>% select(GEOID) %>% distinct(.) %>% pull(.)
 sqdiff_fun <- function(v, e) (v - e) ^ 2
 sqdiff <- mapply(sqdiff_fun, individual_replicate, estim) 
@@ -153,9 +157,15 @@ counts <- c(disabled_count, disabled_universe,
             older_adults_count, older_adults_universe,
             racial_minority_count, racial_minority_universe,
             youth_count, youth_universe)
-counts_ids <- c("D_C", "D_U", "EM_C", "EM_U", "F_C", "F_U",
-                "FB_C", "FB_U", "LEP_C", "LEP_U", "LI_C", "LI_U",
-                "OA_C", "OA_U", "RM_C", "RM_U", "Y_C", "Y_U")
+counts_ids <- c("D_C", "D_U", 
+                "EM_C", "EM_U",
+                "F_C", "F_U",
+                "FB_C", "FB_U",
+                "LEP_C", "LEP_U", 
+                "LI_C", "LI_U",
+                "OA_C", "OA_U", 
+                "RM_C", "RM_U", 
+                "Y_C", "Y_U")
 
 # Zip count API variables and their appropriate abbreviations together
 counts_calls <- tibble(id = counts_ids, api = counts) %>%
@@ -163,11 +173,11 @@ counts_calls <- tibble(id = counts_ids, api = counts) %>%
 
 # Separate into different types of API requests
 s_calls <- counts_calls %>%
-  filter(str_sub(api, 1, 1) == "S")
+  filter(str_sub(api, 1, 1) == "S")  # Summary Tables
 d_calls <- counts_calls %>%
-  filter(str_sub(api, 1, 1) == "B")
+  filter(str_sub(api, 1, 1) == "B")  # Detailed Tables
 dp_calls <- counts_calls %>%
-  filter(str_sub(api, 1, 1) == "D")
+  filter(str_sub(api, 1, 1) == "D")  # Data Profile
 
 # Make requests; if variables exist for this type, dl and append
 dl_counts <- NULL
