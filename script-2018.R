@@ -16,7 +16,7 @@ census_api_key("32ab634e1860576b10f68adba98195e69e1ae330", overwrite = TRUE)
 # for the variables for Detailed Tables (B), Subject Tables (S), and Data Profiles (DP)
 
 disabled_universe                    <- "S1810_C01_001"  
-disabled_count                       <- "S1810_C01_001"  
+disabled_count                       <- "S1810_C02_001"  
 disabled_percent                     <- "S1810_C03_001"  
 ethnic_minority_universe             <- "B03002_001"
 ethnic_minority_count                <- "B03002_012"
