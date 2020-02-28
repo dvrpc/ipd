@@ -1,4 +1,4 @@
-# ipd_2017
+# Indicators of Potential Disadvantage
 
 This project fully automates DVRPC's Indicators of Potential Disadvantage (IPD) analysis, including data download, processing, and export. For more on IPD analysis, see [Equity Analysis for the Greater Philadelphia Region v2.0](https://www.dvrpc.org/webmaps/ipd/).
 
