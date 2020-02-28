@@ -46,12 +46,12 @@ If for some reason the API key currently included in the code doesn't work (this
 ### Outputs 
 
 After the code has finished, outputs are saved in the /outputs subdirectory of where you cloned the repository on your local machine, including:
-- `ipd.csv`: tract-level statistics and scores for IPD's nine indicators
-- `ipd.shp`: spatial version of `ipd.csv`
-- `breaks_by_indicator.csv`: bin breaks by indicator
-- `counts_by_indicator.csv`: census tract counts by bin and indicator
-- `summary_by_indicator.csv`: basic summary stats by indicator
-- `mean_by_county.csv`: population-weighted county means by indicator
+- ipd.csv: tract-level statistics and scores for IPD's nine indicators
+- ipd.shp: spatial version of ipd.csv
+- breaks_by_indicator.csv: bin breaks by indicator
+- counts_by_indicator.csv: census tract counts by bin and indicator
+- summary_by_indicator.csv: basic summary stats by indicator
+- mean_by_county.csv: population-weighted county means by indicator
 
 ## Additional Information
 - [documentation/discussion.pdf](https://github.com/dvrpc/ipd/blob/master/documentation/discussion.pdf) shows the essential math required to compute IPD scores. 
