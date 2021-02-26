@@ -19,6 +19,8 @@ The R script has the following dependencies:
 - tidycensus
 - tidyverse
 - tigris
+- dplyr
+- descr
 
 If you have not previously installed the dependencies, you will need to do so. If you try to run the script without installing the packages, you will get an error message like 
 `Error in library (name_of_package) : there is no package called 'name_of_package'`.
