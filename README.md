@@ -31,7 +31,7 @@ Install each package from R Studio's console (typically at the bottom of the scr
 
 If you are running the code against a newly released 5-year ACS dataset, do the following:
 
-1. Make a copy of the latest .R file (e.g. script-2018.R) and rename it for the year you are working on. (This is to ensure that any schema changes for a particular 5-year dataset are kept with the code for that set.)
+1. Make a copy of the latest .R file (e.g. script-2019.R) and rename it for the year you are working on. (This is to ensure that any schema changes for a particular 5-year dataset are kept with the code for that set.)
 2. Adjust the value for the `ipd_year` variable (to be the end year of the dataset).
 3. Verify the field names (listed under the `# Fields` section). Follow the link provided to check the schema for that dataset.
 
@@ -43,7 +43,7 @@ If you are running the code against a newly released 5-year ACS dataset, do the 
  
 If you see an error about packages not being installed, see [Installing Package Dependencies](#installing-package-dependencies) above. 
 
-If for some reason the API key currently included in the code doesn't work (this is required for the `tidycensus` package, not the Census API), you may get another one [here](https://api.census.gov/data/key_signup.html).
+Please provide your own API Key (this is required for the `tidycensus` package, not the Census API), you may get another one [here](https://api.census.gov/data/key_signup.html).
 
 ### Outputs 
 
