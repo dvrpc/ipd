@@ -9,7 +9,7 @@ library(tidycensus); library(tidyverse); library(tigris); library(dplyr); librar
 
 # Census API Key
 
-census_api_key("219399afeaa3b3c28f7b5351b56bb92d7d0f576d", overwrite = TRUE)
+census_api_key("API_Key_Goes_Here", overwrite = TRUE)
 
 # Fields
 
@@ -584,9 +584,9 @@ trct <- map2(st, cty, ~{tracts(state = .x,
   left_join(., ipd, by = c("GEOID" = "GEOID10")) %>%
   rename(GEOID10 = GEOID)
 
-st_write(trct, here("outputs6", "ipd6.shp"), delete_dsn = TRUE, quiet = TRUE)
-write_csv(ipd, here("outputs6", "ipd6.csv"))
-write_csv(export_counts, here("outputs6", "counts_by_indicator6.csv"))
-write_csv(export_breaks, here("outputs6", "breaks_by_indicator6.csv"))
-write_csv(export_summary, here("outputs6", "summary_by_indicator6.csv"))
-write_csv(export_means, here("outputs6", "mean_by_county6.csv"))
+st_write(trct, here("outputs", "ipd.shp"), delete_dsn = TRUE, quiet = TRUE)
+write_csv(ipd, here("outputs", "ipd.csv"))
+write_csv(export_counts, here("outputs", "counts_by_indicator.csv"))
+write_csv(export_breaks, here("outputs", "breaks_by_indicator.csv"))
+write_csv(export_summary, here("outputs", "summary_by_indicator.csv"))
+write_csv(export_means, here("outputs", "mean_by_county.csv"))
