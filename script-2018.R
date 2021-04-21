@@ -8,7 +8,7 @@ library(tidycensus); library(tidyverse); library(tigris)
 
 # Census API Key
 # census_api_key("YOUR API KEY GOES HERE", install = TRUE)
-census_api_key("32ab634e1860576b10f68adba98195e69e1ae330", overwrite = TRUE)
+census_api_key("Insert API Key Here", overwrite = TRUE)
 
 # Fields
 
