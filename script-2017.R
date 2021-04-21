@@ -41,7 +41,7 @@ ipd_counties <- c("34005", "34007", "34015", "34021",
                   "42017", "42029", "42045", "42091", "42101")
 # Census API Key
 # census_api_key("YOUR API KEY GOES HERE", install = TRUE)
-census_api_key("32ab634e1860576b10f68adba98195e69e1ae330", overwrite = TRUE)
+census_api_key("Insert API Key Here", overwrite = TRUE)
 
 # Functions
 min <- function(i, ..., na.rm = TRUE) {
