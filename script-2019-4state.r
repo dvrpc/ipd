@@ -9,7 +9,7 @@ library(tidycensus); library(tidyverse); library(tigris); library(dplyr); librar
 
 # Census API Key
 
-census_api_key("219399afeaa3b3c28f7b5351b56bb92d7d0f576d", overwrite = TRUE)
+census_api_key("INSERT KEY HERE", overwrite = TRUE)
 
 # Fields
 
@@ -502,10 +502,106 @@ if(exists("rm_moe")){
 
 # Exception 3: Slice low-population tracts
 
-slicer <- c("42045980000", "42017980000", "42101980800",
-            "42101980300", "42101980500", "42101980400",
-            "42101980900", "42101980700", "42101980600",
-            "42101005000", "34021002400")
+slicer <- c("34001990000",
+            "34009990100",
+            "34011990000",
+            "34017980100",
+            "34025990000",
+            "34029980000",
+            "34029980100",
+            "34029990000",
+            "34033990000",
+            "42003980000",
+            "42003980100",
+            "42003980300",
+            "42003980400",
+            "42003980700",
+            "42003980800",
+            "42003981000",
+            "42003981100",
+            "42003981200",
+            "42017980000",
+            "42045980000",
+            "42049990000",
+            "42079980100",
+            "42101005000",
+            "42101980300",
+            "42101980400",
+            "42101980500",
+            "42101980600",
+            "42101980700",
+            "42101980800",
+            "42101980900",
+            "36005011000",
+            "36005016300",
+            "36005017100",
+            "36005024900",
+            "36005050400",
+            "36009940200",
+            "36011990200",
+            "36013990000",
+            "36029990000",
+            "36045990001",
+            "36047008600",
+            "36047017500",
+            "36047017700",
+            "36047040700",
+            "36047066600",
+            "36047070203",
+            "36047096000",
+            "36047118000",
+            "36047990100",
+            "36055980000",
+            "36055990000",
+            "36059990100",
+            "36059990200",
+            "36059990301",
+            "36059990302",
+            "36059990400",
+            "36061000100",
+            "36061000500",
+            "36061008602",
+            "36061031100",
+            "36061031900",
+            "36063940100",
+            "36063990000",
+            "36065980002",
+            "36065980003",
+            "36073990000",
+            "36075990000",
+            "36081003700",
+            "36081009900",
+            "36081010701",
+            "36081021900",
+            "36081022900",
+            "36081024600",
+            "36081029900",
+            "36081033100",
+            "36081038301",
+            "36081038302",
+            "36081061302",
+            "36081062400",
+            "36081064102",
+            "36081065501",
+            "36081071600",
+            "36081079300",
+            "36081091602",
+            "36081099900",
+            "36081107202",
+            "36081121100",
+            "36081128300",
+            "36081990100",
+            "36085015400",
+            "36085990100",
+            "36103990100",
+            "36117990100",
+            "36119005600",
+            "10001990000",
+            "10003980100",
+            "10003990100",
+            "10005990000",
+            "34021002400" 
+)
 dl_counts <- dl_counts %>% filter(!(GEOID10 %in% slicer))
 dl_percs <- dl_percs %>% filter(!(GEOID10 %in% slicer))
 
@@ -736,9 +832,9 @@ trct <- map2(st, cty, ~{tracts(state = .x,
   left_join(., ipd, by = c("GEOID" = "GEOID10")) %>%
   rename(GEOID10 = GEOID)
 
-st_write(trct, here("outputs", "ipd.shp"), delete_dsn = TRUE, quiet = TRUE)
-write_csv(ipd, here("outputs", "ipd.csv"))
-write_csv(export_counts, here("outputs", "counts_by_indicator.csv"))
-write_csv(export_breaks, here("outputs", "breaks_by_indicator.csv"))
-write_csv(export_summary, here("outputs", "summary_by_indicator.csv"))
-write_csv(export_means, here("outputs", "mean_by_county.csv"))
+st_write(trct, here("outputs", "ipd4state.shp"), delete_dsn = TRUE, quiet = TRUE)
+write_csv(ipd, here("outputs", "ipd4state.csv"))
+write_csv(export_counts, here("outputs", "counts_by_indicator4state.csv"))
+write_csv(export_breaks, here("outputs", "breaks_by_indicator4state.csv"))
+write_csv(export_summary, here("outputs", "summary_by_indicator4state.csv"))
+write_csv(export_means, here("outputs", "mean_by_county4state.csv"))
