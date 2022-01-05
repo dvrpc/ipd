@@ -4,7 +4,7 @@
 ## SETUP
 
 # Dependencies
-library(plyr); library(here); library(sf); library(summarytools);
+library(plyr); library(here); library(sf); library(summarytools); library(purrr);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
 
 # Census API Key
@@ -45,8 +45,160 @@ youth_count                          <- "B09001_001"
 youth_percent                        <- NA
 
 ipd_year <- 2019
-ipd_states <- c("PA")
-ipd_counties <- c("42101")
+ipd_states <- c("NJ", "PA", "NY", "DE")
+ipd_counties <- c("34009",
+                  "10005",
+                  "34029",
+                  "36055",
+                  "36095",
+                  "42001",
+                  "36047",
+                  "42095",
+                  "36113",
+                  "42011",
+                  "42067",
+                  "36099",
+                  "36039",
+                  "34035",
+                  "34011",
+                  "36121",
+                  "34019",
+                  "42119",
+                  "36071",
+                  "42015",
+                  "42111",
+                  "34013",
+                  "42045",
+                  "42055",
+                  "42079",
+                  "34031",
+                  "36031",
+                  "10003",
+                  "42069",
+                  "42087",
+                  "42117",
+                  "42047",
+                  "42077",
+                  "36079",
+                  "36073",
+                  "36061",
+                  "42017",
+                  "42103",
+                  "36045",
+                  "42093",
+                  "36037",
+                  "42105",
+                  "42099",
+                  "42057",
+                  "36081",
+                  "36063",
+                  "42003",
+                  "42115",
+                  "36025",
+                  "42071",
+                  "36003",
+                  "42059",
+                  "36043",
+                  "42035",
+                  "42113",
+                  "36105",
+                  "42125",
+                  "42065",
+                  "36059",
+                  "36083",
+                  "34027",
+                  "34003",
+                  "42039",
+                  "34001",
+                  "34039",
+                  "36027",
+                  "36023",
+                  "42029",
+                  "36085",
+                  "42075",
+                  "10001",
+                  "42107",
+                  "42021",
+                  "36065",
+                  "34015",
+                  "42063",
+                  "42013",
+                  "36057",
+                  "36089",
+                  "42073",
+                  "34025",
+                  "36067",
+                  "42027",
+                  "42043",
+                  "36111",
+                  "42133",
+                  "42049",
+                  "42123",
+                  "42053",
+                  "36049",
+                  "36007",
+                  "42007",
+                  "36109",
+                  "36119",
+                  "42083",
+                  "36051",
+                  "36093",
+                  "36097",
+                  "42109",
+                  "42037",
+                  "42023",
+                  "42101",
+                  "36019",
+                  "42131",
+                  "36029",
+                  "42041",
+                  "36013",
+                  "42005",
+                  "36101",
+                  "34023",
+                  "36115",
+                  "36015",
+                  "34037",
+                  "36091",
+                  "36041",
+                  "36123",
+                  "36107",
+                  "34017",
+                  "36009",
+                  "36033",
+                  "36087",
+                  "42121",
+                  "34021",
+                  "36103",
+                  "36001",
+                  "42061",
+                  "42009",
+                  "42097",
+                  "36117",
+                  "42033",
+                  "42085",
+                  "34041",
+                  "34033",
+                  "36005",
+                  "34007",
+                  "42019",
+                  "36011",
+                  "36069",
+                  "42025",
+                  "42051",
+                  "36021",
+                  "36035",
+                  "36075",
+                  "36077",
+                  "42089",
+                  "42129",
+                  "42127",
+                  "42031",
+                  "34005",
+                  "36053",
+                  "42091",
+                  "36017",
+                  "42081")
 
 # Functions
 
@@ -142,10 +294,9 @@ sqdiff <- mapply(sqdiff_fun, individual_replicate, estim)
 sum_sqdiff <- rowSums(sqdiff)
 variance <- 0.05 * sum_sqdiff
 moe <- round(sqrt(variance) * 1.645, 0)
-
 rm_moe <- cbind(id, moe) %>%
   as_tibble(.) %>%
-  dplyr::rename(GEOID = id, RM_CntMOE = moe) %>%
+  rename(GEOID10 = id, RM_CntMOE = moe) %>%
   mutate_at(vars(RM_CntMOE), as.numeric)
 
 ## DOWNLOADS
@@ -216,7 +367,7 @@ if(length(dp_calls$id > 0)){
 }
 
 dl_counts <- dl_counts %>%
-  dplyr::rename(GEOID10 = GEOID)
+  rename(GEOID10 = GEOID)
 
 # For DP downloads, make sure counts_calls and dl_counts match
 
@@ -308,7 +459,7 @@ if(length(dp_calls$id > 0)){
 }
 
 dl_percs <- dl_percs %>%
-  dplyr::rename(GEOID10 = GEOID)
+  rename(GEOID10 = GEOID)
 
 # For DP downloads, make sure percs_calls and dl_percs match
 
@@ -324,16 +475,11 @@ for(i in 1:length(percs_calls$id)){
 
 # Subset for DVRPC region
 
-dl_counts <- dl_counts %>%
-  dplyr::rename(GEOID = GEOID10)
-dl_percs <- dl_percs %>%
-  dplyr::rename(GEOID = GEOID10)
-
 # Desired RM_CE = RM_UE - RM_CE
 dl_counts <- dl_counts %>%
-  filter(str_sub(GEOID, 1, 5) %in% ipd_counties)
+  filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
 dl_percs <- dl_percs %>%
-  filter(str_sub(GEOID, 1, 5) %in% ipd_counties)
+  filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
 
 
 ## CALCULATIONS
@@ -342,7 +488,7 @@ dl_percs <- dl_percs %>%
 
 dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
   select(-RM_CE) %>%
-  dplyr::rename(RM_CE = x) 
+  rename(RM_CE = x)
 
 # Exception 2: Substitute in RM_CntMOE
 
@@ -356,11 +502,108 @@ if(exists("rm_moe")){
 
 # Exception 3: Slice low-population tracts
 
-slicer <- c("42101980300", "42101980500", "42101980400",
-            "42101980900", "42101980700", "42101980600",
-            "42101005000", "42101980800")
-dl_counts <- dl_counts %>% filter(!(GEOID %in% slicer))
-dl_percs <- dl_percs %>% filter(!(GEOID %in% slicer))
+slicer <- c("34001990000",
+            "34009990100",
+            "34011990000",
+            "34017980100",
+            "34025990000",
+            "34029980000",
+            "34029980100",
+            "34029990000",
+            "34033990000",
+            "42003980000",
+            "42003980100",
+            "42003980300",
+            "42003980400",
+            "42003980700",
+            "42003980800",
+            "42003981000",
+            "42003981100",
+            "42003981200",
+            "42017980000",
+            "42045980000",
+            "42049990000",
+            "42079980100",
+            "42101005000",
+            "42101980300",
+            "42101980400",
+            "42101980500",
+            "42101980600",
+            "42101980700",
+            "42101980800",
+            "42101980900",
+            "36005011000",
+            "36005016300",
+            "36005017100",
+            "36005024900",
+            "36005050400",
+            "36009940200",
+            "36011990200",
+            "36013990000",
+            "36029990000",
+            "36045990001",
+            "36047008600",
+            "36047017500",
+            "36047017700",
+            "36047040700",
+            "36047066600",
+            "36047070203",
+            "36047096000",
+            "36047118000",
+            "36047990100",
+            "36055980000",
+            "36055990000",
+            "36059990100",
+            "36059990200",
+            "36059990301",
+            "36059990302",
+            "36059990400",
+            "36061000100",
+            "36061000500",
+            "36061008602",
+            "36061031100",
+            "36061031900",
+            "36063940100",
+            "36063990000",
+            "36065980002",
+            "36065980003",
+            "36073990000",
+            "36075990000",
+            "36081003700",
+            "36081009900",
+            "36081010701",
+            "36081021900",
+            "36081022900",
+            "36081024600",
+            "36081029900",
+            "36081033100",
+            "36081038301",
+            "36081038302",
+            "36081061302",
+            "36081062400",
+            "36081064102",
+            "36081065501",
+            "36081071600",
+            "36081079300",
+            "36081091602",
+            "36081099900",
+            "36081107202",
+            "36081121100",
+            "36081128300",
+            "36081990100",
+            "36085015400",
+            "36085990100",
+            "36103990100",
+            "36117990100",
+            "36119005600",
+            "10001990000",
+            "10003980100",
+            "10003990100",
+            "10005990000",
+            "34021002400" 
+)
+dl_counts <- dl_counts %>% filter(!(GEOID10 %in% slicer))
+dl_percs <- dl_percs %>% filter(!(GEOID10 %in% slicer))
 
 # Split `dl_counts` into list for processing
 
@@ -457,7 +700,9 @@ class <- as_tibble(class_matrix)
 names(class) <- str_replace(names(comp$uni_est), "_UE", "_Class")
 
 # Compute total IPD score
-score <- score %>% mutate(IPD_Score = rowSums(.))
+#score <- score %>% mutate(IPD_Score = rowSums(.))
+score <- score %>%
+      mutate(IPD_Score = reduce(., `+`))
 
 ## CLEANING
 
@@ -471,9 +716,9 @@ ipd <- bind_cols(dl_counts, pct) %>%
 # Rename columns
 names(ipd) <- str_replace(names(ipd), "_CE", "_CntEst")
 names(ipd) <- str_replace(names(ipd), "_CM", "_CntMOE")
-ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID, 1, 2),
-                      COUNTYFP10 = str_sub(GEOID, 3, 5),
-                      NAME10 = str_sub(GEOID, 6, 11),
+ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID10, 1, 2),
+                      COUNTYFP10 = str_sub(GEOID10, 3, 5),
+                      NAME10 = str_sub(GEOID10, 6, 11),
                       U_TPopEst = F_UE,
                       U_TPopMOE = F_UM,
                       U_Pop6Est = LEP_UE,
@@ -485,17 +730,26 @@ ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID, 1, 2),
   select(-ends_with("UE"), -ends_with("UM"))
 
 # Reorder columns
-ipd <- ipd %>% select(GEOID, STATEFP10, COUNTYFP10, NAME10, sort(current_vars())) %>%
+ipd <- ipd %>% select(GEOID10, STATEFP10, COUNTYFP10, NAME10, sort(current_vars())) %>%
   select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE",
                         "U_Pop6Est", "U_Pop6MOE", "U_PPovEst",
                         "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 
+#slice the ipd scores off
+ipdScore <- subset(ipd, select = IPD_Score)
+ipd$IPD_Score <-as.numeric(ipd$IPD_Score)
+ipd <- subset(ipd, select = -c(IPD_Score))
+
+#this breaks the IPD score
 # Replace NA with NoData if character and 0 if numeric
 ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
   mutate_if(is.numeric, ~(ifelse(is.na(.), 0, .)))
 
+#add back in IPD_Score
+ipd <- cbind(ipd, ipdScore)
+
 # Append low-population tracts back onto dataset
-slicer <- enframe(slicer, name = NULL, value = "GEOID")
+slicer <- enframe(slicer, name = NULL, value = "GEOID10")
 ipd <- plyr::rbind.fill(ipd, slicer)
 
 
@@ -550,13 +804,11 @@ export_summary <- as_tibble(summary_data) %>%
   mutate(Statistic = c("Minimum", "Median", "Mean", "SD", "Half-SD", "Maximum")) %>%
   select(Statistic, current_vars())
 
-# BROKEN
 # Population-weighted county means for each indicator
-'''
-export_means <- dl_counts %>% select(GEOID, ends_with("UE"), ends_with("CE")) %>%
-  select(GEOID, sort(current_vars())) %>%
-  mutate(County = str_sub(GEOID, 1, 5)) %>%
-  select(-GEOID) %>%
+export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) %>%
+  select(GEOID10, sort(current_vars())) %>%
+  mutate(County = str_sub(GEOID10, 1, 5)) %>%
+  select(-GEOID10) %>%
   group_by(County) %>%
   summarize(D_PctEst = sum(D_CE) / sum(D_UE),
             EM_PctEst = sum(EM_CE) / sum(EM_UE),
@@ -564,12 +816,12 @@ export_means <- dl_counts %>% select(GEOID, ends_with("UE"), ends_with("CE")) %>
             FB_PctEst = sum(FB_CE) / sum(FB_UE),
             LEP_PctEst = sum(LEP_CE) / sum(LEP_UE),
             LI_PctEst = sum(LI_CE) / sum(LI_UE),
-            OA_PctEst = sum(OA_CE) / sum(x),
+            OA_PctEst = sum(OA_CE) / sum(OA_UE),
             RM_PctEst = sum(RM_CE) / sum(RM_UE),
             Y_PctEst = sum(Y_CE) / sum(Y_UE)) %>%
   mutate_if(is.numeric, ~ . * 100) %>%
   mutate_if(is.numeric, round_1)
-'''
+
 # Replace NA with NoData if character and -99999 if numeric
 #moved from line 352 so tract 42091206702 doesn't mess up breaks and means by indicator
 ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
@@ -588,11 +840,12 @@ trct <- map2(st, cty, ~{tracts(state = .x,
   rbind_tigris() %>%
   st_transform(., 26918) %>%
   select(GEOID) %>%
-  left_join(., ipd, by = c("GEOID" = "GEOID"))
+  left_join(., ipd, by = c("GEOID" = "GEOID10")) %>%
+  rename(GEOID10 = GEOID)
 
-st_write(trct, here("outputs", "ipd.shp"), delete_dsn = TRUE, quiet = TRUE)
-write_csv(ipd, here("outputs", "ipd.csv"))
-write_csv(export_counts, here("outputs", "counts_by_indicator.csv"))
-write_csv(export_breaks, here("outputs", "breaks_by_indicator.csv"))
-write_csv(export_summary, here("outputs", "summary_by_indicator.csv"))
-#write_csv(export_means, here("outputs", "mean_by_county.csv"))
+st_write(trct, here("outputs", "ipd4state.shp"), delete_dsn = TRUE, quiet = TRUE)
+write_csv(ipd, here("outputs", "ipd4state.csv"))
+write_csv(export_counts, here("outputs", "counts_by_indicator4state.csv"))
+write_csv(export_breaks, here("outputs", "breaks_by_indicator4state.csv"))
+write_csv(export_summary, here("outputs", "summary_by_indicator4state.csv"))
+write_csv(export_means, here("outputs", "mean_by_county4state.csv"))
