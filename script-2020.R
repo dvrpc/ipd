@@ -8,8 +8,7 @@ library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
 
 # Census API Key
-
-census_api_key("insert_api_key_here", overwrite = TRUE)
+census_api_key(Sys.getenv("CENSUS_API_KEY"), overwrite = TRUE)
 
 # Fields
 
