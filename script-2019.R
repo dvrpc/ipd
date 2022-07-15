@@ -8,8 +8,7 @@ library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
 
 # Census API Key
-
-census_api_key("API_Key_Goes_Here", overwrite = TRUE)
+census_api_key(Sys.getenv("CENSUS_API_KEY"), overwrite = TRUE)
 
 # Fields
 
@@ -524,9 +523,15 @@ export_counts$Classification <- factor(export_counts$Classification,
                                                   "Well Above Average",
                                                   "NoData"))
 export_counts <- arrange(export_counts, Variable, Classification)
+
+# 2022-04-27 # replacing mutate_all with across, which supercedes it in dplyr
+# was causing issues because replace_na was trying to apply to "Variable" column, 
+# a character data type
+# across + where allows us to apply the function replace_na to just numeric columns
 export_counts <- export_counts %>%
   spread(Classification, Count) %>%
-  mutate_all(~(replace_na(., 0))) %>%
+  # mutate_all(~(replace_na(., 0))) %>%
+  mutate(across(where(is.numeric), ~replace_na(., 0))) %>%
   mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE))
 
 # Bin break points
