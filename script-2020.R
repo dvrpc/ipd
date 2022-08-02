@@ -9,7 +9,7 @@ library(tidycensus); library(tidyverse); library(tigris); library(dplyr); librar
 
 # Census API Key
 
-census_api_key("insert_api_key_here", overwrite = TRUE)
+census_api_key("INSERT_API_KEY_HERE", overwrite = TRUE)
 
 # Fields
 
@@ -571,6 +571,26 @@ export_means <- dl_counts %>% select(GEOID20, ends_with("UE"), ends_with("CE")) 
   mutate_if(is.numeric, ~ . * 100) %>%
   mutate_if(is.numeric, round_1)
 
+#ipd score classes/range
+breaks2 <- st_dev_breaks(ipd$IPD_Score, 5, na.rm = TRUE)
+ipd$IPD_Range <- case_when(ipd$IPD_Score < breaks2[2] ~ 0,
+                           ipd$IPD_Score >= breaks2[2] & ipd$IPD_Score < breaks2[3] ~ 1,
+                           ipd$IPD_Score >= breaks2[3] & ipd$IPD_Score < breaks2[4] ~ 2,
+                           ipd$IPD_Score >= breaks2[4] & ipd$IPD_Score < breaks2[5] ~ 3,
+                           ipd$IPD_Score >= breaks2[5] ~ 4)
+ipd$IPD_Class <- case_when(ipd$IPD_Range == 0 ~ "Well Below Average",
+                           ipd$IPD_Range == 1 ~ "Below Average",
+                           ipd$IPD_Range == 2 ~ "Average",
+                           ipd$IPD_Range == 3 ~ "Above Average",
+                           ipd$IPD_Range == 4 ~ "Well Above Average")
+
+ipd$IPD_Range <- case_when(ipd$IPD_Class == "Well Below Average" ~ "0 - 11.23389",
+                           ipd$IPD_Class == "Below Average" ~ "11.2339 - 15.45367",
+                           ipd$IPD_Class == "Average" ~ "15.45368 - 19.67345",
+                           ipd$IPD_Class == "Above Average" ~ "19.67346 - 23.89323",
+                           ipd$IPD_Class == "Well Above Average" ~ "23.89323 - 32")
+
+
 # Replace NA with NoData if character and -99999 if numeric
 #moved from line 352 so tract 42091206702 doesn't mess up breaks and means by indicator
 ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
@@ -580,6 +600,17 @@ ipd$STATEFP20 <- str_sub(ipd$GEOID20,1,2)
 ipd$COUNTYFP20 <- str_sub(ipd$GEOID20,3,5) 
 ipd$NAME20 <- str_sub(ipd$GEOID20,6,11) 
 
+ipd$GEOID20 <- as.character(ipd$GEOID20)
+ipd$STATEFP20 <- as.character(ipd$STATEFP20)
+ipd$COUNTYFP20 <- as.character(ipd$COUNTYFP20)
+ipd$NAME20 <- as.character(ipd$NAME20)
+ipd$namelsad <- paste(substr(ipd$GEOID20, 6, 9), substr(ipd$GEOID20, 10, 11), sep = ".")
+ipd$U_Pop6Est <- rename(U_Pop6Est = U_Pop5Est)
+ipd$U_Pop6MOE <- rename(U_Pop6MOE = U_Pop5MOE)
+ipd_summary$U_Pop6Est <- rename(U_Pop6Est = U_Pop5Est)
+ipd_summary$U_Pop6MOE <- rename(U_Pop6MOE = U_Pop5MOE)
+trct$U_Pop6Est <- rename(U_Pop6Est = U_Pop5Est)
+trct$U_Pop6MOE <- rename(U_Pop6MOE = U_Pop5MOE)
 
 ## EXPORT
 
@@ -595,11 +626,6 @@ trct <- map2(st, cty, ~{tracts(state = .x,
   select(GEOID) %>%
   left_join(., ipd, by = c("GEOID" = "GEOID20")) %>%
   rename(GEOID20 = GEOID)
-
-ipd$GEOID20 <- as.character(ipd$GEOID20)
-ipd$STATEFP20 <- as.character(ipd$STATEFP20)
-ipd$COUNTYFP20 <- as.character(ipd$COUNTYFP20)
-ipd$NAME20 <- as.character(ipd$NAME20)
 
 st_write(trct, here("outputs", "ipd.shp"), delete_dsn = TRUE, quiet = TRUE)
 write_csv(ipd, here("outputs", "ipd.csv"))
