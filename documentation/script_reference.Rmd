@@ -108,15 +108,15 @@ Abbreviations of field names that you'll see in `outputs` *not* comprised of the
 | IPD_Score    | Composite IPD Score
 | U_TPopEst    | Total Population Estimate
 | U_TPopMOE    | Total Population MOE
-| U_Pop6Est    | Population 6+ Estimate
-| U_Pop6MOE    | Population 6+ MOE
+| U_Pop5Est    | Population 5+ Estimate
+| U_Pop5MOE    | Population 5+ MOE
 | U_PPovEst    | Poverty Status Population Estimate
 | U_PPovMOE    | Poverty Status Population MOE
 | U_PNICEst    | Non-Institutional Civilian Population Estimate
 | U_PNICMOE    | Non-Institutional Civilian Population MOE
 
 ## 1c. Project structure {#one_c}
-This script uses relative file paths based off the location of `ipd_2017.Rproj`. As long as you download the entire repository, the script should have no trouble locating the correct subfolders. The project is structured as follows:
+This script uses relative file paths based off the location of `ipd_2017.Rproj`. As long as you download the entire repository, the script should have no trouble locating the correct subfolders. All of the subsequent years files are based on the same architecture. The project is structured as follows:
 
 ```{r file_structure, eval = FALSE}
 ipd_2017
@@ -720,8 +720,8 @@ ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID10, 1, 2),
                       NAME10 = str_sub(GEOID10, 6, 11),
                       U_TPopEst = F_UE,
                       U_TPopMOE = F_UM,
-                      U_Pop6Est = LEP_UE,
-                      U_Pop6MOE = LEP_UM,
+                      U_Pop5Est = LEP_UE,
+                      U_Pop5MOE = LEP_UM,
                       U_PPovEst = LI_UE,
                       U_PPovMOE = LI_UM,
                       U_PNICEst = D_UE,
@@ -732,7 +732,7 @@ Reorder columns, with `GEOID` and FIPS codes first, the following variables in a
 ```{r reorder}
 ipd <- ipd %>% select(GEOID10, STATEFP10, COUNTYFP10, NAME10, sort(current_vars())) %>%
   select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE",
-                        "U_Pop6Est", "U_Pop6MOE", "U_PPovEst",
+                        "U_Pop5Est", "U_Pop5MOE", "U_PPovEst",
                         "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 ```
 At the beginning of processing, we removed 11 census tracts from processing because their populations were equal to zero. Tack these back on to the dataset.
