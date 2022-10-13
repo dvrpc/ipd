@@ -1,7 +1,5 @@
----
-title: "Technical Reference"
-output: pdf_document
----
+### Technical Reference ###
+
 # Outline
 
 1. [About](#about)
