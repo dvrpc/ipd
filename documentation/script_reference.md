@@ -2,10 +2,6 @@
 title: "Technical Reference"
 output: pdf_document
 ---
-
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo = TRUE, tidy.opts = list(width.cutoff = 80), tidy = TRUE)
-```
 # Outline
 
 1. [About](#about)
@@ -78,49 +74,45 @@ For guidance on software prerequisites and how to run this script, see `getting_
 ## 1b. Output abbreviations {#one_b}
 Components of field names that you'll see in `outputs` and throughout the script.
 
-Component|  Equivalent
--------- |   --------------   
-D        |  Disabled
-EM       |  Ethnic Minority
-F        |  Female
-FB       |  Foreign-Born
-LEP      |  Limited English Proficiency
-LI       |  Low-Income
-OA       |  Older Adults
-RM       |  Racial Minority
-Y        |  Youth
-CntEst   |  Count Estimate
-CntMOE   |  Count MOE
-PctEst   | Percentage Estimate
-PctMOE   |  Percentage MOE
-Pctile   |  Percentile
-Score    |  Score
-Class    |  Classification
----------  --------------   
+Component|  Equivalent                     |
+:--------|  :--------------               |
+D        |  Disabled                       |
+EM       |  Ethnic Minority                |
+F        |  Female                         |
+FB       |  Foreign-Born                   |
+LEP      |  Limited English Proficiency    |
+LI       |  Low-Income                     |
+OA       |  Older Adults                   |
+RM       |  Racial Minority                |
+Y        |  Youth                          |
+CntEst   |  Count Estimate                 |
+CntMOE   |  Count MOE                      |
+PctEst   | Percentage Estimate             |
+PctMOE   |  Percentage MOE                 |
+Pctile   |  Percentile                     |
+Score    |  Score                          |
+Class    |  Classification                 |
 <br>
 
 Abbreviations of field names that you'll see in `outputs` *not* comprised of the above components.
 
-```{r table2, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
-tabl <- "
+
 | Abbreviation | Equivalent |
 |:-------------|:-----------|
-| GEOID        | Census Tract Identifier
-| STATEFP      | State FIPS Code
-| COUNTYFP     | County FIPS Code
-| NAME         | Census Tract FIPS Code
-| IPD_Score    | Composite IPD Score
-| U_TPopEst    | Total Population Estimate
-| U_TPopMOE    | Total Population MOE
-| U_Pop5Est    | Population 5+ Estimate
-| U_Pop5MOE    | Population 5+ MOE
-| U_PPovEst    | Poverty Status Population Estimate
-| U_PPovMOE    | Poverty Status Population MOE
-| U_PNICEst    | Non-Institutional Civilian Population Estimate
-| U_PNICMOE    | Non-Institutional Civilian Population MOE
-"
-cat(tabl)
-```
+| GEOID        | Census Tract Identifier                        |
+| STATEFP      | State FIPS Code                                |
+| COUNTYFP     | County FIPS Code                               |
+| NAME         | Census Tract FIPS Code                         |
+| IPD_Score    | Composite IPD Score                            |
+| U_TPopEst    | Total Population Estimate                      |
+| U_TPopMOE    | Total Population MOE                           |
+| U_Pop5Est    | Population 5+ Estimate                         |
+| U_Pop5MOE    | Population 5+ MOE                              |
+| U_PPovEst    | Poverty Status Population Estimate             |
+| U_PPovMOE    | Poverty Status Population MOE                  |
+| U_PNICEst    | Non-Institutional Civilian Population Estimate |
+| U_PNICMOE    | Non-Institutional Civilian Population MOE      |
+
 ## 1c. Project structure {#one_c}
 This script uses relative file paths based off the location of `ipd.Rproj`. As long as you download the entire repository, the script should have no trouble locating the correct subfolders. All of the subsequent years files are based on the same architecture. The project is structured as follows:
 
@@ -162,8 +154,6 @@ Some percentage fields are empty. This is okay: we will compute the percentages 
 
 Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as the count for Racial Minority. This is a mathematical shortcut: otherwise, we would need to add several subfields to compute the same estimate. The desired count is B02001_001 (Universe) $-$ B02001_002 ("Estimate; Total: - White alone"). The subtraction is computed after download in Section 5d.i., making a correct estimate and an incorrect MOE. The correct MOE for the count, as calculated in Section 4, will be appended later.
 
-```{r table3, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
-tabl <- "
 | Indicator | Abbreviation | Universe | Count | Percentage |
 |:----------|:------------:|:--------:|:-----:|:----------:|
 | Disabled | D | S1810_C01_001 | S1810_C02_001 | S1810_C03_001 |
@@ -175,9 +165,7 @@ tabl <- "
 | Older Adults | OA | S0101_C01_001 | S0101_C01_030 | S0101_C02_030 |
 | Racial Minority | RM | B02001_001 | B02001_002 | N/A |
 | Youth | Y | B03002_001 | B09001_001 | N/A |
-"
-cat(tabl)
-```
+<br>
 
 While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit Census Developers [(link)](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in IPD 2015, 2016, and 2017, see `variables.csv` in the `documentation` folder.
 <br>
@@ -752,8 +740,6 @@ head(percentile)
 ## 6c. IPD score and classification {#six_c}
 Each observation is assigned an IPD score for each indicator. The IPD score for an individual indicator can range from 0 to 4, which corresponds to the following classification and bin breaks:
 
-```{r table4, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
-tabl <- "
 | IPD Score | IPD Classification | Standard Deviations |
 |:---------:|:------------------:|:-------------------:|
 | 0 | Well Below Average | x $< -1.5 \cdot stdev$ |
@@ -761,9 +747,8 @@ tabl <- "
 | 2 | Average | $-0.5 \cdot stdev \leq$ x $<0.5 \cdot stdev$ |
 | 3 | Above Average | $0.5 \cdot stdev \leq$ x $<1.5 \cdot stdev$ |
 | 4 | Well Above Average | x $\geq 1.5 \cdot stdev$ |
-"
-cat(tbl)
-```
+<br>
+
 ### 6c.i. Calculation {#six_c_i}
 The function `st_dev_breaks` is called to compute the bin breaks for each indicator. These breaks determine the IPD score stored in `score`. Note that we divide *rounded* `PctEst` columns by *unrounded* half-standard deviation breaks to compute the `score`. `class` is a textual explanation of the IPD score.
 <br>
