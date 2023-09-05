@@ -37,7 +37,7 @@ youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
 youth_percent                        <- NA
 
-ipd_year <- 2017
+ipd_year <- 2018
 ipd_states <- c("NJ", "PA")
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 
