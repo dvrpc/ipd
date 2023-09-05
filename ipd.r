@@ -1,9 +1,12 @@
-# This scripts works for the 2013-2017 ACS data. 
-
 ## SETUP
 # Dependencies
 library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris)
+
+# Census API Key
+# census_api_key("YOUR API KEY GOES HERE", install = TRUE)
+census_api_key("Insert API Key Here", overwrite = TRUE)
+
 # Fields
 disabled_universe                    <- "S1810_C01_001"
 disabled_count                       <- "S1810_C02_001"
@@ -32,16 +35,11 @@ racial_minority_percent              <- NA
 youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
 youth_percent                        <- NA
-# Year
-ipd_year <- 2017
-# States
+
+ipd_year <- 2016
 ipd_states <- c("NJ", "PA")
-# Counties
 ipd_counties <- c("34005", "34007", "34015", "34021",
                   "42017", "42029", "42045", "42091", "42101")
-# Census API Key
-# census_api_key("YOUR API KEY GOES HERE", install = TRUE)
-census_api_key("Insert API Key Here", overwrite = TRUE)
 
 # Functions
 min <- function(i, ..., na.rm = TRUE) {
