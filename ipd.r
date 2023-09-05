@@ -1,10 +1,10 @@
 ## SETUP
 # Dependencies
 library(plyr); library(here); library(sf); library(summarytools);
-library(tidycensus); library(tidyverse); library(tigris)
+library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
 
 # Census API Key
-census_api_key("Insert API Key Here", overwrite = TRUE)
+census_api_key("API Key Goes Here", overwrite = TRUE)
 
 # Fields
 # See https://www.census.gov/data/developers/data-sets/acs-5year.html
@@ -37,11 +37,12 @@ youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
 youth_percent                        <- NA
 
-ipd_year <- 2018
+ipd_year <- 2019
 ipd_states <- c("NJ", "PA")
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 
 # Functions
+
 min <- function(i, ..., na.rm = TRUE) {
   base::min(i, ..., na.rm = na.rm)
 }
@@ -81,8 +82,8 @@ move_last <- function(df, last_col) {
 }
 
 description <- function(i) {
-  des <- as.numeric(descr(i, na.rm = TRUE,
-                          stats = c("min", "med", "mean", "sd", "max")))
+  des <- as.numeric(summarytools::descr(i, na.rm = TRUE,
+                                        stats = c("min", "med", "mean", "sd", "max")))
   des <- c(des[1:4], des[4] / 2, des[5])
   return(des)
 }
@@ -104,12 +105,12 @@ for (i in 1:length(ipd_states)){
                 ipd_year,
                 "/data/5-year/140/B02001_",
                 ipd_states_numeric[i],
-                ".csv.gz")
+                ".csv.zip")
   temp <- tempfile()
   download.file(url, temp)
-  var_rep_i <- read_csv(gzfile(temp))
-  var_rep <- rbind(var_rep, var_rep_i)
-}
+  var_rep_i <- read_csv(unzip(temp))
+  var_rep <- dplyr::bind_rows(var_rep, var_rep_i)
+} 
 
 var_rep <- var_rep %>%
   mutate_at(vars(GEOID), ~(str_sub(., 8, 18))) %>%
@@ -353,10 +354,10 @@ dl_percs <- dl_percs %>% filter(!(GEOID10 %in% slicer))
 # Sort column names for consistency
 # `comp` = "component parts"
 comp <- list()
-comp$uni_est <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
-comp$uni_moe <- dl_counts %>% select(ends_with("UM")) %>% select(sort(current_vars()))
-comp$count_est <- dl_counts %>% select(ends_with("CE")) %>% select(sort(current_vars()))
-comp$count_moe <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars()))
+comp$uni_est <- dl_counts %>% select(ends_with("UE")) %>% select(sort(tidyselect::peek_vars()))
+comp$uni_moe <- dl_counts %>% select(ends_with("UM")) %>% select(sort(tidyselect::peek_vars()))
+comp$count_est <- dl_counts %>% select(ends_with("CE")) %>% select(sort(tidyselect::peek_vars()))
+comp$count_moe <- dl_counts %>% select(ends_with("CM")) %>% select(sort(tidyselect::peek_vars()))
 
 # Compute percentages and associated MOEs
 pct_matrix <- NULL
@@ -400,7 +401,7 @@ pct_moe <- pct_moe %>% mutate(D_PctMOE = dl_percs$D_PM,
 # Compute percentile
 
 # Add percentages to `comp`; sort column names for consistency
-comp$pct_est <- pct %>% select(sort(current_vars()))
+comp$pct_est <- pct %>% select(sort(tidyselect::peek_vars()))
 percentile_matrix <- NULL
 
 for (c in 1:length(comp$uni_est)){
@@ -470,24 +471,25 @@ ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID10, 1, 2),
   select(-ends_with("UE"), -ends_with("UM"))
 
 # Reorder columns
-ipd <- ipd %>% select(GEOID10, STATEFP10, COUNTYFP10, NAME10, sort(current_vars())) %>%
+ipd <- ipd %>% select(GEOID10, STATEFP10, COUNTYFP10, NAME10, sort(tidyselect::peek_vars())) %>%
   select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE",
                         "U_Pop6Est", "U_Pop6MOE", "U_PPovEst",
                         "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
+
+# Replace NA with NoData if character and 0 if numeric
+ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
+  mutate_if(is.numeric, ~(ifelse(is.na(.), 0, .)))
 
 # Append low-population tracts back onto dataset
 slicer <- enframe(slicer, name = NULL, value = "GEOID10")
 ipd <- plyr::rbind.fill(ipd, slicer)
 
-# Replace NA with NoData if character and -99999 if numeric
-ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
-  mutate_if(is.numeric, ~(ifelse(is.na(.), -99999, .)))
 
 ## SUMMARY TABLES
 
-# Replace -99999 with NA for our purposes
+# Replace 0 with NA for our purposes
 ipd_summary <- ipd
-ipd_summary[ipd_summary == -99999] <- NA
+ipd_summary[ipd_summary == 0]
 
 # Count of tracts that fall in each bin
 counts <- ipd_summary %>% select(ends_with("Class"))
@@ -523,19 +525,20 @@ breaks <- ipd_summary %>% select(ends_with("PctEst"))
 export_breaks <- round(mapply(st_dev_breaks, x = breaks, i = 5, na.rm = TRUE), digits = 3)
 export_breaks <- as_tibble(export_breaks) %>%
   mutate(Class = c("Min", "1", "2", "3", "4", "Max")) %>%
-  select(Class, current_vars())
+  select(Class, tidyselect::peek_vars())
 
 # Minimum, median, mean, standard deviation, maximum
 pcts <- ipd_summary %>% select(ends_with("PctEst"))
-summary_data <- apply(pcts, 2, description)
+
+summary_data <- apply(pcts, MARGIN=2, description)
 export_summary <- as_tibble(summary_data) %>%
   mutate_all(round_2) %>%
   mutate(Statistic = c("Minimum", "Median", "Mean", "SD", "Half-SD", "Maximum")) %>%
-  select(Statistic, current_vars())
+  select(Statistic, tidyselect::peek_vars())
 
 # Population-weighted county means for each indicator
 export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) %>%
-  select(GEOID10, sort(current_vars())) %>%
+  select(GEOID10, sort(tidyselect::peek_vars())) %>%
   mutate(County = str_sub(GEOID10, 1, 5)) %>%
   select(-GEOID10) %>%
   group_by(County) %>%
@@ -551,6 +554,11 @@ export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) 
   mutate_if(is.numeric, ~ . * 100) %>%
   mutate_if(is.numeric, round_1)
 
+# Replace NA with NoData if character and -99999 if numeric
+# so tract 42091206702 doesn't mess up breaks and means by indicator
+ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
+  mutate_if(is.numeric, ~(ifelse(is.na(.), -99999, .)))
+ipd_summary[ipd_summary == -99999] <- NA
 
 ## EXPORT
 
