@@ -37,7 +37,7 @@ youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
 youth_percent                        <- NA
 
-ipd_year <- 2020
+ipd_year <- 2021
 ipd_states <- c("NJ", "PA")
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 
@@ -108,7 +108,7 @@ for (i in 1:length(ipd_states)){
                 ".csv.zip")
   temp <- tempfile()
   download.file(url, temp)
-  var_rep_i <- read_csv(unzip(temp))
+  var_rep_i <- read.csv(unzip(temp))
   var_rep <- dplyr::bind_rows(var_rep, var_rep_i)
 } 
 
@@ -330,17 +330,7 @@ dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
   select(-RM_CE) %>%
   rename(RM_CE = x)
 
-# Exception 2: Substitute in RM_CntMOE
-
-if(exists("rm_moe")){
-  dl_counts <- dl_counts %>%
-    select(-RM_CM) %>%
-    left_join(., rm_moe, by) %>%
-    rename(RM_CM = RM_CntMOE) %>%
-    mutate_at(vars(RM_CM), as.numeric)
-}
-
-# Exception 3: Slice low-population tracts
+# Exception 2: Slice low-population tracts
 
 slicer <- c("34005981802","34005982200","34021980000","42017980000",
             "42045980300","42045980000","42045980200","42091980100",
@@ -574,12 +564,6 @@ ipd$STATEFP20 <- as.character(ipd$STATEFP20)
 ipd$COUNTYFP20 <- as.character(ipd$COUNTYFP20)
 ipd$NAME20 <- as.character(ipd$NAME20)
 ipd$namelsad <- paste(substr(ipd$GEOID20, 6, 9), substr(ipd$GEOID20, 10, 11), sep = ".")
-ipd$U_Pop6Est <- rename(U_Pop6Est = U_Pop5Est)
-ipd$U_Pop6MOE <- rename(U_Pop6MOE = U_Pop5MOE)
-ipd_summary$U_Pop6Est <- rename(U_Pop6Est = U_Pop5Est)
-ipd_summary$U_Pop6MOE <- rename(U_Pop6MOE = U_Pop5MOE)
-trct$U_Pop6Est <- rename(U_Pop6Est = U_Pop5Est)
-trct$U_Pop6MOE <- rename(U_Pop6MOE = U_Pop5MOE)
 
 ## EXPORT
 
@@ -596,9 +580,10 @@ trct <- map2(st, cty, ~{tracts(state = .x,
   left_join(., ipd, by = c("GEOID" = "GEOID20")) %>%
   rename(GEOID20 = GEOID)
 
-st_write(trct, here("outputs", "ipd.shp"), delete_dsn = TRUE, quiet = TRUE)
-write_csv(ipd, here("outputs", "ipd.csv"))
-write_csv(export_counts, here("outputs", "counts_by_indicator.csv"))
-write_csv(export_breaks, here("outputs", "breaks_by_indicator.csv"))
-write_csv(export_summary, here("outputs", "summary_by_indicator.csv"))
-write_csv(export_means, here("outputs", "mean_by_county.csv"))
+
+st_write(trct, here("outputs", "ipd_2021.shp"), delete_dsn = TRUE, quiet = TRUE)
+write_csv(ipd, here("outputs", "ipd_2021.csv"))
+write_csv(export_counts, here("outputs", "counts_by_indicator_2021.csv"))
+write_csv(export_breaks, here("outputs", "breaks_by_indicator_2021.csv"))
+write_csv(export_summary, here("outputs", "summary_by_indicator_2021.csv"))
+write_csv(export_means, here("outputs", "mean_by_county_2021.csv"))
