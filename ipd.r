@@ -4,7 +4,7 @@ library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
 
 # Census API Key
-census_api_key("API Key Goes Here", overwrite = TRUE)
+census_api_key("INSERT_API_KEY_HERE", overwrite = TRUE)
 
 # Fields
 # See https://www.census.gov/data/developers/data-sets/acs-5year.html
@@ -37,7 +37,7 @@ youth_universe                       <- "B03002_001"
 youth_count                          <- "B09001_001"
 youth_percent                        <- NA
 
-ipd_year <- 2019
+ipd_year <- 2020
 ipd_states <- c("NJ", "PA")
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 
@@ -131,12 +131,12 @@ individual_replicate <- num %>% select(-ESTIMATE)
 id <- var_rep %>% select(GEOID) %>% distinct(.) %>% pull(.)
 sqdiff_fun <- function(v, e) (v - e) ^ 2
 sqdiff <- mapply(sqdiff_fun, individual_replicate, estim) 
-sum_sqdiff <- rowSums(sqdiff)
+sum_sqdiff <- sapply(sqdiff, sum) 
 variance <- 0.05 * sum_sqdiff
 moe <- round(sqrt(variance) * 1.645, 0)
 rm_moe <- cbind(id, moe) %>%
   as_tibble(.) %>%
-  rename(GEOID10 = id, RM_CntMOE = moe) %>%
+  rename(GEOID20 = id, RM_CntMOE = moe) %>%
   mutate_at(vars(RM_CntMOE), as.numeric)
 
 ## DOWNLOADS
@@ -207,7 +207,7 @@ if(length(dp_calls$id > 0)){
 }
 
 dl_counts <- dl_counts %>%
-  rename(GEOID10 = GEOID)
+  rename(GEOID20 = GEOID)
 
 # For DP downloads, make sure counts_calls and dl_counts match
 
@@ -299,7 +299,7 @@ if(length(dp_calls$id > 0)){
 }
 
 dl_percs <- dl_percs %>%
-  rename(GEOID10 = GEOID)
+  rename(GEOID20 = GEOID)
 
 # For DP downloads, make sure percs_calls and dl_percs match
 
@@ -317,9 +317,9 @@ for(i in 1:length(percs_calls$id)){
 
 # Desired RM_CE = RM_UE - RM_CE
 dl_counts <- dl_counts %>%
-  filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
+  filter(str_sub(GEOID20, 1, 5) %in% ipd_counties)
 dl_percs <- dl_percs %>%
-  filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
+  filter(str_sub(GEOID20, 1, 5) %in% ipd_counties)
 
 
 ## CALCULATIONS
@@ -335,19 +335,24 @@ dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
 if(exists("rm_moe")){
   dl_counts <- dl_counts %>%
     select(-RM_CM) %>%
-    left_join(., rm_moe) %>%
+    left_join(., rm_moe, by) %>%
     rename(RM_CM = RM_CntMOE) %>%
     mutate_at(vars(RM_CM), as.numeric)
 }
 
 # Exception 3: Slice low-population tracts
 
-slicer <- c("42045980000", "42017980000", "42101980800",
-            "42101980300", "42101980500", "42101980400",
-            "42101980900", "42101980700", "42101980600",
-            "42101005000", "34021002400")
-dl_counts <- dl_counts %>% filter(!(GEOID10 %in% slicer))
-dl_percs <- dl_percs %>% filter(!(GEOID10 %in% slicer))
+slicer <- c("34005981802","34005982200","34021980000","42017980000",
+            "42045980300","42045980000","42045980200","42091980100",
+            "42091980000","42091980200","42091980300","42101036901",
+            "42101980001","42101980002","42101980003","42101980300",
+            "42101980701","42101980702","42101980800","42101980100",
+            "42101980200", "42101980400","42101980500","42101980600",
+            "42101980901","42101980902","42101980903","42101980904",
+            "42101980905","42101980906", "42101989100","42101989200",
+            "42101989300")
+dl_counts <- dl_counts %>% filter(!(GEOID20 %in% slicer))
+dl_percs <- dl_percs %>% filter(!(GEOID20 %in% slicer))
 
 # Split `dl_counts` into list for processing
 
@@ -457,9 +462,9 @@ ipd <- bind_cols(dl_counts, pct) %>%
 # Rename columns
 names(ipd) <- str_replace(names(ipd), "_CE", "_CntEst")
 names(ipd) <- str_replace(names(ipd), "_CM", "_CntMOE")
-ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID10, 1, 2),
-                      COUNTYFP10 = str_sub(GEOID10, 3, 5),
-                      NAME10 = str_sub(GEOID10, 6, 11),
+ipd <- ipd %>% mutate(STATEFP20 = str_sub(GEOID20, 1, 2),
+                      COUNTYFP20 = str_sub(GEOID20, 3, 5),
+                      NAME20 = str_sub(GEOID20, 6, 11),
                       U_TPopEst = F_UE,
                       U_TPopMOE = F_UM,
                       U_Pop6Est = LEP_UE,
@@ -471,7 +476,7 @@ ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID10, 1, 2),
   select(-ends_with("UE"), -ends_with("UM"))
 
 # Reorder columns
-ipd <- ipd %>% select(GEOID10, STATEFP10, COUNTYFP10, NAME10, sort(tidyselect::peek_vars())) %>%
+ipd <- ipd %>% select(GEOID20, STATEFP20, COUNTYFP20, NAME20, sort(tidyselect::peek_vars())) %>%
   select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE",
                         "U_Pop6Est", "U_Pop6MOE", "U_PPovEst",
                         "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
@@ -481,7 +486,7 @@ ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
   mutate_if(is.numeric, ~(ifelse(is.na(.), 0, .)))
 
 # Append low-population tracts back onto dataset
-slicer <- enframe(slicer, name = NULL, value = "GEOID10")
+slicer <- enframe(slicer, name = NULL, value = "GEOID20")
 ipd <- plyr::rbind.fill(ipd, slicer)
 
 
@@ -537,10 +542,10 @@ export_summary <- as_tibble(summary_data) %>%
   select(Statistic, tidyselect::peek_vars())
 
 # Population-weighted county means for each indicator
-export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) %>%
-  select(GEOID10, sort(tidyselect::peek_vars())) %>%
-  mutate(County = str_sub(GEOID10, 1, 5)) %>%
-  select(-GEOID10) %>%
+export_means <- dl_counts %>% select(GEOID20, ends_with("UE"), ends_with("CE")) %>%
+  select(GEOID20, sort(tidyselect::peek_vars())) %>%
+  mutate(County = str_sub(GEOID20, 1, 5)) %>%
+  select(-GEOID20) %>%
   group_by(County) %>%
   summarize(D_PctEst = sum(D_CE) / sum(D_UE),
             EM_PctEst = sum(EM_CE) / sum(EM_UE),
@@ -554,11 +559,46 @@ export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) 
   mutate_if(is.numeric, ~ . * 100) %>%
   mutate_if(is.numeric, round_1)
 
+#ipd score classes/range
+breaks2 <- st_dev_breaks(ipd$IPD_Score, 5, na.rm = TRUE)
+ipd$IPD_Range <- case_when(ipd$IPD_Score < breaks2[2] ~ 0,
+                           ipd$IPD_Score >= breaks2[2] & ipd$IPD_Score < breaks2[3] ~ 1,
+                           ipd$IPD_Score >= breaks2[3] & ipd$IPD_Score < breaks2[4] ~ 2,
+                           ipd$IPD_Score >= breaks2[4] & ipd$IPD_Score < breaks2[5] ~ 3,
+                           ipd$IPD_Score >= breaks2[5] ~ 4)
+ipd$IPD_Class <- case_when(ipd$IPD_Range == 0 ~ "Well Below Average",
+                           ipd$IPD_Range == 1 ~ "Below Average",
+                           ipd$IPD_Range == 2 ~ "Average",
+                           ipd$IPD_Range == 3 ~ "Above Average",
+                           ipd$IPD_Range == 4 ~ "Well Above Average")
+ipd$IPD_Range <- case_when(ipd$IPD_Class == "Well Below Average" ~ "0 - 11.23389",
+                           ipd$IPD_Class == "Below Average" ~ "11.2339 - 15.45367",
+                           ipd$IPD_Class == "Average" ~ "15.45368 - 19.67345",
+                           ipd$IPD_Class == "Above Average" ~ "19.67346 - 23.89323",
+                           ipd$IPD_Class == "Well Above Average" ~ "23.89323 - 32")
+
+
 # Replace NA with NoData if character and -99999 if numeric
 # so tract 42091206702 doesn't mess up breaks and means by indicator
 ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
   mutate_if(is.numeric, ~(ifelse(is.na(.), -99999, .)))
 ipd_summary[ipd_summary == -99999] <- NA
+
+ipd$STATEFP20 <- str_sub(ipd$GEOID20,1,2) 
+ipd$COUNTYFP20 <- str_sub(ipd$GEOID20,3,5) 
+ipd$NAME20 <- str_sub(ipd$GEOID20,6,11) 
+
+ipd$GEOID20 <- as.character(ipd$GEOID20)
+ipd$STATEFP20 <- as.character(ipd$STATEFP20)
+ipd$COUNTYFP20 <- as.character(ipd$COUNTYFP20)
+ipd$NAME20 <- as.character(ipd$NAME20)
+ipd$namelsad <- paste(substr(ipd$GEOID20, 6, 9), substr(ipd$GEOID20, 10, 11), sep = ".")
+ipd$U_Pop6Est <- rename(U_Pop6Est = U_Pop5Est)
+ipd$U_Pop6MOE <- rename(U_Pop6MOE = U_Pop5MOE)
+ipd_summary$U_Pop6Est <- rename(U_Pop6Est = U_Pop5Est)
+ipd_summary$U_Pop6MOE <- rename(U_Pop6MOE = U_Pop5MOE)
+trct$U_Pop6Est <- rename(U_Pop6Est = U_Pop5Est)
+trct$U_Pop6MOE <- rename(U_Pop6MOE = U_Pop5MOE)
 
 ## EXPORT
 
@@ -572,8 +612,8 @@ trct <- map2(st, cty, ~{tracts(state = .x,
   rbind_tigris() %>%
   st_transform(., 26918) %>%
   select(GEOID) %>%
-  left_join(., ipd, by = c("GEOID" = "GEOID10")) %>%
-  rename(GEOID10 = GEOID)
+  left_join(., ipd, by = c("GEOID" = "GEOID20")) %>%
+  rename(GEOID20 = GEOID)
 
 st_write(trct, here("outputs", "ipd.shp"), delete_dsn = TRUE, quiet = TRUE)
 write_csv(ipd, here("outputs", "ipd.csv"))
