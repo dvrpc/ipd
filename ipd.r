@@ -4,7 +4,7 @@ library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
 
 # Census API Key
-census_api_key("INSERT_API_KEY_HERE", overwrite = TRUE)
+census_api_key(Sys.getenv("CENSUS_API_KEY"), overwrite = TRUE)
 
 # Fields
 # See https://www.census.gov/data/developers/data-sets/acs-5year.html
