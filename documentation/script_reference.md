@@ -60,7 +60,6 @@
     b. [Export files](#nine_b)
 10. [Metadata table with sources](#metadata)
 
-\pagebreak
 
 # 1. About {#about}
 DVRPC's IPD analysis identifies populations of interest under Title VI of the Civil Rights Act and the Executive Order on Environmental Justice (#12898) using 2013-2017 American Community Survey (ACS) five-year estimates from the U.S. Census Bureau. IPD analysis assists both DVRPC and outside organizations in equity work by identifying populations of interest, including youth, older adults, female, racial minority, ethnic minority, foreign-born, limited English proficiency, disabled, and low-income populations at the census tract level in DVRPC's nine-county region.
@@ -970,7 +969,6 @@ write_csv(export_summary, here("outputs", "summary_by_indicator.csv"))
 write_csv(export_means, here("outputs", "mean_by_county.csv"))
 ```
 
-\pagebreak
 # 10. Metadata table with sources {#metadata}
 | Variable   | Concept                                     | acs table | acs variable | data source | Source Type | Universe Variable |
 |------------|---------------------------------------------|-----------|--------------|-------------|-------------|-------------------|
