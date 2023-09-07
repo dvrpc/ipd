@@ -970,6 +970,9 @@ write_csv(export_means, here("outputs", "mean_by_county.csv"))
 ```
 
 # 10. Metadata table with sources {#metadata}
+This is a table of the final output with some additional data such as municipality name and area added but not included in the script.
+<br>
+
 | Variable   | Concept                                     | acs table | acs variable | data source | Source Type | Universe Variable |
 |------------|---------------------------------------------|-----------|--------------|-------------|-------------|-------------------|
 | geoid20    | 11-digit tract GEOID                        | n/a       | n/a          | ACS 5-year  | n/a         | n/a               |
