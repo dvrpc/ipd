@@ -58,6 +58,7 @@
 9. [Export](#export)
     a. [Append to TIGER/LINE file](#nine_a)
     b. [Export files](#nine_b)
+10. [Metadata table with sources](#metadata)
 
 \pagebreak
 
@@ -968,3 +969,92 @@ write_csv(export_breaks, here("outputs", "breaks_by_indicator.csv"))
 write_csv(export_summary, here("outputs", "summary_by_indicator.csv"))
 write_csv(export_means, here("outputs", "mean_by_county.csv"))
 ```
+
+\pagebreak
+# 10. Metadata table with sources {#metadata}
+| Variable   | Concept                                     | acs table | acs variable | data source | Source Type | Universe Variable |
+|------------|---------------------------------------------|-----------|--------------|-------------|-------------|-------------------|
+| geoid20    | 11-digit tract GEOID                        | n/a       | n/a          | ACS 5-year  | n/a         | n/a               |
+| statefp20  | 2-digit state GEOID                         | n/a       | n/a          | ACS 5-year  | n/a         | n/a               |
+| countyfp20 | 3-digit county GEOID                       | n/a       | n/a          | ACS 5-year  | n/a         | n/a               |
+| name20     | Tract and county name                      | n/a       | n/a          | ACS 5-year  | n/a         | n/a               |
+| d_class    | Disabled percentile class                   | n/a       | n/a          | calculated  | calculated  | S1810_C01_001     |
+| d_cntest   | Disabled count estimate                     | S1810_C02_001_E | acs variable | ACS 5-year  | acs variable | S1810_C01_001     |
+| d_cntmoe   | Disabled count margin of error              | S1810_C02_001_M | acs variable | ACS 5-year  | acs variable | S1810_C01_001     |
+| d_pctest   | Disabled percent estimate                   | S1810_C03_001_E | acs variable | ACS 5-year  | acs variable | S1810_C01_001     |
+| d_pctile   | Disabled percentile                          | n/a       | n/a          | calculated  | calculated  | S1810_C01_001     |
+| d_pctmoe   | Disabled percent margin of error            | S1810_C03_001_M | acs variable | ACS 5-year  | acs variable | S1810_C01_001     |
+| d_score    | Disabled percentile score                   | n/a       | n/a          | calculated  | calculated  | S1810_C01_001     |
+| em_class   | Ethnic minority percentile class            | B03002    | n/a          | calculated  | calculated  | B03002_001        |
+| em_cntest  | Ethnic minority count estimate              | B03002    | B03002_012_E | ACS 5-year  | acs variable | B03002_001        |
+| em_cntmoe  | Ethnic minority count margin of error       | B03002    | B03002_012_M | ACS 5-year  | acs variable | B03002_001        |
+| em_pctest  | Ethnic minority percent estimate            | B03002    | n/a          | calculated  | calculated  | B03002_001        |
+| em_pctile  | Ethnic minority percentile                   | B03002    | n/a          | calculated  | calculated  | B03002_001        |
+| em_pctmoe  | Ethnic minority percent margin of error     | B03002    | n/a          | calculated  | calculated  | B03002_001        |
+| em_score   | Ethnic minority percentile score            | B03002    | n/a          | calculated  | calculated  | B03002_001        |
+| f_class    | Female percentile class                     | S0101     | n/a          | calculated  | calculated  | S0101_C01_001     |
+| f_cntest   | Female count estimate                       | S0101     | S0101_C05_001_E | ACS 5-year  | acs variable | S0101_C01_001     |
+| f_cntmoe   | Female count margin of error                | S0101     | S0101_C05_001_M | ACS 5-year  | acs variable | S0101_C01_001     |
+| f_pctest   | Female percent estimate                     | S0101     | DP05_0003PE_E | ACS 5-year  | acs variable | S0101_C01_001     |
+| f_pctile   | Female percentile                            | S0101     | n/a          | calculated  | calculated  | S0101_C01_001     |
+| f_pctmoe   | Female percent margin of error              | S0101     | DP05_0003PE_M | ACS 5-year  | acs variable | S0101_C01_001     |
+| f_score    | Female percentile score                     | S0101     | n/a          | calculated  | calculated  | S0101_C01_001     |
+| fb_class   | Foreign-born percentile class                | B05012    | n/a          | calculated  | calculated  | B05012_001        |
+| fb_cntest  | Foreign-born count estimate                  | B05012    | B05012_003_E | ACS 5-year  | acs variable | B05012_001        |
+| fb_cntmoe  | Foreign-born count margin of error           | B05012    | B05012_003_M | ACS 5-year  | acs variable | B05012_001        |
+| fb_pctest  | Foreign-born percent estimate                | B05012    | n/a          | calculated  | calculated  | B05012_001        |
+| fb_pctile  | Foreign-born percentile                       | B05012    | n/a          | calculated  | calculated  | B05012_001        |
+| fb_pctmoe  | Foreign-born percent margin of error         | B05012    | n/a          | calculated  | calculated  | B05012_001        |
+| fb_score   | Foreign-born percentile score                | B05012    | n/a          | calculated  | calculated  | S1601_C01_001     |
+| lep_class  | Limited English proficiency percentile class | S1601     | n/a          | calculated  | calculated  | S1601_C01_001     |
+| lep_cntest | Limited English proficiency count estimate   | S1601     | S1601_C05_001_E | ACS 5-year  | acs variable | S1601_C01_001     |
+| lep_cntmoe | Limited English proficiency count margin of error | S1601 | S1601_C05_001_M | ACS 5-year  | acs variable | S1601_C01_001     |
+| lep_pctest | Limited English proficiency percent estimate | S1601   | S1601_C06_001_E | ACS 5-year  | acs variable | S1601_C01_001     |
+| lep_pctile | Limited English proficiency percentile       | S1601   | n/a          | calculated  | calculated  | S1601_C01_001     |
+| lep_pctmoe | Limited English proficiency percent margin of error | S1601 | S1601_C06_001_M | ACS 5-year  | acs variable | S1601_C01_001     |
+| lep_score  | Limited English proficiency percentile score | S1601 | n/a          | calculated  | calculated  | S1601_C01_001     |
+| li_class   | Low-income percentile class                 | n/a       | n/a          | calculated  | calculated  | S1701_C01_001     |
+| li_cntest  | Low-income count estimate                   | S1701     | S1701_C01_042_E | ACS 5-year  | acs variable | S1701_C01_001     |
+| li_cntmoe  | Low-income count margin of error            | S1701     | S1701_C01_042_M | ACS 5-year  | acs variable | S1701_C01_001     |
+| li_pctest  | Low-income percent estimate                 | n/a       | n/a          | calculated  | calculated  | S1701_C01_001     |
+| li_pctile  | Low-income percentile                        | n/a       | n/a          | calculated  | calculated  | S1701_C01_001     |
+| li_pctmoe  | Low-income percent margin of error          | n/a       | n/a          | calculated  | calculated  | S1701_C01_001     |
+| li_score   | Low-income percentile score                 | n/a       | n/a          | calculated  | calculated  | S1701_C01_001     |
+| oa_class   | Older adult percentile class                | S0101     | n/a          | calculated  | calculated  | B02001_001        |
+| oa_cntest  | Older adult count estimate                  | S0101     | S0101_C01_001_E | ACS 5-year  | acs variable | B02001_001        |
+| oa_cntmoe  | Older adult count margin of error           | S0101     | S0101_C01_001_M | ACS 5-year  | acs variable | B02001_001        |
+| oa_pctest  | Older adult percent estimate                | S0101     | S0101_C02_030_E | ACS 5-year  | acs variable | B02001_001        |
+| oa_pctile  | Older adult percentile                       | S0101     | n/a          | calculated  | calculated  | B02001_001        |
+| oa_pctmoe  | Older adult percent margin of error         | S0101     | S0101_C02_030_M | ACS 5-year  | acs variable | B02001_001        |
+| oa_score   | Older adult percentile score                | S0101     | n/a          | calculated  | calculated  | B02001_001        |
+| rm_class   | Racial minority percentile class            | B02001    | n/a          | calculated  | calculated  | B02001_001        |
+| rm_cntest  | Racial minority count estimate              | B02001    | B02001_002_E | ACS 5-year  | acs variable | B02001_001        |
+| rm_cntmoe  | Racial minority count margin of error       | B02001    | B02001_002_M | ACS 5-year  | acs variable | B02001_001        |
+| rm_pctest  | Racial minority percent estimate            | B02001    | n/a          | calculated  | calculated  | B02001_001        |
+| rm_pctile  | Racial minority percentile                   | B02001    | n/a          | calculated  | calculated  | B02001_001        |
+| rm_pctmoe  | Racial minority percent margin of error     | B02001    | n/a          | calculated  | calculated  | B02001_001        |
+| rm_score   | Racial minority percentile score            | B02001    | n/a          | calculated  | calculated  | B02001_001        |
+| y_class    | Youth percentile class                      | B09001    | n/a          | calculated  | calculated  | B03002_001        |
+| y_cntest   | Youth count estimate                        | B09001    | B09001_001  | ACS 5-year  | acs variable | B03002_001        |
+| y_cntmoe   | Youth count margin of error                 | B09001    | B09001_001  | ACS 5-year  | acs variable | B03002_001        |
+| y_pctest   | Youth population percentage estimate        | B09001    | n/a          | calculated  | calculated  | B03002_001        |
+| y_pctile   | Youth population percentile                  | B09001    | n/a          | calculated  | calculated  | B03002_001        |
+| y_pctmoe   | Youth population percentage margin of error | B09001    | n/a          | calculated  | calculated  | B03002_001        |
+| y_score    | Youth percentile score                      | B09001    | n/a          | calculated  | calculated  | B03002_001        |
+| ipd_score  | Indicator of potential disadvantage score   | n/a       | n/a          | calculated  | calculated  | n/a               |
+| u_tpopest  | Total population estimate                   | B02001    | B02001_001_E | ACS 5-year  | acs variable | B02001_001        |
+| u_tpopmoe  | Total population margin of error            | B02001    | B02001_001_E | ACS 5-year  | acs variable | B02001_001        |
+| u_pop6est  | Population over 6 years of age estimate     | S1601     | S1601_C01_001_E | ACS 5-year  | acs variable | S1601_C01_001     |
+| u_pop6moe  | Population over 6 years of age margin of error | S1601  | S1601_C01_001_M | ACS 5-year  | acs variable | S1601_C01_001     |
+| u_ppovest  | Total population poverty rate estimate      | S1701     | S1701_C01_001_E | ACS 5-year  | acs variable | S1701_C01_001     |
+| u_ppovmoe  | Total population poverty rate margin of error | S1701 | S1701_C01_001_M | ACS 5-year  | acs variable | S1701_C01_001     |
+| u_pnicest  | Disabled universe total estimate            | S1810     | S1810_C01_001_E | ACS 5-year  | acs variable | S1810_C01_001     |
+| u_pnicmoe  | Disabled universe total margin of error     | S1810     | S1810_C01_001_M | ACS 5-year  | acs variable | S1810_C01_001     |
+| namelsad   | Geography name                              | n/a       | n/a          | ACS 5-year  | acs variable | n/a               |
+| mun1       | First municipality name                     | n/a       | n/a          | calculated  | calculated  | n/a               |
+| mun2       | Second municipality name                    | n/a       | n/a          | calculated  | calculated  | n/a               |
+| mun3       | Third municipality name                     | n/a       | n/a          | calculated  | calculated  | n/a               |
+| co_name    | County Name                                 | n/a       | n/a          | calculated  | calculated  | n/a               |
+| state      | State name                                  | n/a       | n/a          | ACS 5-year  | n/a         | n/a               |
+| st_area(shape) | Area of a geometry                       | n/a       | n/a          | ACS 5-year  | n/a         | n/a               |
+| st_perimeter(shape) | Perimeter of the geometry           | n/a       | n/a          | ACS 5-year  | n/a         | n/a               |
