@@ -4,8 +4,8 @@ library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
 
 # Census API Key
+Sys.getenv("CENSUS_API_KEY")
 census_api_key("INSERT_API_KEY_HERE", overwrite = TRUE)
-
 # Fields
 # See https://www.census.gov/data/developers/data-sets/acs-5year.html
 # for the variables for Detailed Tables (B), Subject Tables (S), and Data Profiles (DP)
