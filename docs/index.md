@@ -2,10 +2,10 @@
 
 # Outline
 
-1. [About](#about)\
-   a. [Getting started](#one_a)\
-   b. [Output abbreviations](#one_b)\
-   c. [Project structure](#one_c)\
+1. [About](#about)
+   a. [Getting started](#one_a)
+   b. [Output abbreviations](#one_b)
+   c. [Project structure](#one_c)
 2. [Setup](#setup)
    a. [Dependencies](#two_a)
    b. [Fields](#two_b)
