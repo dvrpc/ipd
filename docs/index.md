@@ -2,7 +2,7 @@
 
 # Outline
 
-1. [About](#about)\s\s
+1. [About](#about)\
    a. [Getting started](#one_a)
    b. [Output abbreviations](#one_b)\
    c. [Project structure](#one_c)\
