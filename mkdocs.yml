@@ -28,6 +28,15 @@ theme:
       primary: teal
       accent: lime
 
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/dvrpc
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/DVRPC?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/channel/UCEU8UI5_iGkVypHP93b5jLA
+
 markdown_extensions:
   - tables
   - pymdownx.highlight:
@@ -48,15 +57,6 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
-
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/dvrpc
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/DVRPC?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor
-    - icon: fontawesome/brands/youtube
-      link: https://www.youtube.com/channel/UCEU8UI5_iGkVypHP93b5jLA
 
 copyright: |
   &copy; 2023 <a href="https://github.com/dvrpc"  target="_blank" rel="noopener">DVRPC</a>
