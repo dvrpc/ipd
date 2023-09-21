@@ -161,7 +161,7 @@ The base information we need for IPD analysis are universes, counts, and percent
 | racial_minority_universe    | B02001_001        | B02001_001        | B02001_001        | B02001_001        | B02001_001        | B02001_001        | B02001_001        |
 | racial_minority_count       | B02001_002        | B02001_002        | B02001_002        | B02001_002        | B02001_002        | B02001_002        | B02001_002        |
 | racial_minority_percent     | NA                | NA                | NA                | NA                | NA                | NA                | NA                |
-| youth_universe              | B03002_001        | B03002_001        | B03002_001        | B03002_001       
+| youth_universe              | B03002_001        | B03002_001        | B03002_001        | B03002_001 | B03002_001        | B03002_001        |       
 
 
 Some percentage fields are empty. This is okay: we will compute the percentages when they are not directly available from the ACS.
@@ -257,14 +257,14 @@ max <- function(i, ..., na.rm = TRUE) {
 
 ### 2g.ii. Create custom half-standard deviation breaks {#two_g_ii}
 
-For a given vector of numbers `x` and a number of bins `i`, `st_dev_breaks` computes the bin breaks starting at $-0.5 \cdot st dev$ and $0.5 \cdot st dev$. For the purposes of IPD analysis, `i = 5`, and `st_dev_breaks` calculates the minimum, $-1.5 \cdot st dev$, $-0.5 \cdot st dev$, $0.5 \cdot st dev$, $1.5 \cdot st dev$, and maximum values. These values are later used to slice the vector into five bins.
+For a given vector of numbers `x` and a number of bins `i`, `st_dev_breaks` computes the bin breaks starting at `$-0.5 \cdot st dev$` and `$0.5 \cdot st dev$`. For the purposes of IPD analysis, `i = 5`, and `st_dev_breaks` calculates the minimum, `$-1.5 \cdot st dev$`, `$-0.5 \cdot st dev$`, `$0.5 \cdot st dev$`, `$1.5 \cdot st dev$`, and maximum values. These values are later used to slice the vector into five bins.
 
 ### 2g.iii. _Exception_ {#two_g_iii}
 
-All minima are coerced to equal zero. If the first bin break ($-1.5 \cdot st dev$) is negative, as happens when the data has a large spread and therefore a large standard deviation, then this bin break is coerced to equal 0.1. In these cases, only estimates of 0 percent will be placed in the bottom bin.
+All minima are coerced to equal zero. If the first bin break (`$-1.5 \cdot st dev$`) is negative, as happens when the data has a large spread and therefore a large standard deviation, then this bin break is coerced to equal 0.1. In these cases, only estimates of 0 percent will be placed in the bottom bin.
 <br>
 
-```{r st_dev_breaks}
+```r
 st_dev_breaks <- function(x, i, na.rm = TRUE){
   half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
                          seq(1, i, by = 2))
@@ -286,10 +286,10 @@ st_dev_breaks <- function(x, i, na.rm = TRUE){
 
 ### 2g.iv. Move column or vector of columns to last position {#two_g_iv}
 
-The requested schema for IPD data export renames and places all relevant universes in the final columns of the dataset. `move_last` moves a column or vector of column names to the last position(s) in a data frame.
+The requested schema for IPD data export renames and places all relevant universes in the final columns of the dataset. `move_last` moves a column or vector of column names to the last position(s) in a data frame. Further reordering is done in the final web application.
 <br>
 
-```{r move_last}
+```r
 move_last <- function(df, last_col) {
   match(c(setdiff(names(df), last_col), last_col), names(df))
 }
@@ -297,10 +297,10 @@ move_last <- function(df, last_col) {
 
 ### 2g.v. Summarize data {#two_g_v}
 
-`description` tailors the exports from `summarytools::descr` to create summary tables with the requested fields. $0.5 \cdot st dev$ is returned after $stdev$.
+`description` tailors the exports from `summarytools::descr` to create summary tables with the requested fields. `$0.5 \cdot st dev$` is returned after `$stdev$`.
 <br>
 
-```{r description}
+```r
 description <- function(i) {
   des <- as.numeric(descr(i, na.rm = TRUE,
                           stats = c("min", "med", "mean", "sd", "max")))
@@ -311,9 +311,9 @@ description <- function(i) {
 
 # 3. Variance replicate table download {#variance_replicate_table_download}
 
-This will feel out of order, but it's necessary. The racial minority indicator is created by summing up several subgroups in ACS Table B03002. This means that the MOE for the count has to be computed. While the ACS has issued guidance on computing the MOE by aggregating subgroups, using the approximation formula can artificially deflate the derived MOE. Variance replicate tables are used instead to account for covariance and compute a more accurate MOE. The MOE computed from variance replicates is substituted in for the racial minority count MOE in Section 5d.ii.
+The racial minority indicator is created by summing up several subgroups in ACS Table `B03002`. This means that the MOE for the count has to be computed. While the ACS has issued guidance on computing the MOE by aggregating subgroups, using the approximation formula can artificially deflate the derived MOE. Variance replicate tables are used instead to account for covariance and compute a more accurate MOE. The MOE computed from variance replicates is substituted in for the racial minority count MOE in Section 5d.ii.
 
-See the Census Bureau's Variance Replicate Tables Documentation [(link)](https://www.census.gov/programs-surveys/acs/technical-documentation/variance-tables.html) for additional guidance on working with variance replicates.
+See the Census Bureau's [Variance Replicate Tables Documentation](https://www.census.gov/programs-surveys/acs/technical-documentation/variance-tables.html) for additional guidance on working with variance replicates.
 
 ## 3a. Download variance replicates from Census website {#three_a}
 
