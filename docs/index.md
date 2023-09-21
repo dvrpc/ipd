@@ -136,7 +136,7 @@ library(tidycensus); library(tidyverse); library(tigris); library(dplyr); librar
 The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. For each indicator, the table below shows the indicator name, its abbreviation used in the script, its universe, its count, and its percentage field if applicable. Find a list of histoic variables below:
 
 | Field                         | year_2015         | year_2016         | year_2017         | year_2018         | year_2019         | year_2020         | year_2021         |
-| ------------------------------ | ----------------- | ----------------- | ----------------- | ----------------- | ----------------- | ----------------- | ----------------- |
+| :------------------------------ | :-----------------: | :-----------------: | :-----------------: | :-----------------: | :-----------------: | :-----------------: | -----------------: |
 | disabled_universe             | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     |
 | disabled_count                | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     |
 | disabled_percent              | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     |
