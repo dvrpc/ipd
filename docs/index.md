@@ -3,7 +3,7 @@
 # Outline
 
 1. [About](#about)
-   - [Getting started](#one_a)
+   - 1a. [Getting started](#one_a)
    - [Output abbreviations](#one_b)
    - [Project structure](#one_c)
 2. [Setup](#setup)
