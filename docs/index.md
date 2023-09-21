@@ -29,13 +29,14 @@
    a. [Percentages and percentage MOEs](#six_a) 1. [Calculation](#six_a_i) 2. [Result](#six_a_ii) 3. [_Exception_](#six_a_iii) 4. [_Exception_](#six_a_iv)
    b. [Percentile](#six_b) 1. [Calculation](#six_b_i) 2. [Result](#six_b_ii)
    c. [IPD score and classification](#six_c) 1. [Calculation](#six_c_i) 2. [Result](#six_c_ii)
-   d. [Composite IPD score](#six_d) 1. [Calculation](#six_d_i) 2. [Result](#six_d_ii)
+   d. [Composite IPD score](#six_d) 1. [Calculation](#six_d_i)
 7. [ACS estimates cleaning](#acs_estimates_cleaning)
 8. [Summary tables](#summary_tables)
    a. [Counts by indicator](#eight_a)
    b. [Breaks by indicator](#eight_b)
    c. [Summary by indicator](#eight_c)
    d. [County means by indicator](#eight_d)
+   e. [Replacing NA with NoData if character and -99999 if numeric](#eight_e)
 9. [Export](#export)
    a. [Append to TIGER/LINE file](#nine_a)
    b. [Export files](#nine_b)
@@ -696,10 +697,10 @@ for (c in 1:length(comp$uni_est)){
 `pct` and `pct_moe` stores the percentages and associated MOEs for the nine indicator variables. Results are rounded to the tenths place and range from 0 to 100.
 <br>
 
-```{r perc_res, warning = FALSE}
-pct <- as_tibble(pct_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_all(round, 1)
+```r
+pct <- as_tibble(pct_matrix) %>% mutate_all(~ . * 100) %>% mutate_all(round_1)
 names(pct) <- str_replace(names(comp$uni_est), "_UE", "_PctEst")
-pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(funs(. * 100)) %>% mutate_all(round, 1)
+pct_moe <- as_tibble(pct_moe_matrix) %>% mutate_all(~ . * 100) %>% mutate_all(round_1)
 names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 ```
 
@@ -708,7 +709,7 @@ names(pct_moe) <- str_replace(names(comp$uni_est), "_UE", "_PctMOE")
 If the percentage MOE equals 0, then overwrite it to equal 0.1. This should be a rare occurence with survey data at the census tract level.
 <br>
 
-```{r perc_excp_4}
+```r
 pct_moe <- pct_moe %>% replace(., . == 0, 0.1)
 ```
 
@@ -717,7 +718,7 @@ pct_moe <- pct_moe %>% replace(., . == 0, 0.1)
 Substitute percentages and associated MOEs when available. This applies to the older adults, female, limited English proficiency, and disabled variables.
 <br>
 
-```{r perc_excp_5}
+```r
 pct <- pct %>% mutate(D_PctEst = dl_percs$D_PE,
                       OA_PctEst = dl_percs$OA_PE,
                       LEP_PctEst = dl_percs$LEP_PE,
@@ -728,13 +729,6 @@ pct_moe <- pct_moe %>% mutate(D_PctMOE = dl_percs$D_PM,
                               F_PctMOE = dl_percs$F_PM)
 ```
 
-Here are the first few lines of `pct` and `pct_moe`:
-
-```{r pct_preview}
-head(pct)
-head(pct_moe)
-```
-
 ## 6b. Percentile {#six_b}
 
 ### 6b.i. Calculation {#six\_\_b_i}
@@ -742,14 +736,15 @@ head(pct_moe)
 Add percentiles (an additional "spreadsheet tab") to `comp`, making sure to first sort column names alphabetically. Compute the empirical cumulative distribution function for each of the nine indicator variables. The ECDF can range from 0 to 1, where 1 indicates the largest observed percentage.
 <br>
 
-```{r percentile}
-comp$pct_est <- pct %>% select(sort(current_vars()))
+```r
+comp$pct_est <- pct %>% select(sort(tidyselect::peek_vars()))
 percentile_matrix <- NULL
 for (c in 1:length(comp$uni_est)){
   p <- unlist(comp$pct_est[,c])
   rank <- ecdf(p)(p)
   percentile_matrix <- cbind(percentile_matrix, rank)
 }
+
 ```
 
 ### 6b.ii. Result {#six_b_ii}
@@ -757,16 +752,9 @@ for (c in 1:length(comp$uni_est)){
 `percentile` stores the percentile for the nine indicator variables. Results are rounded to the hundredths place.
 <br>
 
-```{r percentile_res, warning = FALSE}
-percentile <- as_tibble(percentile_matrix) %>% mutate_all(round, 2)
+```r
+percentile <- as_tibble(percentile_matrix) %>% mutate_all(round_2)
 names(percentile) <- str_replace(names(comp$uni_est), "_UE", "_Pctile")
-```
-
-Here are the first few lines of `percentile`:
-<br>
-
-```{r percentile_preview}
-head(percentile)
 ```
 
 ## 6c. IPD score and classification {#six_c}
@@ -774,7 +762,7 @@ head(percentile)
 Each observation is assigned an IPD score for each indicator. The IPD score for an individual indicator can range from 0 to 4, which corresponds to the following classification and bin breaks:
 
 | IPD Score | IPD Classification |              Standard Deviations              |
-| :-------: | :----------------: | :-------------------------------------------: |
+| :-------  | :----------------: | -------------------------------------------:  |
 |     0     | Well Below Average |            x $< -1.5 \cdot stdev$             |
 |     1     |   Below Average    | $-1.5 \cdot stdev \leq$ x $<-0.5 \cdot stdev$ |
 |     2     |      Average       | $-0.5 \cdot stdev \leq$ x $<0.5 \cdot stdev$  |
@@ -785,10 +773,10 @@ Each observation is assigned an IPD score for each indicator. The IPD score for 
 
 ### 6c.i. Calculation {#six_c_i}
 
-The function `st_dev_breaks` is called to compute the bin breaks for each indicator. These breaks determine the IPD score stored in `score`. Note that we divide _rounded_ `PctEst` columns by _unrounded_ half-standard deviation breaks to compute the `score`. `class` is a textual explanation of the IPD score.
+The function `st_dev_breaks` is called to compute the bin breaks for each indicator. These breaks determine the IPD score stored in `score`. Note that we divide *rounded* `PctEst` columns by *unrounded* half-standard deviation breaks to compute the `score`. `class` is a textual explanation of the IPD score.
 <br>
 
-```{r score_class}
+```r
 score_matrix <- NULL
 class_matrix <- NULL
 for (c in 1:length(comp$uni_est)){
@@ -814,19 +802,11 @@ for (c in 1:length(comp$uni_est)){
 `score` and `class` store the IPD scores and associated descriptions for the nine indicator variables.
 <br>
 
-```{r score_class_res, warning = FALSE}
+```r
 score <- as_tibble(score_matrix)
 names(score) <- str_replace(names(comp$uni_est), "_UE", "_Score")
 class <- as_tibble(class_matrix)
 names(class) <- str_replace(names(comp$uni_est), "_UE", "_Class")
-```
-
-Here are the first few lines of `score` and `class`:
-<br>
-
-```{r score_preview}
-head(score)
-head(class)
 ```
 
 ## 6d. Composite IPD score {#six_d}
@@ -836,17 +816,8 @@ head(class)
 Sum the IPD scores for the nine indicator variables to determine the composite IPD score.
 <br>
 
-```{r ipd_score}
+```r
 score <- score %>% mutate(IPD_Score = rowSums(.))
-```
-
-### 6d.ii. Result {#six_d_ii}
-
-Here are the first few records of the composite IPD score:
-<br>
-
-```{r ipd_score_preview}
-head(score$IPD_Score)
 ```
 
 # 7. ACS estimates cleaning {#acs_estimates_cleaning}
@@ -856,7 +827,7 @@ There is a specific output format for `ipd.csv`, including column names, column 
 Merge the percentage estimates, percentage MOEs, percentile, score, and class data frames into a single data frame called `ipd`.
 <br>
 
-```{r merge}
+```r
 ipd <- bind_cols(dl_counts, pct) %>%
   bind_cols(., pct_moe) %>%
   bind_cols(., percentile) %>%
@@ -867,16 +838,16 @@ ipd <- bind_cols(dl_counts, pct) %>%
 Rename columns.
 <br>
 
-```{r rename}
+```r
 names(ipd) <- str_replace(names(ipd), "_CE", "_CntEst")
 names(ipd) <- str_replace(names(ipd), "_CM", "_CntMOE")
-ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID10, 1, 2),
-                      COUNTYFP10 = str_sub(GEOID10, 3, 5),
-                      NAME10 = str_sub(GEOID10, 6, 11),
+ipd <- ipd %>% mutate(STATEFP20 = str_sub(GEOID20, 1, 2),
+                      COUNTYFP20 = str_sub(GEOID20, 3, 5),
+                      NAME20 = str_sub(GEOID20, 6, 11),
                       U_TPopEst = F_UE,
                       U_TPopMOE = F_UM,
-                      U_Pop5Est = LEP_UE,
-                      U_Pop5MOE = LEP_UM,
+                      U_Pop6Est = LEP_UE,
+                      U_Pop6MOE = LEP_UM,
                       U_PPovEst = LI_UE,
                       U_PPovMOE = LI_UM,
                       U_PNICEst = D_UE,
@@ -887,27 +858,27 @@ ipd <- ipd %>% mutate(STATEFP10 = str_sub(GEOID10, 1, 2),
 Reorder columns, with `GEOID` and FIPS codes first, the following variables in alphabetical order, and the total IPD score and universes at the end.
 <br>
 
-```{r reorder}
-ipd <- ipd %>% select(GEOID10, STATEFP10, COUNTYFP10, NAME10, sort(current_vars())) %>%
+```r
+ipd <- ipd %>% select(GEOID20, STATEFP20, COUNTYFP20, NAME20, sort(tidyselect::peek_vars())) %>%
   select(move_last(., c("IPD_Score", "U_TPopEst", "U_TPopMOE",
-                        "U_Pop5Est", "U_Pop5MOE", "U_PPovEst",
+                        "U_Pop6Est", "U_Pop6MOE", "U_PPovEst",
                         "U_PPovMOE", "U_PNICEst", "U_PNICMOE")))
 ```
 
-At the beginning of processing, we removed 11 census tracts from processing because their populations were equal to zero. Tack these back on to the dataset.
+At the beginning of processing, we removed the slicer census tracts from processing because their populations were equal to zero. Tack these back on to the dataset.
 <br>
 
-```{r tack}
-slicer <- enframe(slicer, name = NULL, value = "GEOID10")
+```r
+slicer <- enframe(slicer, name = NULL, value = "GEOID20")
 ipd <- plyr::rbind.fill(ipd, slicer)
 ```
 
-Replace `NA` values with `NoData` if character and `-99999` if numeric.
+Replace `NA` values with `NoData` if character we'll wait to replace `NA` with `-99999` if numeric.
 <br>
 
-```{r replace}
-ipd <- ipd %>% mutate_if(is.character, funs(ifelse(is.na(.), "NoData", .))) %>%
-  mutate_if(is.numeric, funs(ifelse(is.na(.), -99999, .)))
+```r
+ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
+  mutate_if(is.numeric, ~(ifelse(is.na(.), 0, .)))
 ```
 
 # 8. Summary Tables {#summary_tables}
@@ -919,12 +890,12 @@ b. Breaks by indicator
 c. Summary by indicator
 d. County means by indicator
 
-Replace `-99999` with `NA` for numeric columns to avoid distorting summary statistics.
+Replace `-99999` with `0` for numeric columns to avoid distorting summary statistics.
 <br>
 
-```{r summary_prep}
+```r
 ipd_summary <- ipd
-ipd_summary[ipd_summary == -99999] <- NA
+ipd_summary[ipd_summary == 0]
 ```
 
 ## 8a. Counts by indicator {#eight_a}
@@ -932,7 +903,13 @@ ipd_summary[ipd_summary == -99999] <- NA
 The number of census tracts that fall in each bin. Count census tracts by indicator and bin. Reorder factor levels so that "Well Below Average" appears before "Below Average," and the like.
 <br>
 
-```{r summary_counts, message = FALSE, warning = FALSE}
+```r
+counts <- ipd_summary %>% select(ends_with("Class"))
+export_counts <- apply(counts, 2, function(i) plyr::count(i))
+for(i in 1:length(export_counts)){
+  export_counts[[i]]$var <- names(export_counts)[i]
+}
+export_counts <- map_dfr(export_counts, `[`, c("var", "x", "freq"))
 counts <- ipd_summary %>% select(ends_with("Class"))
 export_counts <- apply(counts, 2, function(i) plyr::count(i))
 for(i in 1:length(export_counts)){
@@ -950,7 +927,7 @@ export_counts$Classification <- factor(export_counts$Classification,
 export_counts <- arrange(export_counts, Variable, Classification)
 export_counts <- export_counts %>%
   spread(Classification, Count) %>%
-  mutate_all(funs(replace_na(., 0))) %>%
+  mutate_all(~(replace_na(., 0))) %>%
   mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE))
 ```
 
@@ -959,12 +936,12 @@ export_counts <- export_counts %>%
 The bin breaks for each indicator. Apply the `st_dev_breaks` function to all percentage values and export results.
 <br>
 
-```{r summary_breaks}
+```r
 breaks <- ipd_summary %>% select(ends_with("PctEst"))
 export_breaks <- round(mapply(st_dev_breaks, x = breaks, i = 5, na.rm = TRUE), digits = 3)
 export_breaks <- as_tibble(export_breaks) %>%
   mutate(Class = c("Min", "1", "2", "3", "4", "Max")) %>%
-  select(Class, current_vars())
+  select(Class, tidyselect::peek_vars())
 ```
 
 ## 8c. Summary by indicator {#eight_c}
@@ -972,13 +949,13 @@ export_breaks <- as_tibble(export_breaks) %>%
 Summary statistics of each indicator. Round results to two decimal places.
 <br>
 
-```{r summary_summary}
+```r
 pcts <- ipd_summary %>% select(ends_with("PctEst"))
-summary_data <- apply(pcts, 2, description)
+summary_data <- apply(pcts, MARGIN=2, description)
 export_summary <- as_tibble(summary_data) %>%
-  mutate_all(round, 2) %>%
+  mutate_all(round_2) %>%
   mutate(Statistic = c("Minimum", "Median", "Mean", "SD", "Half-SD", "Maximum")) %>%
-  select(Statistic, current_vars())
+  select(Statistic, tidyselect::peek_vars())
 ```
 
 ## 8d. County means by indicator {#eight_d}
@@ -986,11 +963,11 @@ export_summary <- as_tibble(summary_data) %>%
 Population-weighted means by county and indicator. For the most accurate percentage values, aggregate all counts back to the county level and compute percentages. In the export file, counties are referred to by the five-digit character supplied by the user to `ipd_counties`.
 <br>
 
-```{r summary_county, warning = FALSE, message = FALSE}
-export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) %>%
-  select(GEOID10, sort(current_vars())) %>%
-  mutate(County = str_sub(GEOID10, 1, 5)) %>%
-  select(-GEOID10) %>%
+```r
+export_means <- dl_counts %>% select(GEOID20, ends_with("UE"), ends_with("CE")) %>%
+  select(GEOID20, sort(tidyselect::peek_vars())) %>%
+  mutate(County = str_sub(GEOID20, 1, 5)) %>%
+  select(-GEOID20) %>%
   group_by(County) %>%
   summarize(D_PctEst = sum(D_CE) / sum(D_UE),
             EM_PctEst = sum(EM_CE) / sum(EM_UE),
@@ -1001,8 +978,30 @@ export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) 
             OA_PctEst = sum(OA_CE) / sum(OA_UE),
             RM_PctEst = sum(RM_CE) / sum(RM_UE),
             Y_PctEst = sum(Y_CE) / sum(Y_UE)) %>%
-  mutate_if(is.numeric, funs(. * 100)) %>%
-  mutate_if(is.numeric, round, 1)
+  mutate_if(is.numeric, ~ . * 100) %>%
+  mutate_if(is.numeric, round_1)
+```
+
+## 8e. Replacing NA with NoData if character and -99999 if numeric {#eight_e}
+Now we replace NA with NoData if character and -99999 if numeric so tract 42091206702 doesn't mess up breaks and means by indicator.
+```r
+ipd <- ipd %>% mutate_if(is.character, ~(ifelse(is.na(.), "NoData", .))) %>%
+  mutate_if(is.numeric, ~(ifelse(is.na(.), -99999, .)))
+ipd_summary[ipd_summary == -99999] <- NA
+```
+
+In addition we extract elements of the GEOID and convert some of the fields to a `character` data type.
+
+```r
+ipd$STATEFP20 <- str_sub(ipd$GEOID20,1,2) 
+ipd$COUNTYFP20 <- str_sub(ipd$GEOID20,3,5) 
+ipd$NAME20 <- str_sub(ipd$GEOID20,6,11) 
+
+ipd$GEOID20 <- as.character(ipd$GEOID20)
+ipd$STATEFP20 <- as.character(ipd$STATEFP20)
+ipd$COUNTYFP20 <- as.character(ipd$COUNTYFP20)
+ipd$NAME20 <- as.character(ipd$NAME20)
+ipd$namelsad <- paste(substr(ipd$GEOID20, 6, 9), substr(ipd$GEOID20, 10, 11), sep = ".")
 ```
 
 # 9. Export {#export}
@@ -1012,7 +1011,7 @@ export_means <- dl_counts %>% select(GEOID10, ends_with("UE"), ends_with("CE")) 
 Using the arguments supplied in `ipd_county`, download the relevant census tracts and append `ipd` to them. Uncommenting `cb = TRUE` will greatly speed processing time by downloading generalized tract boundary shapefiles instead of detailed ones.
 <br>
 
-```{r shapefile, message = FALSE, warning = FALSE}
+```r
 options(tigris_use_cache = TRUE, tigris_class = "sf")
 st <- str_sub(ipd_counties, 1, 2)
 cty <- str_sub(ipd_counties, 3, 5)
@@ -1023,8 +1022,8 @@ trct <- map2(st, cty, ~{tracts(state = .x,
   rbind_tigris() %>%
   st_transform(., 26918) %>%
   select(GEOID) %>%
-  left_join(., ipd, by = c("GEOID" = "GEOID10")) %>%
-  rename(GEOID10 = GEOID)
+  left_join(., ipd, by = c("GEOID" = "GEOID20")) %>%
+  rename(GEOID20 = GEOID)
 ```
 
 ## 9b. Export files {#nine_b}
@@ -1032,13 +1031,13 @@ trct <- map2(st, cty, ~{tracts(state = .x,
 Results are saved in `outputs`.
 <br>
 
-```{r happy_trails, message = FALSE, warning = FALSE}
-st_write(trct, here("outputs", "ipd.shp"), delete_dsn = TRUE, quiet = TRUE)
-write_csv(ipd, here("outputs", "ipd.csv"))
-write_csv(export_counts, here("outputs", "counts_by_indicator.csv"))
-write_csv(export_breaks, here("outputs", "breaks_by_indicator.csv"))
-write_csv(export_summary, here("outputs", "summary_by_indicator.csv"))
-write_csv(export_means, here("outputs", "mean_by_county.csv"))
+```r
+st_write(trct, here("outputs", "ipd_2021.shp"), delete_dsn = TRUE, quiet = TRUE)
+write_csv(ipd, here("outputs", "ipd_2021.csv"))
+write_csv(export_counts, here("outputs", "counts_by_indicator_2021.csv"))
+write_csv(export_breaks, here("outputs", "breaks_by_indicator_2021.csv"))
+write_csv(export_summary, here("outputs", "summary_by_indicator_2021.csv"))
+write_csv(export_means, here("outputs", "mean_by_county_2021.csv"))
 ```
 
 # 10. Metadata table with sources {#metadata}
@@ -1047,7 +1046,7 @@ This is a table of the final output with some additional data such as municipali
 <br>
 
 | Variable            | Concept                                             | acs table       | acs variable    | data source | Source Type  | Universe Variable |
-| ------------------- | --------------------------------------------------- | --------------- | --------------- | ----------- | ------------ | ----------------- |
+|:------------------- | :---------------------------------------------------: | :---------------: | :---------------: | :-----------: | :------------: | -----------------: |
 | geoid20             | 11-digit tract GEOID                                | n/a             | n/a             | ACS 5-year  | n/a          | n/a               |
 | statefp20           | 2-digit state GEOID                                 | n/a             | n/a             | ACS 5-year  | n/a          | n/a               |
 | countyfp20          | 3-digit county GEOID                                | n/a             | n/a             | ACS 5-year  | n/a          | n/a               |
