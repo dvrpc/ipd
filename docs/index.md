@@ -49,7 +49,7 @@ There are many ways of identifying these populations of interest. This document 
 
 ## 1a. Getting started {#one_a}
 
-For guidance on software prerequisites and how to run this script, see `getting_started.pdf` in the `documentation` folder.
+For guidance on software prerequisites and how to run this script, see the README.md at https://github.com/dvrpc/ipd
 
 ## 1b. Output abbreviations {#one_b}
 
