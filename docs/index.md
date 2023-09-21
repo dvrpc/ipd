@@ -76,7 +76,7 @@ Components of field names that you'll see in `outputs` and throughout the script
 
 <br>
 
-Abbreviations of field names that you'll see in `outputs` _not_ comprised of the above components.
+Abbreviations of field names that you'll see in `outputs` *not* comprised of the above components.
 
 | Abbreviation | Equivalent                                     |
 | :----------- | :--------------------------------------------- |
@@ -98,7 +98,7 @@ Abbreviations of field names that you'll see in `outputs` _not_ comprised of the
 
 This script uses relative file paths based off the location of `ipd.Rproj`. As long as you download the entire repository, the script should have no trouble locating the correct subfolders. All of the subsequent years files are based on the same architecture. The project is structured as follows:
 
-```{r file_structure, eval = FALSE}
+```r
 ipd
 ipd.Rproj
   script.R
