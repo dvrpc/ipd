@@ -516,7 +516,7 @@ for(i in 1:length(combined_rows$api)){
 Download percentage tables that are available for four of IPD's nine indicators. We will compute percentages and their associated MOEs for the rest of the dataset later. The procedure is identical to that described in Section 5b.
 <br>
 
-```{r api_percs, message = FALSE}
+```r
 percs <- c(disabled_percent,
            ethnic_minority_percent,
            female_percent,
@@ -526,17 +526,24 @@ percs <- c(disabled_percent,
            older_adults_percent,
            racial_minority_percent,
            youth_percent)
+
 percs_ids <- c("D_P", "EM_P", "F_P", "FB_P", "LEP_P",
                "LI_P", "OA_P", "RM_P", "Y_P")
+
 percs_calls <- tibble(id = percs_ids, api = percs) %>%
   drop_na(.)
+
 s_calls <- percs_calls %>%
   filter(str_sub(api, 1, 1) == "S")
+
 d_calls <- percs_calls %>%
   filter(str_sub(api, 1, 1) == "B")
+
 dp_calls <- percs_calls %>%
   filter(str_sub(api, 1, 1) == "D")
+
 dl_percs <- NULL
+
 if(length(s_calls$id > 0)){
   s_percs <- get_acs(geography = "tract",
                      state = ipd_states,
@@ -546,6 +553,7 @@ if(length(s_calls$id > 0)){
     select(-NAME)
   dl_percs <- bind_cols(dl_percs, s_percs)
 }
+
 if(length(d_calls$id > 0)){
   d_percs <- get_acs(geography = "tract",
                      state = ipd_states,
@@ -555,6 +563,7 @@ if(length(d_calls$id > 0)){
     select(-NAME)
   dl_percs <- left_join(dl_percs, d_percs)
 }
+
 if(length(dp_calls$id > 0)){
   dp_percs <- get_acs(geography = "tract",
                       state = ipd_states,
@@ -564,16 +573,21 @@ if(length(dp_calls$id > 0)){
     select(-NAME)
   dl_percs <- left_join(dl_percs, dp_percs)
 }
+
+dl_percs <- dl_percs %>%
+  rename(GEOID20 = GEOID)
+
+# For DP downloads, make sure percs_calls and dl_percs match
+
 percs_calls$api <- str_replace(percs_calls$api, "PE", "")
 names(dl_percs) <- str_replace(names(dl_percs), "PE", "E")
 names(dl_percs) <- str_replace(names(dl_percs), "PM", "M")
+
 for(i in 1:length(percs_calls$id)){
   names(dl_percs) <- str_replace(names(dl_percs),
                                  percs_calls$api[i],
                                  percs_calls$id[i])
 }
-dl_percs <- dl_percs %>%
-  rename(GEOID10 = GEOID)
 ```
 
 ## 5d. Format downloads {#five_d}
@@ -581,19 +595,19 @@ dl_percs <- dl_percs %>%
 Subset `dl_counts` and `dl_percs` for DVRPC's nine-county region. Percentages should range from 0 to 100.
 <br>
 
-```{r dl_counts_dl_percs, message = FALSE}
+```r
 dl_counts <- dl_counts %>%
-  filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
+  filter(str_sub(GEOID20, 1, 5) %in% ipd_counties)
 dl_percs <- dl_percs %>%
-  filter(str_sub(GEOID10, 1, 5) %in% ipd_counties)
+  filter(str_sub(GEOID20, 1, 5) %in% ipd_counties)
 ```
 
 ### 5d.i. _Exception_ {#five_d_i}
 
-Note that variable B02001_002 ("Estimate; Total: - White alone") was downloaded as the count for racial minority. Compute B02001_001 (Universe) $-$ B02001_002 ("Estimate; Total: - White alone") and substitute for `RM_CE`.
+Note that variable `B02001_002 ("Estimate; Total: - White alone")` was downloaded as the count for racial minority. Compute `B02001_001 (Universe)` - `B02001_002 ("Estimate; Total: - White alone")` and substitute for `RM_CE`.
 <br>
 
-```{r perc_excp_1, message = FALSE}
+```r
 dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
   select(-RM_CE) %>%
   rename(RM_CE = x)
@@ -601,25 +615,10 @@ dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
 
 ### 5d.ii. _Exception_ {#five_d_ii}
 
-Before computing percentages and percentage MOEs, import the count MOE for the racial minority variable computed from variance replicates. If `rm_moe` exists, then this chunk will substitute the correct count MOE in `dl_counts`; if not, this chunk will do nothing.
-<br>
-
-```{r perc_excp_2, message = FALSE}
-if(exists("rm_moe")){
-  dl_counts <- dl_counts %>%
-    select(-RM_CM) %>%
-    left_join(., rm_moe) %>%
-    rename(RM_CM = RM_CntMOE) %>%
-    mutate_at(vars(RM_CM), as.numeric)
-}
-```
-
-### 5d.iii. _Exception_ {#five_d_iii}
-
 Half-standard deviations serve as the classification bins for IPD scores, and including zero-population tracts affects computed standard deviation values. Start by removing the 11 census tracts with zero population.
 <br>
 
-```{r perc_excp_3}
+```r
 slicer <- c("34005981802","34005982200","34021980000","42017980000",
             "42045980300","42045980000","42045980200","42091980100",
             "42091980000","42091980200","42091980300","42101036901",
@@ -629,8 +628,8 @@ slicer <- c("34005981802","34005982200","34021980000","42017980000",
             "42101980901","42101980902","42101980903","42101980904",
             "42101980905","42101980906", "42101989100","42101989200",
             "42101989300")
-dl_counts <- dl_counts %>% filter(!(GEOID10 %in% slicer))
-dl_percs <- dl_percs %>% filter(!(GEOID10 %in% slicer))
+dl_counts <- dl_counts %>% filter(!(GEOID20 %in% slicer))
+dl_percs <- dl_percs %>% filter(!(GEOID20 %in% slicer))
 ```
 
 Here are the first few lines of `dl_counts` and `dl_percs`. Notice the naming convention:
@@ -645,31 +644,26 @@ Here are the first few lines of `dl_counts` and `dl_percs`. Notice the naming co
 We use these strings to select columns, so consistency is key.
 <br>
 
-```{r acs_preview}
-head(dl_counts)
-head(dl_percs)
-```
-
 # 6. ACS estimates calculations {#acs_estimates_calculations}
 
 For all nine indicators, this section computes:
 
-a. Percentages and percentage MOEs
-b. Percentile
-c. IPD score and classification
-d. Composite IPD score
+- Percentages and percentage MOEs
+- Percentile
+- IPD score and classification
+- Composite IPD score
 
 Split `dl_counts` into a list named `comp` for processing and arrange column names in alphabetical order. The name of the list, `comp`, is a nod to the "component parts" of `dl_counts`. The structure of `comp` is similar to a four-tab Excel spreadsheet: for example, `comp` is the name of the `.xlsx` file, `uni_est` is a tab for universe estimates, and `uni_est` has nine columns and 1,368 rows, where the column is the IPD indicator and the row is the census tract observation.
 
 The order of columns is important because processing is based on vector position. We want to make sure that the first column of every tab corresponds to the Disabled indicator, the second to Ethnic Minority, et cetera.
 <br>
 
-```{r comp}
+```r
 comp <- list()
-comp$uni_est <- dl_counts %>% select(ends_with("UE")) %>% select(sort(current_vars()))
-comp$uni_moe <- dl_counts %>% select(ends_with("UM")) %>% select(sort(current_vars()))
-comp$count_est <- dl_counts %>% select(ends_with("CE")) %>% select(sort(current_vars()))
-comp$count_moe <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_vars()))
+comp$uni_est <- dl_counts %>% select(ends_with("UE")) %>% select(sort(tidyselect::peek_vars()))
+comp$uni_moe <- dl_counts %>% select(ends_with("UM")) %>% select(sort(tidyselect::peek_vars()))
+comp$count_est <- dl_counts %>% select(ends_with("CE")) %>% select(sort(tidyselect::peek_vars()))
+comp$count_moe <- dl_counts %>% select(ends_with("CM")) %>% select(sort(tidyselect::peek_vars()))
 ```
 
 ## 6a. Percentages and percentage MOEs {#six_a}
@@ -679,7 +673,7 @@ comp$count_moe <- dl_counts %>% select(ends_with("CM")) %>% select(sort(current_
 MOEs of the percentage values are obtained using the `tidycensus` function `moe_prop`. This chunk mentions `r` and `c` several times: continuing the spreadsheet analogy, think of `r` as the row number and `c` as the column number for a given spreadsheet tab.
 <br>
 
-```{r perc}
+```r
 pct_matrix <- NULL
 pct_moe_matrix <- NULL
 for (c in 1:length(comp$uni_est)){
