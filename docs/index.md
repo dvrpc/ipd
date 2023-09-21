@@ -302,8 +302,8 @@ move_last <- function(df, last_col) {
 
 ```r
 description <- function(i) {
-  des <- as.numeric(descr(i, na.rm = TRUE,
-                          stats = c("min", "med", "mean", "sd", "max")))
+  des <- as.numeric(summarytools::descr(i, na.rm = TRUE,
+                                        stats = c("min", "med", "mean", "sd", "max")))
   des <- c(des[1:4], des[4] / 2, des[5])
   return(des)
 }
@@ -317,24 +317,25 @@ See the Census Bureau's [Variance Replicate Tables Documentation](https://www.ce
 
 ## 3a. Download variance replicates from Census website {#three_a}
 
-Download, unzip, and read variance replicate tables for Table B02001. Results are combined into a single table called `var_rep`.
+Download, unzip, and read variance replicate tables for Table `B02001`. Results are combined into a single table called `var_rep`.
 <br>
 
-```{r varrep_download, tidy = TRUE, message = FALSE}
+```r
 ipd_states_numeric <- fips_codes %>%
   filter(state %in% ipd_states) %>%
   select(state_code) %>% distinct(.) %>% pull(.)
 var_rep <- NULL
+
 for (i in 1:length(ipd_states)){
   url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
                 ipd_year,
                 "/data/5-year/140/B02001_",
                 ipd_states_numeric[i],
-                ".csv.gz")
+                ".csv.zip")
   temp <- tempfile()
   download.file(url, temp)
-  var_rep_i <- read_csv(gzfile(temp))
-  var_rep <- rbind(var_rep, var_rep_i)
+  var_rep_i <- read.csv(unzip(temp))
+  var_rep <- dplyr::bind_rows(var_rep, var_rep_i)
 }
 ```
 
@@ -343,11 +344,11 @@ for (i in 1:length(ipd_states)){
 Subset `var_rep` for the study area defined in `ipd_counties` and extract the necessary subgroups.
 <br>
 
-```{r varrep_merge, message = FALSE}
+```r
 var_rep <- var_rep %>%
-  mutate_at(vars(GEOID), funs(str_sub(., 8, 18))) %>%
+  mutate_at(vars(GEOID), ~(str_sub(., 8, 18))) %>%
   filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
-  select(-TBLID, -NAME, -ORDER, -moe, -CME, -SE) %>%
+  select(-TBLID, -NAME, -ORDER, -MOE, -CME, -SE) %>%
   filter(TITLE %in% c("Black or African American alone",
                       "American Indian and Alaska Native alone",
                       "Asian alone",
@@ -363,23 +364,23 @@ var_rep <- var_rep %>%
 Add up the racial minority counts into a single count per census tract for the estimate and 80 variance replicates. Separate the resulting data frame into estimates and variance replicates.
 <br>
 
-```{r varrep_subset, message = FALSE}
-num <- var_rep %>%
+```r
+num <- var_rep %>% 
   group_by(GEOID) %>%
-  summarize_if(is.numeric, funs(sum)) %>%
+  summarize_if(is.numeric, ~ sum(.)) %>%
   select(-GEOID)
-estim <- num %>% select(estimate)
-individual_replicate <- num %>% select(-estimate)
+estim <- num %>% select(ESTIMATE)
+individual_replicate <- num %>% select(-ESTIMATE)
 ```
 
 Compute the variance replicate for the count. GEOIDs are stored as `id` to be re-appended to the MOEs after they are calculated.
 <br>
 
-```{r varrep_calc, message = FALSE}
+```r
 id <- var_rep %>% select(GEOID) %>% distinct(.) %>% pull(.)
 sqdiff_fun <- function(v, e) (v - e) ^ 2
-sqdiff <- mapply(sqdiff_fun, individual_replicate, estim)
-sum_sqdiff <- rowSums(sqdiff)
+sqdiff <- mapply(sqdiff_fun, individual_replicate, estim) 
+sum_sqdiff <- sapply(sqdiff, sum) 
 variance <- 0.05 * sum_sqdiff
 moe <- round(sqrt(variance) * 1.645, 0)
 ```
@@ -389,18 +390,11 @@ moe <- round(sqrt(variance) * 1.645, 0)
 Save the racial minority MOE.
 <br>
 
-```{r varrep_save, message = FALSE}
+```r
 rm_moe <- cbind(id, moe) %>%
   as_tibble(.) %>%
-  rename(GEOID10 = id, RM_CntMOE = moe) %>%
+  rename(GEOID20 = id, RM_CntMOE = moe) %>%
   mutate_at(vars(RM_CntMOE), as.numeric)
-```
-
-Here are the first few lines of `rm_moe`:
-<br>
-
-```{r varrep_preview}
-head(rm_moe)
 ```
 
 # 5. ACS estimates download {#acs_estimates_download}
@@ -418,7 +412,7 @@ Input data for IPD comes from ACS Subject Tables, Detailed Tables, and Data Prof
 The chunk below zips the user-defined calls from the API with the output abbreviations into a data frame called `counts_calls` and separates the calls into three batches.
 <br>
 
-```{r api_counts, message = FALSE}
+```r
 counts <- c(disabled_count, disabled_universe,
             ethnic_minority_count, ethnic_minority_universe,
             female_count, female_universe,
@@ -428,24 +422,36 @@ counts <- c(disabled_count, disabled_universe,
             older_adults_count, older_adults_universe,
             racial_minority_count, racial_minority_universe,
             youth_count, youth_universe)
-counts_ids <- c("D_C", "D_U", "EM_C", "EM_U", "F_C", "F_U",
-                "FB_C", "FB_U", "LEP_C", "LEP_U", "LI_C", "LI_U",
-                "OA_C", "OA_U", "RM_C", "RM_U", "Y_C", "Y_U")
+counts_ids <- c("D_C", "D_U", 
+                "EM_C", "EM_U",
+                "F_C", "F_U",
+                "FB_C", "FB_U",
+                "LEP_C", "LEP_U", 
+                "LI_C", "LI_U",
+                "OA_C", "OA_U", 
+                "RM_C", "RM_U", 
+                "Y_C", "Y_U")
+
+# Zip count API variables and their appropriate abbreviations together
 counts_calls <- tibble(id = counts_ids, api = counts) %>%
   drop_na(.)
+
+# Separate into different types of API requests
 s_calls <- counts_calls %>%
-  filter(str_sub(api, 1, 1) == "S")
+  filter(str_sub(api, 1, 1) == "S")  # Summary Tables
 d_calls <- counts_calls %>%
-  filter(str_sub(api, 1, 1) == "B")
+  filter(str_sub(api, 1, 1) == "B")  # Detailed Tables
 dp_calls <- counts_calls %>%
-  filter(str_sub(api, 1, 1) == "D")
+  filter(str_sub(api, 1, 1) == "D")  # Data Profile
 ```
 
 API calls are made separately for ACS Subject Tables, Detailed Tables, and Data Profiles and appended to `dl_counts`. Sometimes there are no requests for an ACS table type; in these situations, the script bypasses a download attempt. Then, information from `counts_calls` is used to rename the downloads to the appropriate abbreviation.
+Please note that ACS surveys 2019 and before make use of the GEOID10 variable.
 <br>
 
-```{r api_counts_calls, message = FALSE}
+```r
 dl_counts <- NULL
+
 if(length(s_calls$id > 0)){
   s_counts <- get_acs(geography = "tract",
                       state = ipd_states,
@@ -455,6 +461,7 @@ if(length(s_calls$id > 0)){
     select(-NAME)
   dl_counts <- bind_cols(dl_counts, s_counts)
 }
+
 if(length(d_calls$id > 0)){
   d_counts <- get_acs(geography = "tract",
                       state = ipd_states,
@@ -464,6 +471,7 @@ if(length(d_calls$id > 0)){
     select(-NAME)
   dl_counts <- left_join(dl_counts, d_counts)
 }
+
 if(length(dp_calls$id > 0)){
   dp_counts <- get_acs(geography = "tract",
                        state = ipd_states,
@@ -473,14 +481,9 @@ if(length(dp_calls$id > 0)){
     select(-NAME)
   dl_counts <- left_join(dl_counts, dp_counts)
 }
-counts_calls$api <- str_replace(counts_calls$api, "E$", "")
-for(i in 1:length(counts_calls$id)){
-  names(dl_counts) <- str_replace(names(dl_counts),
-                                  counts_calls$api[i],
-                                  counts_calls$id[i])
-}
+
 dl_counts <- dl_counts %>%
-  rename(GEOID10 = GEOID)
+  rename(GEOID20 = GEOID)
 ```
 
 ### 5b.i. _Exception_ {#five_b_i}
@@ -488,18 +491,21 @@ dl_counts <- dl_counts %>%
 The API does not allow redundant downloads, so universes for Older Adults and Youth are duplicated after download. `duplicate_cols` identifies duplicate API calls, and `combined_rows` serves as a crosswalk to duplicate and rename fields.
 <br>
 
-```{r api_counts_duplicator}
-duplicate_cols <- counts_calls %>%
-  group_by(api) %>%
+```r
+duplicate_cols <- counts_calls %>% 
+  group_by(api) %>% 
   filter(n()>1) %>%
   summarize(orig = id[1],
             duplicator = id[2])
+
 e_paste <- function(i) paste0(i, "E")
 m_paste <- function(i) paste0(i, "M")
 e_rows <- apply(duplicate_cols, 2, e_paste)
 m_rows <- apply(duplicate_cols, 2, m_paste)
+
 combined_rows <- as_tibble(rbind(e_rows, m_rows)) %>%
   mutate_all(as.character)
+
 for(i in 1:length(combined_rows$api)){
   dl_counts[combined_rows$duplicator[i]] <- dl_counts[combined_rows$orig[i]]
 }
