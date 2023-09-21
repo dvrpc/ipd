@@ -49,7 +49,7 @@ There are many ways of identifying these populations of interest. This document 
 
 ## 1a. Getting started {#one_a}
 
-For guidance on software prerequisites and how to run this script, see the README.md at https://github.com/dvrpc/ipd
+For guidance on software prerequisites and how to run this script, see the [README.md](https://github.com/dvrpc/ipd)
 
 ## 1b. Output abbreviations {#one_b}
 
@@ -124,7 +124,7 @@ ipd.Rproj
 
 ## 2a. Dependencies {#two_a}
 
-Packages required to run this script. If you don't have the packages, you'll get the warning `Error in library (<name of package>) : there is no package called '<name of package>'`, in which case you'll need to install the package before proceeding.
+The following packages are required to run this script. If you don't have the packages, you'll get the warning `Error in library (<name of package>) : there is no package called '<name of package>'`, in which case you'll need to install the package before proceeding.
 
 ```r
 library(plyr); library(here); library(sf); library(summarytools);
@@ -133,7 +133,36 @@ library(tidycensus); library(tidyverse); library(tigris); library(dplyr); librar
 
 ## 2b. Fields {#two_b}
 
-The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. For each indicator, the table below shows the indicator name, its abbreviation used in the script, its universe, its count, and its percentage field if applicable. Because the schemata of ACS tables can change with each annual ACS update, these field names are applicable _only_ to 2013-2017 ACS Five-Year Estimates.
+The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. For each indicator, the table below shows the indicator name, its abbreviation used in the script, its universe, its count, and its percentage field if applicable. Find a list of histoic variables below:
+
+| Field                         | year_2015         | year_2016         | year_2017         | year_2018         | year_2019         | year_2020         | year_2021         |
+| ------------------------------ | ----------------- | ----------------- | ----------------- | ----------------- | ----------------- | ----------------- | ----------------- |
+| disabled_universe             | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     | S1810_C01_001     |
+| disabled_count                | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     | S1810_C02_001     |
+| disabled_percent              | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     | S1810_C03_001     |
+| ethnic_minority_universe     | B03002_001        | B03002_001        | B03002_001        | B03002_001        | B03002_001        | B03002_001        | B03002_001        |
+| ethnic_minority_count        | B03002_012        | B03002_012        | B03002_012        | B03002_012        | B03002_012        | B03002_012        | B03002_012        |
+| ethnic_minority_percent      | NA                | NA                | NA                | NA                | NA                | NA                | NA                |
+| female_universe              | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     |
+| female_count                 | S0101_C03_001     | S0101_C03_001     | S0101_C05_001     | S0101_C05_001     | S0101_C05_001     | S0101_C05_001     | S0101_C05_001     |
+| female_percent               | DP05_0003PE       | DP05_0003PE       | DP05_0003PE       | DP05_0003PE       | DP05_0003PE       | DP05_0003PE       | DP05_0003PE       |
+| foreign_born_universe        | B05012_001        | B05012_001        | B05012_001        | B05012_001        | B05012_001        | B05012_001        | B05012_001        |
+| foreign_born_count           | B05012_003        | B05012_003        | B05012_003        | B05012_003        | B05012_003        | B05012_003        | B05012_003        |
+| foreign_born_percent         | NA                | NA                | NA                | NA                | NA                | NA                | NA                |
+| limited_english_proficiency_universe | S1601_C01_001 | S1601_C01_001 | S1601_C01_001 | S1601_C01_001 | S1601_C01_001 | S1601_C01_001 | S1601_C01_001 |
+| limited_english_proficiency_count    | S1601_C05_001 | S1601_C05_001 | S1601_C05_001 | S1601_C05_001 | S1601_C05_001 | S1601_C05_001 | S1601_C05_001 |
+| limited_english_proficiency_percent  | S1601_C06_001 | S1601_C06_001 | S1601_C06_001 | S1601_C06_001 | S1601_C06_001 | S1601_C06_001 | S1601_C06_001 |
+| low_income_universe          | S1701_C01_001     | S1701_C01_001     | S1701_C01_001     | S1701_C01_001     | S1701_C01_001     | S1701_C01_001     | S1701_C01_001     |
+| low_income_count             | S1701_C01_042     | S1701_C01_042     | S1701_C01_042     | S1701_C01_042     | S1701_C01_042     | S1701_C01_042     | S1701_C01_042     |
+| low_income_percent           | NA                | NA                | NA                | NA                | NA                | NA                | NA                |
+| older_adults_universe       | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     | S0101_C01_001     |
+| older_adults_count          | DP05_0025E        | DP05_0025E        | DP05_0025E        | S0101_C01_030     | S0101_C01_030     | S0101_C01_030     | S0101_C01_030     |
+| older_adults_percent        | S0101_C02_028     | S0101_C02_028     | S0101_C02_030     | S0101_C02_030     | S0101_C02_030     | S0101_C02_030     | S0101_C02_030     |
+| racial_minority_universe    | B02001_001        | B02001_001        | B02001_001        | B02001_001        | B02001_001        | B02001_001        | B02001_001        |
+| racial_minority_count       | B02001_002        | B02001_002        | B02001_002        | B02001_002        | B02001_002        | B02001_002        | B02001_002        |
+| racial_minority_percent     | NA                | NA                | NA                | NA                | NA                | NA                | NA                |
+| youth_universe              | B03002_001        | B03002_001        | B03002_001        | B03002_001       
+
 
 Some percentage fields are empty. This is okay: we will compute the percentages when they are not directly available from the ACS.
 
@@ -153,65 +182,7 @@ Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as th
 
 <br>
 
-While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit Census Developers [(link)](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in IPD 2015, 2016, and 2017, see `variables.csv` in the `documentation` folder.
-<br>
-
-<table>
-disabled_universe                    <- "S1810_C01_001"
-
-disabled_count <- "S1810_C02_001"
-
-disabled_percent <- "S1810_C03_001"
-
-ethnic_minority_universe <- "B03002_001"
-
-ethnic_minority_count <- "B03002_012"
-
-ethnic_minority_percent <- NA
-
-female_universe <- "S0101_C01_001"
-
-female_count <- "S0101_C05_001"
-
-female_percent <- "DP05_0003PE"
-
-foreign_born_universe <- "B05012_001"
-
-foreign_born_count <- "B05012_003"
-
-foreign_born_percent <- NA
-
-limited_english_proficiency_universe <- "S1601_C01_001"
-
-limited_english_proficiency_count <- "S1601_C05_001"
-
-limited_english_proficiency_percent <- "S1601_C06_001"
-
-low_income_universe <- "S1701_C01_001"
-
-low_income_count <- "S1701_C01_042"
-
-low_income_percent <- NA
-
-older_adults_universe <- "S0101_C01_001"
-
-older_adults_count <- "S0101_C01_030"
-
-older_adults_percent <- "S0101_C02_030"
-
-racial_minority_universe <- "B02001_001"
-
-racial_minority_count <- "B02001_002"
-
-racial_minority_percent <- NA
-
-youth_universe <- "B03002_001"
-
-youth_count <- "B09001_001"
-
-youth_percent <- NA
-
-</table>
+While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit [Census Developers](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in IPD 2015, 2016, and 2017, see `variables.csv` in the `documentation` folder or in the table above.
 
 <br>
 
@@ -219,7 +190,7 @@ youth_percent <- NA
 
 The data download year.
 
-```{r year}
+```r
 ipd_year <- 2017
 ```
 
@@ -230,7 +201,7 @@ ipd_year <- 2017
 The data download state or states. Use the two-character text abbreviation.
 <br>
 
-```{r states}
+```r
 ipd_states <- c("NJ", "PA")
 ```
 
@@ -238,10 +209,10 @@ ipd_states <- c("NJ", "PA")
 
 ## 2e. Counties {#two_e}
 
-The counties in your study area. Use five-digit characters concatenating the two-digit state and three-digit county FIPS codes.
+The counties in your study area. Use five-digit characters concatenating the two-digit state and three-digit county GEOID's.
 <br>
 
-```{r counties}
+```r
 ipd_counties <- c("34005", "34007", "34015", "34021",
                   "42017", "42029", "42045", "42091", "42101")
 ```
@@ -250,12 +221,12 @@ ipd_counties <- c("34005", "34007", "34015", "34021",
 
 ## 2f. Census API Key {#two_f}
 
-Placeholder if you have never installed an API key before. If this is your first time accessing the Census API using `R`, see `getting_started.pdf` in the `documentation` folder.
+Placeholder if you have never installed an API key before. If this is your first time accessing the Census API using `R`, see [README.md](https://github.com/dvrpc/ipd/#readme)
 <br>
 
-```{r api_key}
+```r
 # Census API Key
-# census_api_key("YOUR API KEY GOES HERE", install = TRUE)
+census_api_key("YOUR API KEY GOES HERE", install = TRUE)
 ```
 
 # _THE TYPICAL USER SHOULD NOT HAVE TO EDIT ANYTHING BELOW THIS POINT._
@@ -269,7 +240,7 @@ Load custom functions.
 A time-saver so that it's not required to call `na.rm = TRUE` every time common functions are called.
 <br>
 
-```{r override}
+```r
 min <- function(i, ..., na.rm = TRUE) {
   base::min(i, ..., na.rm = na.rm)
 }

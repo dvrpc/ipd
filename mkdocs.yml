@@ -29,6 +29,7 @@ theme:
       accent: lime
 
 markdown_extensions:
+  - tables
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
