@@ -98,7 +98,7 @@ Abbreviations of field names that you'll see in `outputs` *not* comprised of the
 
 This script uses relative file paths based off the location of `ipd.Rproj`. As long as you download the entire repository, the script should have no trouble locating the correct subfolders. All of the subsequent years files are based on the same architecture. The project is structured as follows:
 
-```r
+```R
 ipd
 ipd.Rproj
   script.R
