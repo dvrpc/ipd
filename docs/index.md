@@ -98,7 +98,7 @@ Abbreviations of field names that you'll see in `outputs` *not* comprised of the
 
 This script uses relative file paths based off the location of `ipd.Rproj`. As long as you download the entire repository, the script should have no trouble locating the correct subfolders. All of the subsequent years files are based on the same architecture. The project is structured as follows:
 
-```R
+```r
 ipd
 ipd.Rproj
   script.R
@@ -126,7 +126,7 @@ ipd.Rproj
 
 Packages required to run this script. If you don't have the packages, you'll get the warning `Error in library (<name of package>) : there is no package called '<name of package>'`, in which case you'll need to install the package before proceeding.
 
-```{r packages, message = FALSE}
+```r
 library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr);
 ```
