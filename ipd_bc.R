@@ -79,8 +79,8 @@ raw_data_combined <- raw_dt_data %>%
 estimates_table <- raw_data_combined %>%
   mutate(lep_pct = round(100 * (lep_est/lep_uni), digits = 1)) %>%
   mutate(rac_est = tot_pop - wht_est) %>% # Racial minority calculation
-  mutate(rac_pct = round(100 * (rac_est/tot_pop), digits = 1)) %>%
-  mutate(fem_pct = round(100 * (fem_est/tot_pop), digits = 1)) %>%
+  mutate(rac_pct = round(100 * (rac_est/rac_uni), digits = 1)) %>%
+  mutate(fem_pct = round(100 * (fem_est/fem_uni), digits = 1)) %>%
   mutate(eth_pct = round(100 * (eth_est/eth_uni), digits = 1)) %>%
   mutate(fbo_pct = round(100 * (fbo_est/fbo_uni), digits = 1)) %>%
   mutate(inc_pct = round(100 * (inc_est/inc_uni), digits = 1)) %>%

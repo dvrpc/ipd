@@ -4,94 +4,115 @@ library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
 
 # Census API Key
-Sys.getenv("CENSUS_API_KEY")
-census_api_key("INSERT_API_KEY_HERE", overwrite = TRUE)
+census_api_key <- Sys.getenv("CENSUS_API_KEY")
+
 # Fields
 # See https://www.census.gov/data/developers/data-sets/acs-5year.html
 # for the variables for Detailed Tables (B), Subject Tables (S), and Data Profiles (DP)
-disabled_universe                    <- "S1810_C01_001"  
-disabled_count                       <- "S1810_C02_001"  
-disabled_percent                     <- "S1810_C03_001"  
-ethnic_minority_universe             <- "B03002_001"
-ethnic_minority_count                <- "B03002_012"
-ethnic_minority_percent              <- NA
-female_universe                      <- "S0101_C01_001"
-female_count                         <- "S0101_C05_001"
-female_percent                       <- "DP05_0003PE"
-foreign_born_universe                <- "B05012_001"
-foreign_born_count                   <- "B05012_003"
-foreign_born_percent                 <- NA
-limited_english_proficiency_universe <- "S1601_C01_001"
-limited_english_proficiency_count    <- "S1601_C05_001"
-limited_english_proficiency_percent  <- "S1601_C06_001"
-low_income_universe                  <- "S1701_C01_001"
-low_income_count                     <- "S1701_C01_042"
-low_income_percent                   <- NA
-older_adults_universe                <- "S0101_C01_001"
-older_adults_count                   <- "S0101_C01_030"
-older_adults_percent                 <- "S0101_C02_030"
-racial_minority_universe             <- "B02001_001"
-racial_minority_count                <- "B02001_002"
-racial_minority_percent              <- NA
-youth_universe                       <- "B03002_001"
-youth_count                          <- "B09001_001"
-youth_percent                        <- NA
+
+acs5_dt_list <- c(
+  tot_pop = "B01003_001", # Total Population
+  eth_uni = "B03002_001", # Ethnic Minority
+  eth_est = "B03002_012",
+  fbo_uni = "B05012_001", # Foreign-born
+  fbo_est = "B05012_003",
+  rac_uni = "B02001_001", # Racial minority
+  wht_est = "B02001_002", # White Alone
+  blk_est = "B02001_003", # Black or African American alone
+  aia_est = "B02001_004", # American Indian and Alaska Native alone
+  asn_est = "B02001_005", # Asian alone
+  hpi_est = "B02001_006", # Native Hawaiian and Other Pacific Islander alone
+  oth_est = "B02001_007", # Some other race alone
+  two_est = "B02001_008", # Two or more races
+  you_est = "B09001_001" # Youth
+)
+
+acs5_st_list <- c(
+  lep_uni = "S1601_C01_001", # Limited English Proficiency
+  lep_est = "S1601_C05_001",
+  lep_pct = "S1601_C06_001",
+  dis_uni = "S1810_C01_001",  # Disabled
+  dis_est = "S1810_C02_001",  
+  dis_pct = "S1810_C03_001", 
+  fem_uni = "S0101_C01_001",
+  fem_est = "S0101_C05_001", # Female
+  inc_uni = "S1701_C01_001", # Low Income
+  inc_est = "S1701_C01_042",
+  old_uni = "S0101_C01_001", # Older Population
+  old_est = "S0101_C01_030",
+  old_pct = "S0101_C02_030"
+)
+
+acs5_dp_list <- c(
+  fem_pct = "DP05_0003P"
+)
+
 
 ipd_year <- 2021
 ipd_states <- c("NJ", "PA")
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
 
-# Functions
+raw_dt_data <- get_acs(geography = "tract",
+                       variables = acs5_dt_list,
+                       year = ipd_year,
+                       state = ipd_states,
+                       survey = "acs5",
+                       output = "wide"
+) %>%
+  mutate(year = ipd_year) %>%
+  filter(str_starts(GEOID, '^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')) %>%
+  dplyr::select(-NAME) %>%
+  'colnames<-'(str_replace(colnames(.), "E$", "")) %>%
+  'colnames<-'(str_replace(colnames(.), "M$", "_MOE"))
+  
+raw_st_data <- get_acs(geography = "tract",
+                       variables = acs5_st_list,
+                       year = ipd_year,
+                       state = ipd_states,
+                       survey = "acs5",
+                       output = "wide"
+) %>%
+  mutate(year = ipd_year) %>%
+  filter(str_starts(GEOID, '^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')) %>%
+  dplyr::select(-NAME) %>%
+  'colnames<-'(str_replace(colnames(.), "E$", "")) %>%
+  'colnames<-'(str_replace(colnames(.), "M$", "_MOE"))
 
-min <- function(i, ..., na.rm = TRUE) {
-  base::min(i, ..., na.rm = na.rm)
-}
+raw_dp_data <- get_acs(geography = "tract",
+                       variables = acs5_dp_list,
+                       year = ipd_year,
+                       state = ipd_states,
+                       survey = "acs5",
+                       output = "wide"
+) %>%
+  mutate(year = ipd_year) %>%
+  filter(str_starts(GEOID, '^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')) %>%
+  dplyr::select(-NAME) %>%
+  'colnames<-'(str_replace(colnames(.), "E$", "")) %>%
+  'colnames<-'(str_replace(colnames(.), "M$", "_MOE"))
 
-mean <- function(i, ..., na.rm = TRUE) {
-  base::mean(i, ..., na.rm = na.rm)
-}
+# Combine tables
+raw_data_combined <- raw_dt_data %>%
+  inner_join(raw_st_data) %>%
+  inner_join(raw_dp_data)
 
-sd <- function(i, ..., na.rm = TRUE) {
-  stats::sd(i, ..., na.rm = na.rm)
-}
+# Calculate percentages and MOEs
+estimates_table <- raw_data_combined %>%
+  mutate(rac_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est) %>% # Racial minority calculation
+  mutate(rac_est_MOE = sqrt(blk_est_MOE^2 + aia_est_MOE^2 + asn_est_MOE^2 + hpi_est_MOE^2 + oth_est_MOE^2 + two_est_MOE^2)) %>%
+  select(-blk_est_MOE, -aia_est_MOE, -asn_est_MOE, -hpi_est_MOE, -oth_est_MOE, -two_est_MOE) %>%
+  mutate(rac_pct = round(100 * (rac_est/rac_uni), digits = 1)) %>%
+  mutate(eth_pct = round(100 * (eth_est/eth_uni), digits = 1)) %>%
+  mutate(fbo_pct = round(100 * (fbo_est/fbo_uni), digits = 1)) %>%
+  mutate(inc_pct = round(100 * (inc_est/inc_uni), digits = 1)) %>%
+  mutate(you_pct = round(100 * (you_est/tot_pop), digits = 1)) %>%
+  select(-wht_est, -wht_est_MOE) %>%
+  mutate(rac_pct_MOE = round((sqrt(rac_est_MOE^2 + (rac_pct^2 * tot_pop_MOE^2))/rac_uni), 1)) %>%
+  mutate()
 
-max <- function(i, ..., na.rm = TRUE) {
-  base::max(i, ..., na.rm = na.rm)
-}
 
-st_dev_breaks <- function(x, i, na.rm = TRUE){
-  half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
-                         seq(1, i, by = 2))
-  if((i %% 2) == 1) {
-    half_st_dev_breaks <- sapply(half_st_dev_count,
-                                 function(i) (0.5 * i * sd(x)) + mean(x))
-    half_st_dev_breaks[[1]] <- 0
-    half_st_dev_breaks[[2]] <- ifelse(half_st_dev_breaks[[2]] < 0,
-                                      0.1,
-                                      half_st_dev_breaks[[2]])
-    half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
-                                          max(x), half_st_dev_breaks[[i + 1]])
-  } else {
-    half_st_dev_breaks <- NA
-  }
-  return(half_st_dev_breaks)
-}
 
-move_last <- function(df, last_col) {
-  match(c(setdiff(names(df), last_col), last_col), names(df))
-}
-
-description <- function(i) {
-  des <- as.numeric(summarytools::descr(i, na.rm = TRUE,
-                                        stats = c("min", "med", "mean", "sd", "max")))
-  des <- c(des[1:4], des[4] / 2, des[5])
-  return(des)
-}
-
-round_0 <- function(i) round(i, 0)
-round_1 <- function(i) round(i, 1)
-round_2 <- function(i) round(i, 2)
-mult_100 <- function(i) i * 100
+# Cutoff ----
 
 ## VARIANCE REPLICATES
 
@@ -440,7 +461,7 @@ names(class) <- str_replace(names(comp$uni_est), "_UE", "_Class")
 # Compute total IPD score
 score <- score %>% mutate(IPD_Score = rowSums(.))
 
-## CLEANING
+## CLEANING ----
 
 # Merge all information into a single df
 ipd <- bind_cols(dl_counts, pct) %>%
@@ -480,7 +501,7 @@ slicer <- enframe(slicer, name = NULL, value = "GEOID20")
 ipd <- plyr::rbind.fill(ipd, slicer)
 
 
-## SUMMARY TABLES
+## SUMMARY TABLES ----
 
 # Replace 0 with NA for our purposes
 ipd_summary <- ipd
@@ -565,7 +586,7 @@ ipd$COUNTYFP20 <- as.character(ipd$COUNTYFP20)
 ipd$NAME20 <- as.character(ipd$NAME20)
 ipd$namelsad <- paste(substr(ipd$GEOID20, 6, 9), substr(ipd$GEOID20, 10, 11), sep = ".")
 
-## EXPORT
+## EXPORT ----
 
 options(tigris_use_cache = TRUE, tigris_class = "sf")
 st <- str_sub(ipd_counties, 1, 2)
