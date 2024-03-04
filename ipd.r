@@ -12,11 +12,11 @@ census_api_key <- Sys.getenv("CENSUS_API_KEY")
 
 acs5_dt_list <- c(
   tot_pop = "B01003_001", # Total Population
-  eth_uni = "B03002_001", # Ethnic Minority
-  eth_est = "B03002_012",
-  fbo_uni = "B05012_001", # Foreign-born
-  fbo_est = "B05012_003",
-  rac_uni = "B02001_001", # Racial minority
+  em_uni = "B03002_001", # Ethnic Minority
+  em_est = "B03002_012",
+  fb_uni = "B05012_001", # Foreign-born
+  fb_est = "B05012_003",
+  rm_uni = "B02001_001", # Racial minority
   wht_est = "B02001_002", # White Alone
   blk_est = "B02001_003", # Black or African American alone
   aia_est = "B02001_004", # American Indian and Alaska Native alone
@@ -24,27 +24,27 @@ acs5_dt_list <- c(
   hpi_est = "B02001_006", # Native Hawaiian and Other Pacific Islander alone
   oth_est = "B02001_007", # Some other race alone
   two_est = "B02001_008", # Two or more races
-  you_est = "B09001_001" # Youth
+  y_est = "B09001_001" # Youth
 )
 
 acs5_st_list <- c(
   lep_uni = "S1601_C01_001", # Limited English Proficiency
   lep_est = "S1601_C05_001",
   lep_pct = "S1601_C06_001",
-  dis_uni = "S1810_C01_001",  # Disabled
-  dis_est = "S1810_C02_001",  
-  dis_pct = "S1810_C03_001", 
-  fem_uni = "S0101_C01_001",
-  fem_est = "S0101_C05_001", # Female
-  inc_uni = "S1701_C01_001", # Low Income
-  inc_est = "S1701_C01_042",
-  old_uni = "S0101_C01_001", # Older Population
-  old_est = "S0101_C01_030",
-  old_pct = "S0101_C02_030"
+  d_uni = "S1810_C01_001",  # Disabled
+  d_est = "S1810_C02_001",  
+  d_pct = "S1810_C03_001", 
+  f_uni = "S0101_C01_001",
+  f_est = "S0101_C05_001", # Female
+  li_uni = "S1701_C01_001", # Low Income
+  li_est = "S1701_C01_042",
+  oa_uni = "S0101_C01_001", # Older Population
+  oa_est = "S0101_C01_030",
+  oa_pct = "S0101_C02_030"
 )
 
 acs5_dp_list <- c(
-  fem_pct = "DP05_0003P"
+  f_pct = "DP05_0003P"
 )
 
 
@@ -100,19 +100,19 @@ raw_data_combined <- raw_dt_data %>%
 # Calculate percentages and MOEs, Drop Unnecessesary MOEs
 estimates_table <- raw_data_combined %>%
   mutate(rac_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est) %>% # Racial minority calculation
-  mutate(rac_est_MOE = round(sqrt(blk_est_MOE^2 + aia_est_MOE^2 + asn_est_MOE^2 + hpi_est_MOE^2 + oth_est_MOE^2 + two_est_MOE^2), 0)) %>%
+  mutate(rm_est_MOE = round(sqrt(blk_est_MOE^2 + aia_est_MOE^2 + asn_est_MOE^2 + hpi_est_MOE^2 + oth_est_MOE^2 + two_est_MOE^2), 0)) %>%
   select(-blk_est, -aia_est, -asn_est, -hpi_est, -oth_est, -two_est, -blk_est_MOE, -aia_est_MOE, -asn_est_MOE, -hpi_est_MOE, -oth_est_MOE, -two_est_MOE) %>%
-  mutate(rac_pct = round(100 * (rac_est/rac_uni), digits = 1)) %>%
-  mutate(eth_pct = round(100 * (eth_est/eth_uni), digits = 1)) %>%
-  mutate(fbo_pct = round(100 * (fbo_est/fbo_uni), digits = 1)) %>%
-  mutate(inc_pct = round(100 * (inc_est/inc_uni), digits = 1)) %>%
-  mutate(you_pct = round(100 * (you_est/tot_pop), digits = 1)) %>%
+  mutate(rm_pct = round(100 * (rm_est/rm_uni), digits = 1)) %>%
+  mutate(em_pct = round(100 * (em_est/em_uni), digits = 1)) %>%
+  mutate(fb_pct = round(100 * (fb_est/fb_uni), digits = 1)) %>%
+  mutate(li_pct = round(100 * (li_est/li_uni), digits = 1)) %>%
+  mutate(y_pct = round(100 * (y_est/tot_pop), digits = 1)) %>%
   select(-wht_est, -wht_est_MOE) %>%
-  mutate(rac_pct_MOE = round((sqrt(rac_est_MOE^2 + (rac_pct^2 * tot_pop_MOE^2))/rac_uni), 1)) %>%
-  mutate(you_pct_MOE = round((sqrt(you_est_MOE^2 + (you_pct^2 * tot_pop_MOE^2)))/tot_pop, 1)) %>%
-  mutate(eth_pct_MOE = round((sqrt(eth_est_MOE^2 + (eth_pct^2 * eth_uni_MOE^2)))/eth_uni, 1)) %>%
-  mutate(fbo_pct_MOE = round((sqrt(fbo_est_MOE^2 + (fbo_pct^2 * fbo_uni_MOE^2)))/fbo_uni, 1)) %>%
-  mutate(inc_pct_MOE = round((sqrt(inc_est_MOE^2 + (inc_pct^2 * inc_uni_MOE^2)))/inc_uni, 1)) %>%
+  mutate(rm_pct_MOE = round((sqrt(rm_est_MOE^2 + (rm_pct^2 * tot_pop_MOE^2))/rm_uni), 1)) %>%
+  mutate(y_pct_MOE = round((sqrt(y_est_MOE^2 + (y_pct^2 * tot_pop_MOE^2)))/tot_pop, 1)) %>%
+  mutate(em_pct_MOE = round((sqrt(em_est_MOE^2 + (em_pct^2 * em_uni_MOE^2)))/em_uni, 1)) %>%
+  mutate(fb_pct_MOE = round((sqrt(fb_est_MOE^2 + (fb_pct^2 * fb_uni_MOE^2)))/fb_uni, 1)) %>%
+  mutate(li_pct_MOE = round((sqrt(li_est_MOE^2 + (li_pct^2 * li_uni_MOE^2)))/li_uni, 1)) %>%
   select(-matches("uni"))
   
 
@@ -139,7 +139,7 @@ test_table <- estimates_table_clean
 
 
 # Variables
-vars <- list("lep_pct", "dis_pct", "old_pct", "rac_pct", "fem_pct", "eth_pct", "fbo_pct", "inc_pct", "you_pct")
+vars <- list("lep_pct", "d_pct", "oa_pct", "rm_pct", "f_pct", "em_pct", "fb_pct", "li_pct", "y_pct")
 
 
 # Function to calculate indicator percentile and score
@@ -210,3 +210,6 @@ tract_mcd_lookup <- st_read("U:\\_OngoingProjects\\Census\\_Geographies\\Census_
 # Join IPD table with Lookup
 ipd_shapefile <- ipd_shapefile %>%
   left_join(tract_mcd_lookup, by=c("GEOID"="geoid20"))
+
+
+# Summary Tables ----
