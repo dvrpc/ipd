@@ -99,7 +99,7 @@ raw_data_combined <- raw_dt_data %>%
 
 # Calculate percentages and MOEs, Drop Unnecessesary MOEs
 estimates_table <- raw_data_combined %>%
-  mutate(rac_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est) %>% # Racial minority calculation
+  mutate(rm_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est) %>% # Racial minority calculation
   mutate(rm_est_MOE = round(sqrt(blk_est_MOE^2 + aia_est_MOE^2 + asn_est_MOE^2 + hpi_est_MOE^2 + oth_est_MOE^2 + two_est_MOE^2), 0)) %>%
   select(-blk_est, -aia_est, -asn_est, -hpi_est, -oth_est, -two_est, -blk_est_MOE, -aia_est_MOE, -asn_est_MOE, -hpi_est_MOE, -oth_est_MOE, -two_est_MOE) %>%
   mutate(rm_pct = round(100 * (rm_est/rm_uni), digits = 1)) %>%
@@ -112,8 +112,7 @@ estimates_table <- raw_data_combined %>%
   mutate(y_pct_MOE = round((sqrt(y_est_MOE^2 + (y_pct^2 * tot_pop_MOE^2)))/tot_pop, 1)) %>%
   mutate(em_pct_MOE = round((sqrt(em_est_MOE^2 + (em_pct^2 * em_uni_MOE^2)))/em_uni, 1)) %>%
   mutate(fb_pct_MOE = round((sqrt(fb_est_MOE^2 + (fb_pct^2 * fb_uni_MOE^2)))/fb_uni, 1)) %>%
-  mutate(li_pct_MOE = round((sqrt(li_est_MOE^2 + (li_pct^2 * li_uni_MOE^2)))/li_uni, 1)) %>%
-  select(-matches("uni"))
+  mutate(li_pct_MOE = round((sqrt(li_est_MOE^2 + (li_pct^2 * li_uni_MOE^2)))/li_uni, 1))
   
 
 # Drop Low Population Tracts
@@ -129,6 +128,7 @@ low_pop_tracts <- c("34005981802","34005982200","34021980000","42017980000",
 
 
 estimates_table_clean <- estimates_table %>%
+  select(-matches("_uni")) %>%
   filter(!GEOID %in% low_pop_tracts)
 
 
@@ -147,7 +147,7 @@ calculate_score <- function(data, var) {
   means <- mean(data[[var]], na.rm = TRUE)
   stdev <- sd(data[[var]], na.rm = TRUE)
   score_col <- paste0(var, "_score")
-  cat_col <- paste0(var, "_cat")
+  class_col <- paste0(var, "_class")
   pctile_col <- paste0(var, "_pctile")
   data <- data %>%
     mutate(!!score_col := case_when(
@@ -157,7 +157,7 @@ calculate_score <- function(data, var) {
       data[[var]] >= means + (0.5 * stdev) & data[[var]] < means + (1.5 * stdev) ~ 3,
       data[[var]] >= means + (1.5 * stdev) ~ 4
     )) %>%
-    mutate(!!cat_col := case_when(
+    mutate(!!class_col := case_when(
       data[[var]] < ifelse(means - (1.5 * stdev) < 0, 0.1, means - (1.5 * stdev)) ~ "Well Below Average",
       data[[var]] >= means - (1.5 * stdev) & data[[var]] < means - (0.5 * stdev) ~ "Below Average",
       data[[var]] >= means - (0.5 * stdev) & data[[var]] < means + (0.5 * stdev) ~ "Average",
@@ -185,6 +185,8 @@ ipd_table <- tracts %>%
   left_join(test_table) %>%
   'colnames<-'(str_replace(colnames(.), "pct_score", "score"))
 
+
+# Spatial Data ----
 # Geography columns
 ipd_table <- ipd_table %>%
   rename(GEOID20 = GEOID) %>%
@@ -193,7 +195,6 @@ ipd_table <- ipd_table %>%
   mutate(NAME20 = str_sub(GEOID20, 6, 11)) %>%
   mutate(namelsad = paste(substr(GEOID20, 6, 9), substr(GEOID20, 10, 11), sep = "."))
 
-# Spatial
 pa_tracts <- tracts("42", c("017", "029", "045", "091", "101"))
 nj_tracts <- tracts("34", c("005", "007", "015", "021"))
 
@@ -213,3 +214,119 @@ ipd_shapefile <- ipd_shapefile %>%
 
 
 # Summary Tables ----
+# Counts
+counts <- ipd_table %>% select(ends_with("_class"))
+
+export_counts <- apply(counts, 2, function(i) plyr::count(i))
+for(i in 1:length(export_counts)){
+  export_counts[[i]]$var <- names(export_counts)[i]
+}
+
+export_counts <- map_dfr(export_counts, `[`, c("var", "x", "freq"))
+
+colnames(export_counts) <- c("Variable", "Classification", "Count")
+
+export_counts$Classification <- factor(export_counts$Classification,
+                                       levels = c("Well Below Average",
+                                                  "Below Average",
+                                                  "Average",
+                                                  "Above Average",
+                                                  "Well Above Average",
+                                                  "NA"))
+
+export_counts <- arrange(export_counts, Variable, Classification)
+
+counts_table <- export_counts %>%
+  spread(Classification, Count) %>%
+  mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE))
+
+# Breaks
+breaks_table <- ipd_table  %>%
+  select(ends_with("_pct"))
+
+calculate_class_breaks <- function(input_df) {
+  breaks_df <- data.frame(matrix(NA, nrow = 6, ncol = ncol(input_df) + 1))
+  colnames(breaks_df) <- c("Break", colnames(input_df))
+  
+  breaks_df$Break <- c("Min", "1", "2", "3", "4", "Max")
+  
+  for (i in 1:ncol(input_df)) {
+    x <- input_df[[i]]
+    mean_x <- mean(x, na.rm = TRUE)
+    sd_x <- sd(x, na.rm = TRUE)
+    
+    min_break <- 0
+    b1 <- round(mean_x - (1.5 * sd_x), 1)
+    if (b1 < 0) {
+      b1 <- 0.1
+    }    
+    b2 <- round(mean_x - (0.5 * sd_x), 1)
+    b3 <- round(mean_x + (0.5 * sd_x), 1)
+    b4 <- round(mean_x + (1.5 * sd_x), 1)
+    max_break <- round(max(x, na.rm = TRUE), 1)
+    
+    breaks_df[, i + 1] <- c(min_break, b1, b2, b3, b4, max_break)
+  }
+  
+  return(breaks_df)
+}
+
+
+class_breaks_table <- calculate_class_breaks(breaks_table)
+
+# Summary Statistics
+description <- function(i) {
+  des <- as.numeric(summarytools::descr(i, na.rm = TRUE,
+                                        stats = c("min", "med", "mean", "sd", "max")))
+  des <- c(des[1:4], des[4] / 2, des[5])
+  return(des)
+}
+
+pcts <- ipd_table %>% select(ends_with("_pct"))
+
+round_1 <- function(i) round(i, 1)
+round_2 <- function(i) round(i, 2)
+
+summary_data <- apply(pcts, MARGIN=2, description)
+
+summary_table <- as_tibble(summary_data) %>%
+  mutate_all(round_2) %>%
+  mutate(Statistic = c("Minimum", "Median", "Mean", "SD", "Half-SD", "Maximum")) %>%
+  select(Statistic, tidyselect::peek_vars())
+
+# County-level Means
+means_table <- estimates_table %>%
+  mutate(county_fips = str_sub(GEOID, 1, 5)) %>%
+  select(-GEOID, tot_pop, ends_with("_est"), ends_with("_uni"), -matches("MOE"), -year) %>%
+  group_by(county_fips) %>%
+  summarise(
+    d_pctest = sum(d_est)/sum(d_uni),
+    em_pctest = sum(em_est)/sum(em_uni),
+    f_pctest = sum(f_est)/sum(f_uni),
+    fb_pctest = sum(fb_est)/sum(fb_uni),
+    lep_pctest = sum(lep_est)/sum(lep_uni),
+    li_pctest = sum(li_est)/sum(li_uni),
+    oa_pctest = sum(oa_est)/sum(tot_pop),
+    rm_pctest = sum(rm_est)/sum(rm_uni),
+    y_pctest = sum(y_est)/sum(tot_pop)
+  ) %>%
+  mutate_if(is.numeric, ~ . * 100) %>%
+  mutate_if(is.numeric, round_1)
+
+# Export Data ----
+## Tract-Level IPD Outputs
+
+# write.csv(ipd_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\ipd_2021.csv")
+
+# st_write(ipd_shapefile, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\ipd_2021.shp") 
+
+## Summary Tables
+
+# write.csv(counts_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\counts_by_indicator_2021.csv")
+
+# write.csv(ipd_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\breaks_by_indicator_2021.csv")
+
+# write.csv(ipd_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\summary_by_indicator_2021.csv")
+
+# write.csv(ipd_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\means_by_county_2021.csv")
+
