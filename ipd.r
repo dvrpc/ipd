@@ -4,8 +4,9 @@ library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
 
 # Census API Key
-Sys.getenv("CENSUS_API_KEY")
-census_api_key("INSERT_API_KEY_HERE", overwrite = TRUE)
+readRenviron(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/.Renviron"))
+census_api_key <- Sys.getenv("CENSUS_API_KEY")
+
 # Fields
 # See https://www.census.gov/data/developers/data-sets/acs-5year.html
 # for the variables for Detailed Tables (B), Subject Tables (S), and Data Profiles (DP)
@@ -113,7 +114,7 @@ for (i in 1:length(ipd_states)){
 } 
 
 var_rep <- var_rep %>%
-  mutate_at(vars(GEOID), ~(str_sub(., 8, 18))) %>%
+  mutate_at(vars(GEOID), ~(str_sub(., 10, 20))) %>%
   filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
   select(-TBLID, -NAME, -ORDER, -MOE, -CME, -SE) %>%
   filter(TITLE %in% c("Black or African American alone",
@@ -131,7 +132,8 @@ individual_replicate <- num %>% select(-ESTIMATE)
 id <- var_rep %>% select(GEOID) %>% distinct(.) %>% pull(.)
 sqdiff_fun <- function(v, e) (v - e) ^ 2
 sqdiff <- mapply(sqdiff_fun, individual_replicate, estim) 
-sum_sqdiff <- sapply(sqdiff, sum) 
+
+sum_sqdiff <- rowSums(sqdiff, dims = 1)
 variance <- 0.05 * sum_sqdiff
 moe <- round(sqrt(variance) * 1.645, 0)
 rm_moe <- cbind(id, moe) %>%
@@ -329,6 +331,15 @@ dl_percs <- dl_percs %>%
 dl_counts <- dl_counts %>% mutate(x = RM_UE - RM_CE) %>%
   select(-RM_CE) %>%
   rename(RM_CE = x)
+
+# join RM_MOE 
+if(exists("rm_moe")){
+  dl_counts <- dl_counts %>%
+    select(-RM_CM) %>%
+    left_join(., rm_moe) %>%
+    rename(RM_CM = RM_CntMOE) %>%
+    mutate_at(vars(RM_CM), as.numeric)
+}
 
 # Exception 2: Slice low-population tracts
 
