@@ -1,3 +1,7 @@
+# environment variables
+.env
+.Renviron
+
 # Output files
 /outputs
 
