@@ -101,7 +101,6 @@ raw_data_combined <- raw_dt_data %>%
 # Calculate percentages and MOEs, Drop Unnecessesary MOEs
 estimates_table <- raw_data_combined %>%
   mutate(rm_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est) %>% # Racial minority calculation
-  mutate(rm_est_MOE = round(sqrt(blk_est_MOE^2 + aia_est_MOE^2 + asn_est_MOE^2 + hpi_est_MOE^2 + oth_est_MOE^2 + two_est_MOE^2), 0)) %>%
   select(-blk_est, -aia_est, -asn_est, -hpi_est, -oth_est, -two_est, -blk_est_MOE, -aia_est_MOE, -asn_est_MOE, -hpi_est_MOE, -oth_est_MOE, -two_est_MOE) %>%
   mutate(rm_pct = round(100 * (rm_est/rm_uni), digits = 1)) %>%
   mutate(em_pct = round(100 * (em_est/em_uni), digits = 1)) %>%
@@ -109,12 +108,11 @@ estimates_table <- raw_data_combined %>%
   mutate(li_pct = round(100 * (li_est/li_uni), digits = 1)) %>%
   mutate(y_pct = round(100 * (y_est/tot_pop), digits = 1)) %>%
   select(-wht_est, -wht_est_MOE) %>%
-  mutate(rm_pct_MOE = round((sqrt(rm_est_MOE^2 + (rm_pct^2 * tot_pop_MOE^2))/rm_uni), 1)) %>%
-  mutate(y_pct_MOE = round((sqrt(y_est_MOE^2 + (y_pct^2 * tot_pop_MOE^2)))/tot_pop, 1)) %>%
-  mutate(em_pct_MOE = round((sqrt(em_est_MOE^2 + (em_pct^2 * em_uni_MOE^2)))/em_uni, 1)) %>%
-  mutate(fb_pct_MOE = round((sqrt(fb_est_MOE^2 + (fb_pct^2 * fb_uni_MOE^2)))/fb_uni, 1)) %>%
-  mutate(li_pct_MOE = round((sqrt(li_est_MOE^2 + (li_pct^2 * li_uni_MOE^2)))/li_uni, 1))
-  
+  mutate(em_pct_MOE = round(moe_prop(em_est,em_uni,em_est_MOE,em_uni_MOE) * 100,1)) %>%
+  mutate(fb_pct_MOE = round(moe_prop(fb_est,fb_uni,fb_est_MOE,fb_uni_MOE) * 100,1)) %>%
+  mutate(li_pct_MOE = round(moe_prop(li_est,li_uni,li_est_MOE,li_uni_MOE) * 100,1)) %>%
+  mutate(y_pct_MOE = round(moe_prop(y_est,tot_pop,y_est_MOE,tot_pop_MOE) * 100,1))
+
 
 # Drop Low Population Tracts
 low_pop_tracts <- c("34005981802","34005982200","34021980000","42017980000",
