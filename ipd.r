@@ -7,6 +7,13 @@ library(tidycensus); library(tidyverse); library(tigris); library(dplyr); librar
 readRenviron(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/.Renviron"))
 census_api_key <- Sys.getenv("CENSUS_API_KEY")
 
+# Inputs and settings
+ipd_year <- 2021
+ipd_states <- c("NJ", "PA")
+dvrpc_counties <- c('^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')
+ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
+output_dir <- "data\\"
+
 # Fields
 # See https://www.census.gov/data/developers/data-sets/acs-5year.html
 # for the variables for Detailed Tables (B), Subject Tables (S), and Data Profiles (DP)
@@ -48,12 +55,6 @@ acs5_dp_list <- c(
   f_pct = "DP05_0003P"
 )
 
-
-ipd_year <- 2021
-ipd_states <- c("NJ", "PA")
-dvrpc_counties <- c('^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')
-ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
-
 raw_dt_data <- get_acs(geography = "tract",
                        variables = acs5_dt_list,
                        year = ipd_year,
@@ -66,7 +67,7 @@ raw_dt_data <- get_acs(geography = "tract",
   dplyr::select(-NAME) %>%
   'colnames<-'(str_replace(colnames(.), "E$", "")) %>%
   'colnames<-'(str_replace(colnames(.), "M$", "_MOE"))
-  
+
 raw_st_data <- get_acs(geography = "tract",
                        variables = acs5_st_list,
                        year = ipd_year,
@@ -234,6 +235,7 @@ ipd_table <- tracts %>%
   left_join(test_table) %>%
   'colnames<-'(str_replace(colnames(.), "pct_score", "score"))
 
+
 # Spatial Data ----
 # Geography columns
 ipd_table <- ipd_table %>%
@@ -364,17 +366,13 @@ means_table <- estimates_table %>%
 # Export Data ----
 ## Tract-Level IPD Outputs
 
-# write.csv(ipd_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\ipd_2021.csv")
-
-# st_write(ipd_shapefile, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\ipd_2021.shp") 
+write.csv(ipd_table, paste(output_dir,"ipd_", ipd_year, ".csv", sep=""))
+st_write(ipd_shapefile, paste(output_dir,"ipd_", ipd_year, ".shp", sep="")) 
 
 ## Summary Tables
 
-# write.csv(counts_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\counts_by_indicator_2021.csv")
-
-# write.csv(ipd_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\breaks_by_indicator_2021.csv")
-
-# write.csv(ipd_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\summary_by_indicator_2021.csv")
-
-# write.csv(ipd_table, "U:\\_OngoingProjects\\EJ\\2021_IPD\\data\\2021_outputs\\revised\\means_by_county_2021.csv")
+write.csv(counts_table, paste(output_dir,"counts_by_indicator_", ipd_year, ".csv", sep=""))
+write.csv(class_breaks_table, paste(output_dir,"breaks_by_indicator_", ipd_year, ".csv", sep=""))
+write.csv(summary_table, paste(output_dir,"summary_by_indicator_", ipd_year, ".csv", sep=""))
+write.csv(means_table, paste(output_dir,"means_by_county_", ipd_year, ".csv", sep=""))
 
