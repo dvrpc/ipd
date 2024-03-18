@@ -234,7 +234,6 @@ ipd_table <- tracts %>%
   left_join(test_table) %>%
   'colnames<-'(str_replace(colnames(.), "pct_score", "score"))
 
-
 # Spatial Data ----
 # Geography columns
 ipd_table <- ipd_table %>%
