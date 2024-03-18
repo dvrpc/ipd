@@ -25,7 +25,6 @@ acs5_dt_list <- c(
   fb_uni = "B05012_001", # Foreign-born
   fb_est = "B05012_003",
   rm_uni = "B02001_001", # Racial minority
-  wht_est = "B02001_002", # White Alone
   blk_est = "B02001_003", # Black or African American alone
   aia_est = "B02001_004", # American Indian and Alaska Native alone
   asn_est = "B02001_005", # Asian alone
@@ -108,7 +107,6 @@ estimates_table <- raw_data_combined %>%
   mutate(fb_pct = round(100 * (fb_est/fb_uni), digits = 1)) %>%
   mutate(li_pct = round(100 * (li_est/li_uni), digits = 1)) %>%
   mutate(y_pct = round(100 * (y_est/tot_pop), digits = 1)) %>%
-  select(-wht_est, -wht_est_MOE) %>%
   mutate(em_pct_MOE = round(moe_prop(em_est,em_uni,em_est_MOE,em_uni_MOE) * 100,1)) %>%
   mutate(fb_pct_MOE = round(moe_prop(fb_est,fb_uni,fb_est_MOE,fb_uni_MOE) * 100,1)) %>%
   mutate(li_pct_MOE = round(moe_prop(li_est,li_uni,li_est_MOE,li_uni_MOE) * 100,1)) %>%
