@@ -113,6 +113,56 @@ estimates_table <- raw_data_combined %>%
   mutate(li_pct_MOE = round(moe_prop(li_est,li_uni,li_est_MOE,li_uni_MOE) * 100,1)) %>%
   mutate(y_pct_MOE = round(moe_prop(y_est,tot_pop,y_est_MOE,tot_pop_MOE) * 100,1))
 
+# Use variance replicates to calc MOE for RM indicator
+ipd_states_numeric <- fips_codes %>%
+  filter(state %in% ipd_states) %>%
+  select(state_code) %>% distinct(.) %>% pull(.)
+var_rep <- NULL
+
+for (i in 1:length(ipd_states)){
+  url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
+                ipd_year,
+                "/data/5-year/140/B02001_",
+                ipd_states_numeric[i],
+                ".csv.zip")
+  temp <- tempfile()
+  download.file(url, temp)
+  var_rep_i <- read.csv(unzip(temp))
+  var_rep <- dplyr::bind_rows(var_rep, var_rep_i)
+} 
+
+# function to calculate sqdiff
+sqdiff_fn <- function(v, e) (v - e) ^ 2
+
+var_rep <- var_rep %>%
+  mutate_at(vars(GEOID), ~(str_sub(., 10, 20))) %>%
+  filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
+  select(-TBLID, -NAME, -ORDER, -MOE, -CME, -SE) %>%
+  filter(TITLE %in% c("Black or African American alone",
+                      "American Indian and Alaska Native alone",
+                      "Asian alone",
+                      "Native Hawaiian and Other Pacific Islander alone",
+                      "Some other race alone",
+                      "Two or more races:")) %>%
+  group_by(GEOID) %>%
+  summarize_if(is.numeric, ~ sum(.))
+
+ids <- var_rep %>% select(GEOID) %>% pull(.)
+rep_estimates <- var_rep %>% select(ESTIMATE)
+replicates <- var_rep %>% select(-GEOID, -ESTIMATE)
+
+sqdiff <- mapply(sqdiff_fn, replicates, rep_estimates)
+sum_sqdiff <- rowSums(sqdiff, dims=1)
+moe <- round(sqrt(0.05 * sum_sqdiff) * 1.645, 0) #sqrt(variance) * 1.645
+rm_moe <- cbind(ids, moe) %>%
+  as_tibble(.) %>%
+  rename(GEOID = ids, rm_est_MOE = moe) %>%
+  mutate_at(vars(rm_est_MOE), as.numeric)
+
+estimates_table <- estimates_table %>%
+  left_join(., rm_moe) %>%
+  mutate(rm_pct_MOE = round(moe_prop(rm_est,rm_uni,rm_est_MOE,rm_uni_MOE) * 100,1))
+
 
 # Drop Low Population Tracts
 low_pop_tracts <- c("34005981802","34005982200","34021980000","42017980000",
