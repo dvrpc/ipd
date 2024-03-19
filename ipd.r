@@ -19,7 +19,7 @@ output_dir <- "data\\"
 # for the variables for Detailed Tables (B), Subject Tables (S), and Data Profiles (DP)
 
 acs5_dt_list <- c(
-  tot_pop = "B01003_001", # Total Population
+  tot_pp = "B01003_001", # Total Population
   em_uni = "B03002_001", # Ethnic Minority
   em_est = "B03002_012",
   fb_uni = "B05012_001", # Foreign-born
@@ -35,9 +35,9 @@ acs5_dt_list <- c(
 )
 
 acs5_st_list <- c(
-  lep_uni = "S1601_C01_001", # Limited English Proficiency
-  lep_est = "S1601_C05_001",
-  lep_pct = "S1601_C06_001",
+  le_uni = "S1601_C01_001", # Limited English Proficiency
+  le_est = "S1601_C05_001",
+  le_pct = "S1601_C06_001",
   d_uni = "S1810_C01_001",  # Disabled
   d_est = "S1810_C02_001",  
   d_pct = "S1810_C03_001", 
@@ -65,7 +65,7 @@ raw_dt_data <- get_acs(geography = "tract",
   filter(str_detect(GEOID, dvrpc_counties)) %>%
   dplyr::select(-NAME) %>%
   'colnames<-'(str_replace(colnames(.), "E$", "")) %>%
-  'colnames<-'(str_replace(colnames(.), "M$", "_MOE"))
+  'colnames<-'(str_replace(colnames(.), "M$", "_moe"))
 
 raw_st_data <- get_acs(geography = "tract",
                        variables = acs5_st_list,
@@ -78,7 +78,7 @@ raw_st_data <- get_acs(geography = "tract",
   filter(str_detect(GEOID, dvrpc_counties)) %>%
   dplyr::select(-NAME) %>%
   'colnames<-'(str_replace(colnames(.), "E$", "")) %>%
-  'colnames<-'(str_replace(colnames(.), "M$", "_MOE"))
+  'colnames<-'(str_replace(colnames(.), "M$", "_moe"))
 
 raw_dp_data <- get_acs(geography = "tract",
                        variables = acs5_dp_list,
@@ -87,11 +87,10 @@ raw_dp_data <- get_acs(geography = "tract",
                        survey = "acs5",
                        output = "wide"
 ) %>%
-  mutate(year = ipd_year) %>%
   filter(str_detect(GEOID, dvrpc_counties)) %>%
   dplyr::select(-NAME) %>%
   'colnames<-'(str_replace(colnames(.), "E$", "")) %>%
-  'colnames<-'(str_replace(colnames(.), "M$", "_MOE"))
+  'colnames<-'(str_replace(colnames(.), "M$", "_moe"))
 
 # Combine tables
 raw_data_combined <- raw_dt_data %>%
@@ -101,16 +100,16 @@ raw_data_combined <- raw_dt_data %>%
 # Calculate percentages and MOEs, Drop Unnecessesary MOEs
 estimates_table <- raw_data_combined %>%
   mutate(rm_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est) %>% # Racial minority calculation
-  select(-blk_est, -aia_est, -asn_est, -hpi_est, -oth_est, -two_est, -blk_est_MOE, -aia_est_MOE, -asn_est_MOE, -hpi_est_MOE, -oth_est_MOE, -two_est_MOE) %>%
+  select(-blk_est, -aia_est, -asn_est, -hpi_est, -oth_est, -two_est, -blk_est_moe, -aia_est_moe, -asn_est_moe, -hpi_est_moe, -oth_est_moe, -two_est_moe) %>%
   mutate(rm_pct = round(100 * (rm_est/rm_uni), digits = 1)) %>%
   mutate(em_pct = round(100 * (em_est/em_uni), digits = 1)) %>%
   mutate(fb_pct = round(100 * (fb_est/fb_uni), digits = 1)) %>%
   mutate(li_pct = round(100 * (li_est/li_uni), digits = 1)) %>%
-  mutate(y_pct = round(100 * (y_est/tot_pop), digits = 1)) %>%
-  mutate(em_pct_MOE = round(moe_prop(em_est,em_uni,em_est_MOE,em_uni_MOE) * 100,1)) %>%
-  mutate(fb_pct_MOE = round(moe_prop(fb_est,fb_uni,fb_est_MOE,fb_uni_MOE) * 100,1)) %>%
-  mutate(li_pct_MOE = round(moe_prop(li_est,li_uni,li_est_MOE,li_uni_MOE) * 100,1)) %>%
-  mutate(y_pct_MOE = round(moe_prop(y_est,tot_pop,y_est_MOE,tot_pop_MOE) * 100,1))
+  mutate(y_pct = round(100 * (y_est/tot_pp), digits = 1)) %>%
+  mutate(em_pct_moe = round(moe_prop(em_est,em_uni,em_est_moe,em_uni_moe) * 100,1)) %>%
+  mutate(fb_pct_moe = round(moe_prop(fb_est,fb_uni,fb_est_moe,fb_uni_moe) * 100,1)) %>%
+  mutate(li_pct_moe = round(moe_prop(li_est,li_uni,li_est_moe,li_uni_moe) * 100,1)) %>%
+  mutate(y_pct_moe = round(moe_prop(y_est,tot_pp,y_est_moe,tot_pp_moe) * 100,1))
 
 # Use variance replicates to calc MOE for RM indicator
 ipd_states_numeric <- fips_codes %>%
@@ -155,12 +154,12 @@ sum_sqdiff <- rowSums(sqdiff, dims=1)
 moe <- round(sqrt(0.05 * sum_sqdiff) * 1.645, 0) #sqrt(variance) * 1.645
 rm_moe <- cbind(ids, moe) %>%
   as_tibble(.) %>%
-  rename(GEOID = ids, rm_est_MOE = moe) %>%
-  mutate_at(vars(rm_est_MOE), as.numeric)
+  rename(GEOID = ids, rm_est_moe = moe) %>%
+  mutate_at(vars(rm_est_moe), as.numeric)
 
 estimates_table <- estimates_table %>%
   left_join(., rm_moe) %>%
-  mutate(rm_pct_MOE = round(moe_prop(rm_est,rm_uni,rm_est_MOE,rm_uni_MOE) * 100,1))
+  mutate(rm_pct_moe = round(moe_prop(rm_est,rm_uni,rm_est_moe,rm_uni_moe) * 100,1))
 
 
 # Drop Low Population Tracts
@@ -187,7 +186,7 @@ test_table <- estimates_table_clean
 
 
 # Variables
-vars <- list("lep_pct", "d_pct", "oa_pct", "rm_pct", "f_pct", "em_pct", "fb_pct", "li_pct", "y_pct")
+vars <- list("le_pct", "d_pct", "oa_pct", "rm_pct", "f_pct", "em_pct", "fb_pct", "li_pct", "y_pct")
 
 
 # Function to calculate indicator percentile and score
@@ -231,18 +230,15 @@ tracts <- estimates_table %>%
 
 ipd_table <- tracts %>%
   left_join(test_table) %>%
-  'colnames<-'(str_replace(colnames(.), "pct_score", "score"))
+  'colnames<-'(str_replace(colnames(.), "pct_score", "score")) %>%
+  'colnames<-'(str_replace(colnames(.), "pct_class", "class")) %>%
+  'colnames<-'(str_replace(colnames(.), "pct_pctile", "pctile")) %>%
+  select(GEOID, sort(colnames(.))) %>%
+  relocate(ipd_score, .after=y_score)
 
 
 # Spatial Data ----
 # Geography columns
-ipd_table <- ipd_table %>%
-  rename(GEOID20 = GEOID) %>%
-  mutate(STATEFP20 = str_sub(GEOID20, 1, 2)) %>%
-  mutate(COUNTYFP20 = str_sub(GEOID20, 3, 5)) %>%
-  mutate(NAME20 = str_sub(GEOID20, 6, 11)) %>%
-  mutate(namelsad = paste(substr(GEOID20, 6, 9), substr(GEOID20, 10, 11), sep = "."))
-
 pa_tracts <- tracts("42", c("017", "029", "045", "091", "101"))
 nj_tracts <- tracts("34", c("005", "007", "015", "021"))
 
@@ -250,7 +246,12 @@ region_tracts <- rbind(pa_tracts, nj_tracts) %>%
   st_transform(., 26918)
 
 ipd_shapefile <- region_tracts %>%
-  left_join(ipd_table, by=c("GEOID"="GEOID20"))
+  left_join(ipd_table, by=c("GEOID"="GEOID")) %>%
+  select(-MTFCC, -FUNCSTAT, -ALAND, -AWATER, -INTPTLAT, -INTPTLON) %>%
+  rename(geoid20 = GEOID) %>%
+  'colnames<-'(tolower(colnames(.))) %>%
+  mutate(year = ipd_year) %>%
+  select(year, geoid20, everything())
 
 # Import Tract to MCD Lookup
 tract_mcd_lookup <- st_read("U:\\_OngoingProjects\\Census\\_Geographies\\Census_Boundaries_2020.gdb", layer="TractToMCD_Lookup20") %>%
@@ -258,7 +259,9 @@ tract_mcd_lookup <- st_read("U:\\_OngoingProjects\\Census\\_Geographies\\Census_
 
 # Join IPD table with Lookup
 ipd_shapefile <- ipd_shapefile %>%
-  left_join(tract_mcd_lookup, by=c("GEOID"="geoid20"))
+  left_join(tract_mcd_lookup)
+
+ipd_table <- st_drop_geometry(ipd_shapefile) 
 
 
 # Summary Tables ----
@@ -345,18 +348,18 @@ summary_table <- as_tibble(summary_data) %>%
 # County-level Means
 means_table <- estimates_table %>%
   mutate(county_fips = str_sub(GEOID, 1, 5)) %>%
-  select(-GEOID, tot_pop, ends_with("_est"), ends_with("_uni"), -matches("MOE"), -year) %>%
+  select(-GEOID, tot_pp, ends_with("_est"), ends_with("_uni"), -matches("moe"), -year) %>%
   group_by(county_fips) %>%
   summarise(
     d_pctest = sum(d_est)/sum(d_uni),
     em_pctest = sum(em_est)/sum(em_uni),
     f_pctest = sum(f_est)/sum(f_uni),
     fb_pctest = sum(fb_est)/sum(fb_uni),
-    lep_pctest = sum(lep_est)/sum(lep_uni),
+    le_pctest = sum(le_est)/sum(le_uni),
     li_pctest = sum(li_est)/sum(li_uni),
-    oa_pctest = sum(oa_est)/sum(tot_pop),
+    oa_pctest = sum(oa_est)/sum(tot_pp),
     rm_pctest = sum(rm_est)/sum(rm_uni),
-    y_pctest = sum(y_est)/sum(tot_pop)
+    y_pctest = sum(y_est)/sum(tot_pp)
   ) %>%
   mutate_if(is.numeric, ~ . * 100) %>%
   mutate_if(is.numeric, round_1)
