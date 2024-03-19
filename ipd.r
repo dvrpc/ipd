@@ -8,7 +8,7 @@ readRenviron(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/.Renv
 census_api_key <- Sys.getenv("CENSUS_API_KEY")
 
 # Inputs and settings
-ipd_year <- 2021
+ipd_year <- 2022
 ipd_states <- c("NJ", "PA")
 dvrpc_counties <- c('^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
