@@ -1,75 +1,61 @@
-### Technical Reference ###
+## Table of Contents ##
 
-# Outline
-
-1. [About](#about)
-    a. [Getting started](#one_a)
-    b. [Output abbreviations](#one_b)
-    c. [Project structure](#one_c)
-2. [Setup](#setup)
-    a. [Dependencies](#two_a)
-    b. [Fields](#two_b)
-    c. [Year](#two_c)
-    d. [States](#two_d)
-    e. [Counties](#two_e)
-    f. [Census API key](#two_f)
-    f. [Functions](#two_g)
-        1. [Override `base` and `stats` function defaults](#two_g_i)
-        2. [Create custom half-standard deviation breaks](#two_g_ii)
-        3. [*Exception*](#two_g_iii)
-        4. [Move column or vector of columns to last position](#two_g_iv)
-        5. [Summarize data](#two_g_v)
-3. [Variance replicate table download](#variance_replicate_table_download)
-    a. [Download variance replicates from Census website](#three_a)
-    b. [Combine and format downloads](#three_b)
-4. [Variance replicate table processing](#variance_replicate_table_processing)
-    a. [Compute racial minority count MOE](#four_a)
-    b. [Save results](#four_b)
-5. [ACS estimates download](#acs_estimates_download)
-    a. [Fields](#five_a)
-    b. [Download counts and universes from Census API](#five_b)
-        1. [*Exception*](#five_b_i)
-    c. [Download percentages from Census API](#five_c)
-    d. [Format downloads](#five_d)
-        1. [*Exception*](#five_d_i)
-        2. [*Exception*](#five_d_ii)
-        3. [*Exception*](#five_d_iii)
-6. [ACS estimates calculations](#acs_estimates_calculations)
-    a. [Percentages and percentage MOEs](#six_a)
-        1. [Calculation](#six_a_i)
-        2. [Result](#six_a_ii)
-        3. [*Exception*](#six_a_iii)
-        4. [*Exception*](#six_a_iv)
-    b. [Percentile](#six_b)
-        1. [Calculation](#six_b_i)
-        2. [Result](#six_b_ii)
-    c. [IPD score and classification](#six_c)
-        1. [Calculation](#six_c_i)
-        2. [Result](#six_c_ii)
-    d. [Composite IPD score](#six_d)
-        1. [Calculation](#six_d_i)
-        2. [Result](#six_d_ii)
-7. [ACS estimates cleaning](#acs_estimates_cleaning)
-8. [Summary tables](#summary_tables)
-    a. [Counts by indicator](#eight_a)
-    b. [Breaks by indicator](#eight_b)
-    c. [Summary by indicator](#eight_c)
-    d. [County means by indicator](#eight_d)
-9. [Export](#export)
-    a. [Append to TIGER/LINE file](#nine_a)
-    b. [Export files](#nine_b)
-10. [Metadata table with sources](#metadata)
+1. [About](#about)  
+    1. [Getting started](#one_a)  
+    2. [Output abbreviations](#one_b)  
+    3. [Project structure](#one_c)  
+2. [Setup](#setup)  
+    1. [Dependencies](#two_a)  
+    2. [Fields](#two_b)  
+    3. [Year](#two_c)  
+    4. [States](#two_d)  
+    5. [Counties](#two_e)  
+    6. [Census API key](#two_f)  
+3. [Variance replicate table download](#variance_replicate_table_download)  
+    1. [Download variance replicates from Census website](#three_a)  
+    2. [Combine and format downloads](#three_b)  
+4. [Variance replicate table processing](#variance_replicate_table_processing)  
+    1. [Compute racial minority count MOE](#four_a)  
+    2. [Save results](#four_b)  
+5. [ACS estimates download](#acs_estimates_download)  
+    1. [Fields](#five_a)  
+    2. [Download counts and universes from Census API](#five_b)  
+    3. [Download percentages from Census API](#five_c)  
+    4. [Format downloads](#five_d)  
+6. [ACS estimates calculations](#acs_estimates_calculations)  
+    1. [Percentages and percentage MOEs](#six_a)  
+        1. [Calculation](#six_a_i)  
+        2. [Result](#six_a_ii)  
+    2. [Percentile](#six_b)  
+        1. [Calculation](#six_b_i)  
+        2. [Result](#six_b_ii)  
+    3. [IPD score and classification](#six_c)  
+        1. [Calculation](#six_c_i)  
+        2. [Result](#six_c_ii)  
+    4. [Composite IPD score](#six_d)  
+        1. [Calculation](#six_d_i)  
+        2. [Result](#six_d_ii)  
+7. [ACS estimates cleaning](#acs_estimates_cleaning)  
+8. [Summary tables](#summary_tables)  
+    1. [Counts by indicator](#eight_a)  
+    2. [Breaks by indicator](#eight_b)  
+    3. [Summary by indicator](#eight_c)  
+    4. [County means by indicator](#eight_d)  
+9. [Export](#export)  
+    1. [Append to TIGER/LINE file](#nine_a)  
+    2. [Export files](#nine_b)  
+10. [Metadata table with sources](#metadata)  
 
 
-# 1. About {#about}
+# 1. About  {#about}
 DVRPC's IPD analysis identifies populations of interest under Title VI of the Civil Rights Act and the Executive Order on Environmental Justice (#12898) using 2013-2017 American Community Survey (ACS) five-year estimates from the U.S. Census Bureau. IPD analysis assists both DVRPC and outside organizations in equity work by identifying populations of interest, including youth, older adults, female, racial minority, ethnic minority, foreign-born, limited English proficiency, disabled, and low-income populations at the census tract level in DVRPC's nine-county region.
 
 There are many ways of identifying these populations of interest. This document discusses DVRPC's process, which is automated in an `R` script.
 
-## 1a. Getting started {#one_a}
+## 1a. Getting started  {#one_a}
 For guidance on software prerequisites and how to run this script, see `getting_started.pdf` in the `documentation` folder.
 
-## 1b. Output abbreviations {#one_b}
+## 1b. Output abbreviation  {#one_b}
 Components of field names that you'll see in `outputs` and throughout the script.
 
 Component|  Equivalent                     |
@@ -90,7 +76,7 @@ PctMOE   |  Percentage MOE                 |
 Pctile   |  Percentile                     |
 Score    |  Score                          |
 Class    |  Classification                 |
-<br>
+
 
 Abbreviations of field names that you'll see in `outputs` *not* comprised of the above components.
 
@@ -111,7 +97,7 @@ Abbreviations of field names that you'll see in `outputs` *not* comprised of the
 | U_PNICEst    | Non-Institutional Civilian Population Estimate |
 | U_PNICMOE    | Non-Institutional Civilian Population MOE      |
 
-## 1c. Project structure {#one_c}
+## 1c. Project structure  {#one_c}
 This script uses relative file paths based off the location of `ipd.Rproj`. As long as you download the entire repository, the script should have no trouble locating the correct subfolders. All of the subsequent years files are based on the same architecture. The project is structured as follows:
 
 ```{r file_structure, eval = FALSE}
@@ -136,7 +122,7 @@ ipd.Rproj
       summary_by_indicator.csv
 ```
 
-# 2. Setup {#setup}
+# 2. Setup  
 ## 2a. Dependencies {#two_a}
 Packages required to run this script. If you don't have the packages, you'll get the warning `Error in library (<name of package>) : there is no package called '<name of package>'`, in which case you'll need to install the package before proceeding.
 
@@ -150,7 +136,6 @@ The base information we need for IPD analysis are universes, counts, and percent
 
 Some percentage fields are empty. This is okay: we will compute the percentages when they are not directly available from the ACS.
 
-Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as the count for Racial Minority. This is a mathematical shortcut: otherwise, we would need to add several subfields to compute the same estimate. The desired count is B02001_001 (Universe) $-$ B02001_002 ("Estimate; Total: - White alone"). The subtraction is computed after download in Section 5d.i., making a correct estimate and an incorrect MOE. The correct MOE for the count, as calculated in Section 4, will be appended later.
 
 | Indicator | Abbreviation | Universe | Count | Percentage |
 |:----------|:------------:|:--------:|:-----:|:----------:|
@@ -163,66 +148,66 @@ Note that variable B02001_002 ("Estimate; Total: - White alone") is listed as th
 | Older Adults | OA | S0101_C01_001 | S0101_C01_030 | S0101_C02_030 |
 | Racial Minority | RM | B02001_001 | B02001_002 | N/A |
 | Youth | Y | B03002_001 | B09001_001 | N/A |
+
+
+While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit [Census Developers](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in IPD 2015, 2016, and 2017, see `variables.csv` in the `documentation` folder.
 <br>
 
-While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit Census Developers [(link)](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in IPD 2015, 2016, and 2017, see `variables.csv` in the `documentation` folder.
-<br>
+```
+disabled_universe                    <- "S1810_C01_001"  
 
-<table>
-disabled_universe                    <- "S1810_C01_001"
+disabled_count                       <- "S1810_C02_001"  
 
-disabled_count                       <- "S1810_C02_001"
+disabled_percent                     <- "S1810_C03_001"  
 
-disabled_percent                     <- "S1810_C03_001"
+ethnic_minority_universe             <- "B03002_001"  
 
-ethnic_minority_universe             <- "B03002_001"
+ethnic_minority_count                <- "B03002_012"  
 
-ethnic_minority_count                <- "B03002_012"
+ethnic_minority_percent              <- NA  
 
-ethnic_minority_percent              <- NA
+female_universe                      <- "S0101_C01_001"  
 
-female_universe                      <- "S0101_C01_001"
+female_count                         <- "S0101_C05_001"  
 
-female_count                         <- "S0101_C05_001"
+female_percent                       <- "DP05_0003PE"  
 
-female_percent                       <- "DP05_0003PE"
+foreign_born_universe                <- "B05012_001"  
 
-foreign_born_universe                <- "B05012_001"
+foreign_born_count                   <- "B05012_003"  
 
-foreign_born_count                   <- "B05012_003"
+foreign_born_percent                 <- NA  
 
-foreign_born_percent                 <- NA
+limited_english_proficiency_universe <- "S1601_C01_001"  
 
-limited_english_proficiency_universe <- "S1601_C01_001"
+limited_english_proficiency_count    <- "S1601_C05_001"  
 
-limited_english_proficiency_count    <- "S1601_C05_001"
+limited_english_proficiency_percent  <- "S1601_C06_001"  
 
-limited_english_proficiency_percent  <- "S1601_C06_001"
+low_income_universe                  <- "S1701_C01_001"  
 
-low_income_universe                  <- "S1701_C01_001"
+low_income_count                     <- "S1701_C01_042"  
 
-low_income_count                     <- "S1701_C01_042"
+low_income_percent                   <- NA  
 
-low_income_percent                   <- NA
+older_adults_universe                <- "S0101_C01_001"  
 
-older_adults_universe                <- "S0101_C01_001"
+older_adults_count                   <- "S0101_C01_030"  
 
-older_adults_count                   <- "S0101_C01_030"
+older_adults_percent                 <- "S0101_C02_030"  
 
-older_adults_percent                 <- "S0101_C02_030"
+racial_minority_universe             <- "B02001_001"  
 
-racial_minority_universe             <- "B02001_001"
+racial_minority_count                <- "B02001_002"  
 
-racial_minority_count                <- "B02001_002"
+racial_minority_percent              <- NA  
 
-racial_minority_percent              <- NA
+youth_universe                       <- "B03002_001"  
 
-youth_universe                       <- "B03002_001"
+youth_count                          <- "B09001_001"  
 
-youth_count                          <- "B09001_001"
-
-youth_percent                        <- NA
-</table>
+youth_percent                        <- NA  
+```
 
 <br>
 
@@ -260,78 +245,11 @@ Placeholder if you have never installed an API key before. If this is your first
 
 # *THE TYPICAL USER SHOULD NOT HAVE TO EDIT ANYTHING BELOW THIS POINT.*
 
-## 2g. Functions {#two_g}
-Load custom functions.
-
-### 2g.i. Override `base` and `stats` function defaults {#two_g_i}
-A time-saver so that it's not required to call `na.rm = TRUE` every time common functions are called.
-<br>
-```{r override}
-min <- function(i, ..., na.rm = TRUE) {
-  base::min(i, ..., na.rm = na.rm)
-}
-mean <- function(i, ..., na.rm = TRUE) {
-  base::mean(i, ..., na.rm = na.rm)
-}
-sd <- function(i, ..., na.rm = TRUE) {
-  stats::sd(i, ..., na.rm = na.rm)
-}
-max <- function(i, ..., na.rm = TRUE) {
-  base::max(i, ..., na.rm = na.rm)
-}
-```
-
-### 2g.ii. Create custom half-standard deviation breaks {#two_g_ii}
-For a given vector of numbers `x` and a number of bins `i`, `st_dev_breaks` computes the bin breaks starting at $-0.5 \cdot st dev$ and $0.5 \cdot st dev$. For the purposes of IPD analysis, `i = 5`, and `st_dev_breaks` calculates the minimum, $-1.5 \cdot st dev$, $-0.5 \cdot st dev$, $0.5 \cdot st dev$, $1.5 \cdot st dev$, and maximum values. These values are later used to slice the vector into five bins.
-
-### 2g.iii. *Exception* {#two_g_iii}
-All minima are coerced to equal zero. If the first bin break ($-1.5 \cdot st dev$) is negative, as happens when the data has a large spread and therefore a large standard deviation, then this bin break is coerced to equal 0.1. In these cases, only estimates of 0 percent will be placed in the bottom bin.
-<br>
-```{r st_dev_breaks}
-st_dev_breaks <- function(x, i, na.rm = TRUE){
-  half_st_dev_count <- c(-1 * rev(seq(1, i, by = 2)),
-                         seq(1, i, by = 2))
-  if((i %% 2) == 1) {
-    half_st_dev_breaks <- sapply(half_st_dev_count,
-                                 function(i) (0.5 * i * sd(x)) + mean(x))
-    half_st_dev_breaks[[1]] <- 0
-    half_st_dev_breaks[[2]] <- ifelse(half_st_dev_breaks[[2]] < 0,
-                                      0.1,
-                                      half_st_dev_breaks[[2]])
-    half_st_dev_breaks[[i + 1]] <- ifelse(max(x) > half_st_dev_breaks[[i + 1]],
-                                          max(x), half_st_dev_breaks[[i + 1]])
-  } else {
-    half_st_dev_breaks <- NA
-  }
-  return(half_st_dev_breaks)
-}
-```
-
-### 2g.iv. Move column or vector of columns to last position {#two_g_iv}
-The requested schema for IPD data export renames and places all relevant universes in the final columns of the dataset. `move_last` moves a column or vector of column names to the last position(s) in a data frame.
-<br>
-```{r move_last}
-move_last <- function(df, last_col) {
-  match(c(setdiff(names(df), last_col), last_col), names(df))
-}
-```
-
-### 2g.v. Summarize data {#two_g_v}
-`description` tailors the exports from `summarytools::descr` to create summary tables with the requested fields.  $0.5 \cdot st dev$ is returned after $stdev$.
-<br>
-```{r description}
-description <- function(i) {
-  des <- as.numeric(descr(i, na.rm = TRUE,
-                          stats = c("min", "med", "mean", "sd", "max")))
-  des <- c(des[1:4], des[4] / 2, des[5])
-  return(des)
-}
-```
 
 # 3. Variance replicate table download {#variance_replicate_table_download}
 This will feel out of order, but it's necessary. The racial minority indicator is created by summing up several subgroups in ACS Table B03002. This means that the MOE for the count has to be computed. While the ACS has issued guidance on computing the MOE by aggregating subgroups, using the approximation formula can artificially deflate the derived MOE. Variance replicate tables are used instead to account for covariance and compute a more accurate MOE. The MOE computed from variance replicates is substituted in for the racial minority count MOE in Section 5d.ii.
 
-See the Census Bureau's Variance Replicate Tables Documentation [(link)](https://www.census.gov/programs-surveys/acs/technical-documentation/variance-tables.html) for additional guidance on working with variance replicates.
+See the Census Bureau's [Variance Replicate Tables Documentation](https://www.census.gov/programs-surveys/acs/technical-documentation/variance-tables.html) for additional guidance on working with variance replicates.
 
 ## 3a. Download variance replicates from Census website {#three_a}
 Download, unzip, and read variance replicate tables for Table B02001. Results are combined into a single table called `var_rep`.
