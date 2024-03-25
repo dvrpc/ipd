@@ -1,4 +1,4 @@
-site_name: Documentation
+site_name: IPD Documentation
 theme:
   name: material
   features:

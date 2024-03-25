@@ -49,12 +49,12 @@ Please provide your own API Key (this is required for the `tidycensus` package, 
 
 After the code has finished, outputs are saved in the /outputs subdirectory of where you cloned the repository on your local machine, including:
 
-- ipd.csv: tract-level statistics and scores for IPD's nine indicators
-- ipd.shp: spatial version of ipd.csv
-- breaks_by_indicator.csv: bin breaks by indicator
-- counts_by_indicator.csv: census tract counts by bin and indicator
-- summary_by_indicator.csv: basic summary stats by indicator
-- mean_by_county.csv: population-weighted county means by indicator
+- ipd_`ipd_year`.csv: tract-level statistics and scores for IPD's nine indicators
+- ipd_`ipd_year`.shp: spatial version of ipd.csv
+- breaks_by_indicator_`ipd_year`.csv: bin breaks by indicator
+- counts_by_indicator_`ipd_year`.csv: census tract counts by bin and indicator
+- summary_by_indicator_`ipd_year`.csv: basic summary stats by indicator
+- means_by_county_`ipd_year`.csv: population-weighted county means by indicator
 
 ## Additional Information
 

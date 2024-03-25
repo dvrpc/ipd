@@ -48,7 +48,7 @@
 
 
 # 1. About  {#about}
-DVRPC's IPD analysis identifies populations of interest under Title VI of the Civil Rights Act and the Executive Order on Environmental Justice (#12898) using 2013-2017 American Community Survey (ACS) five-year estimates from the U.S. Census Bureau. IPD analysis assists both DVRPC and outside organizations in equity work by identifying populations of interest, including youth, older adults, female, racial minority, ethnic minority, foreign-born, limited English proficiency, disabled, and low-income populations at the census tract level in DVRPC's nine-county region.
+DVRPC's IPD analysis identifies populations of interest under Title VI of the Civil Rights Act and the Executive Order on Environmental Justice (#12898) using American Community Survey (ACS) five-year estimates from the U.S. Census Bureau. IPD analysis assists both DVRPC and outside organizations in equity work by identifying populations of interest, including youth, older adults, female, racial minority, ethnic minority, foreign-born, limited English proficiency, disabled, and low-income populations at the census tract level in DVRPC's nine-county region.
 
 There are many ways of identifying these populations of interest. This document discusses DVRPC's process, which is automated in an `R` script.
 
@@ -58,24 +58,17 @@ For guidance on software prerequisites and how to run this script, see `getting_
 ## 1b. Output abbreviation  {#one_b}
 Components of field names that you'll see in `outputs` and throughout the script.
 
-Component|  Equivalent                     |
-:--------|  :--------------               |
-D        |  Disabled                       |
-EM       |  Ethnic Minority                |
-F        |  Female                         |
-FB       |  Foreign-Born                   |
-LEP      |  Limited English Proficiency    |
-LI       |  Low-Income                     |
-OA       |  Older Adults                   |
-RM       |  Racial Minority                |
-Y        |  Youth                          |
-CntEst   |  Count Estimate                 |
-CntMOE   |  Count MOE                      |
-PctEst   | Percentage Estimate             |
-PctMOE   |  Percentage MOE                 |
-Pctile   |  Percentile                     |
-Score    |  Score                          |
-Class    |  Classification                 |
+ | Component |   Equivalent                      |
+ | --------- | --------------------------------- |
+ | d         |   Disabled                        |
+ | em        |   Ethnic Minority                 |
+ | f         |   Female                          |
+ | fb        |   Foreign-Born                    |
+ | lep       |   Limited English Proficiency     |
+ | li        |   Low-Income                      |
+ | oa        |   Older Adults                    |
+ | rm        |   Racial Minority                 |
+ | y         |   Youth                           |
 
 
 Abbreviations of field names that you'll see in `outputs` *not* comprised of the above components.
@@ -139,18 +132,18 @@ Some percentage fields are empty. This is okay: we will compute the percentages 
 
 | Indicator | Abbreviation | Universe | Count | Percentage |
 |:----------|:------------:|:--------:|:-----:|:----------:|
-| Disabled | D | S1810_C01_001 | S1810_C02_001 | S1810_C03_001 |
-| Ethnic Minority | EM | B03002_001 | B03002_012 | N/A |
-| Female | F | S0101_C01_001 | S0101_C05_001 | DP05_0003PE |
-| Foreign-Born | FB | B05012_001 | B05012_003 | N/A |
-| Limited English Proficiency | LEP | S1601_C01_001 | S1601_C05_001 | S1601_C06_001 |
-| Low-Income | LI | S1701_C01_001 | S1701_C01_042 | N/A |
-| Older Adults | OA | S0101_C01_001 | S0101_C01_030 | S0101_C02_030 |
-| Racial Minority | RM | B02001_001 | B02001_002 | N/A |
-| Youth | Y | B03002_001 | B09001_001 | N/A |
+| Disabled | d | S1810_C01_001 | S1810_C02_001 | S1810_C03_001 |
+| Ethnic Minority | em | B03002_001 | B03002_012 | N/A |
+| Female | f | S0101_C01_001 | S0101_C05_001 | DP05_0003PE |
+| Foreign-Born | fb | B05012_001 | B05012_003 | N/A |
+| Limited English Proficiency | lep | S1601_C01_001 | S1601_C05_001 | S1601_C06_001 |
+| Low-Income | li | S1701_C01_001 | S1701_C01_042 | N/A |
+| Older Adults | oa | S0101_C01_001 | S0101_C01_030 | S0101_C02_030 |
+| Racial Minority | rm | B02001_001 | B02001_002 | N/A |
+| Youth | y | B03002_001 | B09001_001 | N/A |
 
 
-While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit [Census Developers](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in IPD 2015, 2016, and 2017, see `variables.csv` in the `documentation` folder.
+While it's quicker to embed the names of the desired columns into the code, fields are explicitly spelled out in this script. This is a purposeful design choice. The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit [Census Developers](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in previous IPD results, see `variables.csv` in the `documentation` folder.
 <br>
 
 ```
@@ -214,7 +207,7 @@ youth_percent                        <- NA
 ## 2c. Year {#two_c}
 The data download year.
 ```{r year}
-ipd_year <- 2017
+ipd_year <- 2022
 ```
 <br>
 
