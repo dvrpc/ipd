@@ -31,15 +31,7 @@ Abbreviations of field names that you'll see in `outputs` *not* comprised of the
 | STATEFP      | State FIPS Code                                |
 | COUNTYFP     | County FIPS Code                               |
 | NAME         | Census Tract FIPS Code                         |
-| IPD_Score    | Composite IPD Score                            |
-| U_TPopEst    | Total Population Estimate                      |
-| U_TPopMOE    | Total Population MOE                           |
-| U_Pop5Est    | Population 5+ Estimate                         |
-| U_Pop5MOE    | Population 5+ MOE                              |
-| U_PPovEst    | Poverty Status Population Estimate             |
-| U_PPovMOE    | Poverty Status Population MOE                  |
-| U_PNICEst    | Non-Institutional Civilian Population Estimate |
-| U_PNICMOE    | Non-Institutional Civilian Population MOE      |
+
 
 ### Project Structure  
 This script uses relative file paths based off the location of `ipd.Rproj`. As long as you download the entire repository, the script should have no trouble locating the correct subfolders. All of the subsequent years files are based on the same architecture. The project is structured as follows:

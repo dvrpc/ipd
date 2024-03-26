@@ -2,11 +2,12 @@ site_name: IPD Documentation
 theme:
   name: material
   features:
-    - navigation.tabs
     - navigation.sections
     - toc.integrate
+    - toc.follow
     - navigation.top
     - navigation.path
+    - navigation.tabs
     - search.suggest
     - search.highlight
     - content.tabs.link
@@ -58,5 +59,4 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
 nav:
-  - Home: index.md
   - Documentation: script_reference.md
