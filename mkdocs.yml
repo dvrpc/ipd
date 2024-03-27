@@ -1,4 +1,4 @@
-site_name: IPD Documentation
+site_name: DVRPC IPD
 theme:
   name: material
   features:
@@ -59,4 +59,5 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
 nav:
+  - Home: index.md
   - Documentation: script_reference.md

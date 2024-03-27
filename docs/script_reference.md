@@ -109,6 +109,12 @@ output_dir <- "data\\"
 ## Preparing Census Data
 
 ### Fields
+Fields are organized in vectors based on the data table it is located in. This will make it easier to pull the data using the `get_acs` function.
+
+`dt` = Detailed Tables  
+`st` = Subject Tables  
+`dp` = Data Profiles  
+
 ```
 acs5_dt_list <- c(
   tot_pop = "B01003_001", # Total Population
@@ -147,8 +153,7 @@ acs5_dp_list <- c(
 )
 ```
 
-### Use `get_acs` to Pull ACS Data
-
+### Pull ACS Data
 ```
 raw_dt_data <- get_acs(geography = "tract",
                        variables = acs5_dt_list,
@@ -294,13 +299,15 @@ estimates_table_clean <- estimates_table %>%
 
 ## Calculate IPD Score  
 
+`p` = percent estimate
+
 | IPD Score | IPD Classification | Standard Deviations |
 |:---------:|:------------------:|:-------------------:|
-| 0 | Well Below Average | x $< -1.5 \cdot stdev$ |
-| 1 | Below Average | $-1.5 \cdot stdev \leq$ x $<-0.5 \cdot stdev$ |
-| 2 | Average | $-0.5 \cdot stdev \leq$ x $<0.5 \cdot stdev$ |
-| 3 | Above Average | $0.5 \cdot stdev \leq$ x $<1.5 \cdot stdev$ |
-| 4 | Well Above Average | x $\geq 1.5 \cdot stdev$ |
+| 0 | Well Below Average | p < mean - (1.5 * stdev) |
+| 1 | Below Average | mean - (1.5 * stdev) <= p <  mean - (0.5 * stdev)|
+| 2 | Average | mean - (0.5 * stdev) <= p < mean + (0.5 * stdev)|
+| 3 | Above Average | mean + (0.5 * stdev) <= p < mean + (1.5 * stdev)|
+| 4 | Well Above Average | p >= mean * (1.5 * stdev)|
 
 ```
 # Define Test Table
@@ -355,7 +362,6 @@ This section generates a handful of other deliverables, including:
 
 ### Counts by Indicator
 ### Breaks by Indicator
-#### `calculate_class_breaks` Function
 ### Summary by Indicator
 ### County-Level Means by Indicator
 
