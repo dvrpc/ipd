@@ -3,9 +3,6 @@ DVRPC's IPD analysis identifies populations of interest under Title VI of the Ci
 
 There are many ways of identifying these populations of interest. This document discusses DVRPC's process, which is automated in an `R` script.
 
-### Getting Started
-For guidance on software prerequisites and how to run this script, see `getting_started.pdf` in the `documentation` folder.
-
 ### Output Abbreviation
 Components of field names that you'll see in `outputs` and throughout the script.
 
@@ -355,16 +352,139 @@ test_table$ipd_score <- rowSums(select(test_table, ends_with("_score")), na.rm =
 
 
 ## Spatial Data
+```
+ipd_table <- ipd_table %>%
+  rename(GEOID20 = GEOID) %>%
+  mutate(STATEFP20 = str_sub(GEOID20, 1, 2)) %>%
+  mutate(COUNTYFP20 = str_sub(GEOID20, 3, 5)) %>%
+  mutate(NAME20 = str_sub(GEOID20, 6, 11)) %>%
+  mutate(namelsad = paste(substr(GEOID20, 6, 9), substr(GEOID20, 10, 11), sep = "."))
 
+pa_tracts <- tracts("42", c("017", "029", "045", "091", "101"))
+nj_tracts <- tracts("34", c("005", "007", "015", "021"))
+
+region_tracts <- rbind(pa_tracts, nj_tracts) %>%
+  st_transform(., 26918)
+
+ipd_shapefile <- region_tracts %>%
+  left_join(ipd_table, by=c("GEOID"="GEOID20"))
+
+# Import Tract to MCD Lookup
+tract_mcd_lookup <- st_read("U:\\_OngoingProjects\\Census\\_Geographies\\Census_Boundaries_2020.gdb", layer="TractToMCD_Lookup20") %>%
+  select(geoid20, mun1, mun2, mun3, mcdgeo1, mcdgeo2, mcdgeo3)
+
+# Join IPD table with Lookup
+ipd_shapefile <- ipd_shapefile %>%
+  left_join(tract_mcd_lookup, by=c("GEOID"="geoid20"))
+```
 
 ## Summary Tables 
 This section generates a handful of other deliverables, including:
 
-### Counts by Indicator
-### Breaks by Indicator
-### Summary by Indicator
-### County-Level Means by Indicator
+### Counts by Indicator  
+```
+counts <- ipd_table %>% select(ends_with("_class"))
 
+export_counts <- apply(counts, 2, function(i) plyr::count(i))
+for(i in 1:length(export_counts)){
+  export_counts[[i]]$var <- names(export_counts)[i]
+}
+
+export_counts <- map_dfr(export_counts, `[`, c("var", "x", "freq"))
+
+colnames(export_counts) <- c("Variable", "Classification", "Count")
+
+export_counts$Classification <- factor(export_counts$Classification,
+                                       levels = c("Well Below Average",
+                                                  "Below Average",
+                                                  "Average",
+                                                  "Above Average",
+                                                  "Well Above Average",
+                                                  "NA"))
+
+export_counts <- arrange(export_counts, Variable, Classification)
+
+counts_table <- export_counts %>%
+  spread(Classification, Count) %>%
+  mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE))
+```
+
+### Breaks by Indicator
+```
+breaks_table <- ipd_table  %>%
+  select(ends_with("_pct"))
+
+calculate_class_breaks <- function(input_df) {
+  breaks_df <- data.frame(matrix(NA, nrow = 6, ncol = ncol(input_df) + 1))
+  colnames(breaks_df) <- c("Break", colnames(input_df))
+  
+  breaks_df$Break <- c("Min", "1", "2", "3", "4", "Max")
+  
+  for (i in 1:ncol(input_df)) {
+    x <- input_df[[i]]
+    mean_x <- mean(x, na.rm = TRUE)
+    sd_x <- sd(x, na.rm = TRUE)
+    
+    min_break <- 0
+    b1 <- round(mean_x - (1.5 * sd_x), 1)
+    if (b1 < 0) {
+      b1 <- 0.1
+    }    
+    b2 <- round(mean_x - (0.5 * sd_x), 1)
+    b3 <- round(mean_x + (0.5 * sd_x), 1)
+    b4 <- round(mean_x + (1.5 * sd_x), 1)
+    max_break <- round(max(x, na.rm = TRUE), 1)
+    
+    breaks_df[, i + 1] <- c(min_break, b1, b2, b3, b4, max_break)
+  }
+  
+  return(breaks_df)
+}
+
+
+class_breaks_table <- calculate_class_breaks(breaks_table)
+```
+### Summary by Indicator
+```
+description <- function(i) {
+  des <- as.numeric(summarytools::descr(i, na.rm = TRUE,
+                                        stats = c("min", "med", "mean", "sd", "max")))
+  des <- c(des[1:4], des[4] / 2, des[5])
+  return(des)
+}
+
+pcts <- ipd_table %>% select(ends_with("_pct"))
+
+round_1 <- function(i) round(i, 1)
+round_2 <- function(i) round(i, 2)
+
+summary_data <- apply(pcts, MARGIN=2, description)
+
+summary_table <- as_tibble(summary_data) %>%
+  mutate_all(round_2) %>%
+  mutate(Statistic = c("Minimum", "Median", "Mean", "SD", "Half-SD", "Maximum")) %>%
+  select(Statistic, tidyselect::peek_vars())
+```
+### County-Level Means by Indicator
+```
+means_table <- estimates_table %>%
+  mutate(county_fips = str_sub(GEOID, 1, 5)) %>%
+  select(-GEOID, tot_pop, ends_with("_est"), ends_with("_uni"), -matches("MOE"), -year) %>%
+  group_by(county_fips) %>%
+  summarise(
+    d_pctest = sum(d_est)/sum(d_uni),
+    em_pctest = sum(em_est)/sum(em_uni),
+    f_pctest = sum(f_est)/sum(f_uni),
+    fb_pctest = sum(fb_est)/sum(fb_uni),
+    lep_pctest = sum(lep_est)/sum(lep_uni),
+    li_pctest = sum(li_est)/sum(li_uni),
+    oa_pctest = sum(oa_est)/sum(tot_pop),
+    rm_pctest = sum(rm_est)/sum(rm_uni),
+    y_pctest = sum(y_est)/sum(tot_pop)
+  ) %>%
+  mutate_if(is.numeric, ~ . * 100) %>%
+  mutate_if(is.numeric, round_1)
+```
 
 ## Export Data
 Results are saved in `outputs`.
