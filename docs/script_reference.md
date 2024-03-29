@@ -299,15 +299,17 @@ estimates_table_clean <- estimates_table %>%
 
 ## Calculate IPD Score  
 
-`p` = percent estimate
+`p` = percent estimate  
+`mean(pop)` = mean for indicator population  
+`stdev(pop)` = standard deviation for indicator population  
 
 | IPD Score | IPD Classification | Standard Deviations |
 |:---------:|:------------------:|:-------------------:|
-| 0 | Well Below Average | p < mean - (1.5 * stdev) |
-| 1 | Below Average | mean - (1.5 * stdev) <= p <  mean - (0.5 * stdev)|
-| 2 | Average | mean - (0.5 * stdev) <= p < mean + (0.5 * stdev)|
-| 3 | Above Average | mean + (0.5 * stdev) <= p < mean + (1.5 * stdev)|
-| 4 | Well Above Average | p >= mean * (1.5 * stdev)|
+| 0 | Well Below Average | p < mean(pop) - (1.5 * stdev(pop)) |
+| 1 | Below Average | mean(pop) - (1.5 * stdev(pop)) <= p <  mean(pop) - (0.5 * stdev(pop))|
+| 2 | Average | mean(pop) - (0.5 * stdev(pop)) <= p < mean(pop) + (0.5 * stdev(pop))|
+| 3 | Above Average | mean(pop) + (0.5 * stdev(pop)) <= p < mean(pop) + (1.5 * stdev(pop))|
+| 4 | Well Above Average | p >= mean(pop) * (1.5 * stdev(pop))|
 
 ```
 # Define Test Table
