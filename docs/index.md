@@ -20,7 +20,7 @@ Below is an overview of the calculations required to conduct IPD analysis and is
 IPD Scores can be presented in two ways: individual IPD score and composite IPD score.
 
 ### Individual IPD Score
-For each indicator, percent estimates are split into five bins, which are detailed in the table below. There is one exception to the standard deviation classification: if `mean(pop) - (1.5 * stdev(pop)(pop))` is a negative value, it is manually reassigned to 0.1. This ensures that at least some census tracts fall in the bottom bin regardless of the spread of the indicator. 
+For each indicator, percent estimates are split into five bins, which are detailed in the table below. There is one exception to the standard deviation classification: if `mean(pop) - (1.5 * stdev(pop))` is a negative value, it is manually reassigned to 0.1. This ensures that at least some census tracts fall in the bottom bin regardless of the spread of the indicator. 
 
 `p` = percent estimate  
 `mean(pop)` = mean for indicator population  
