@@ -74,6 +74,14 @@ Placeholder if you have never installed an API key before. If this is your first
 
 ### Inputs and Settings
 
+```
+ipd_year <- 2022
+ipd_states <- c("NJ", "PA")
+dvrpc_counties <- c('^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')
+ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
+output_dir <- "data\\"
+```
+
 ### Fields 
 The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. For each indicator, the table below shows the indicator name, its abbreviation used in the script, its universe, its count, and its percentage field if applicable. Some percentage fields are empty. This is okay: we will compute the percentages when they are not directly available from the ACS.
 
@@ -93,19 +101,11 @@ The base information we need for IPD analysis are universes, counts, and percent
 
 The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit [Census Developers](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in previous IPD results, see `variables.csv` in the `documentation` folder.
 
-### Inputs and Settings
 
-```
-ipd_year <- 2022
-ipd_states <- c("NJ", "PA")
-dvrpc_counties <- c('^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')
-ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
-output_dir <- "data\\"
-```
 
 ## Preparing Census Data
 
-### Fields
+### Data Table Lists
 Fields are organized in vectors based on the data table it is located in. This will make it easier to pull the data using the `get_acs` function.
 
 `dt` = Detailed Tables  
@@ -199,9 +199,12 @@ raw_data_combined <- raw_dt_data %>%
   inner_join(raw_dp_data)
 ```
 
-## Data Transformation
+## Data Transformations
+Before calculating IPD scores, the raw ACS data needs to be transformed. This includes calculating percent and margin of error (MOE) estimates that are not provided by the ACS and removing census tract geographies to reduce data skew.
 
 ### Calculate Percentages and MOEs
+The ACS does not provide percent or MOE estimates for the following IPD fields: Ethnic Minority, Foreign-Born, Low-Income, Youth. The percent estimates are calculated by dividing the count estimate for each variable by its population estimate. The MOE is calculated using the `moe_prop` function in R.
+
 ```
 estimates_table <- raw_data_combined %>%
   mutate(rm_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est) %>% # Racial minority calculation
@@ -217,8 +220,8 @@ estimates_table <- raw_data_combined %>%
   mutate(y_pct_MOE = round(moe_prop(y_est,tot_pop,y_est_MOE,tot_pop_MOE) * 100,1))
 ```
 
-### Use Variance Replicates to Calculate Racial Minority MOE
-This will feel out of order, but it's necessary. The racial minority indicator is created by summing up several subgroups in ACS Table B03002. This means that the MOE for the count has to be computed. While the ACS has issued guidance on computing the MOE by aggregating subgroups, using the approximation formula can artificially deflate the derived MOE. Variance replicate tables are used instead to account for covariance and compute a more accurate MOE. The MOE computed from variance replicates is substituted in for the racial minority count MOE in Section 5d.ii.
+### Calculate Racial Minority MOE
+The racial minority indicator is created by summing up several subgroups in ACS Table B03002. This means that the MOE for the count has to be computed. While the ACS has issued guidance on computing the MOE by aggregating subgroups, using the approximation formula can artificially deflate the derived MOE. Variance replicate tables are used instead to account for covariance and compute a more accurate MOE. The MOE computed from variance replicates is substituted in for the racial minority count MOE in Section 5d.ii.
 
 See the Census Bureau's [Variance Replicate Tables Documentation](https://www.census.gov/programs-surveys/acs/technical-documentation/variance-tables.html) for additional guidance on working with variance replicates.
 
