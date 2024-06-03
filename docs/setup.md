@@ -1,0 +1,57 @@
+# Code Setup
+
+This project automates DVRPC's Indicators of Potential Disadvantage (IPD) analysis, including data download, processing, and export. For more on IPD analysis, see [Equity Analysis for the Greater Philadelphia Region](https://www.dvrpc.org/webmaps/ipd/).
+
+## Getting the Code and Software
+
+1. Clone the [Github repository](https://github.com/dvrpc/ipd)
+2. [Download and install R](https://www.r-project.org/)
+3. [Download and install R Studio](https://www.rstudio.com/products/rstudio/#Desktop)
+
+## Installing Package Dependencies
+
+The R script has the following dependencies:
+
+- plyr
+- here
+- sf
+- summarytools
+- tidycensus
+- tidyverse
+- tigris
+- dplyr
+- descr
+
+If you have not previously installed the dependencies, you will need to do so. If you try to run the script without installing the packages, you will get an error message like
+`Error in library (name_of_package) : there is no package called 'name_of_package'`.
+
+Install each package from R Studio's console (typically at the bottom of the screen in R Studio) with the command `install.packages('name_of_package')` (include the quotation marks).
+
+## Updating the Script for a New 5-Year Dataset
+
+If you are running the code against a newly released 5-year ACS dataset, do the following:
+
+1. Update the `ipd_year` in the `ipd.r` to be the end year of the dataset.
+2. Update the `output_dir` with the output location for the files.
+3. Verify the field names (listed under the `# Fields` section). Follow the link provided to check the schema for that dataset.
+
+## Running the Code
+
+1. Open RStudio.
+2. Open the R file (File -> Open File)
+3. Run the code by clicking the Source button or Ctrl+A followed by Ctrl+Enter.
+
+If you see an error about packages not being installed, see [Installing Package Dependencies](#installing-package-dependencies) above.
+
+Please provide your own API Key (this is required for the `tidycensus` package, not the Census API), you may get another one [here](https://api.census.gov/data/key_signup.html).
+
+### Outputs
+
+After the code has finished, outputs are saved in the /outputs subdirectory of where you cloned the repository on your local machine, including:
+
+- ipd_`ipd_year`.csv: tract-level statistics and scores for IPD's nine indicators
+- ipd_`ipd_year`.shp: spatial version of ipd.csv
+- breaks_by_indicator_`ipd_year`.csv: bin breaks by indicator
+- counts_by_indicator_`ipd_year`.csv: census tract counts by bin and indicator
+- summary_by_indicator_`ipd_year`.csv: basic summary stats by indicator
+- means_by_county_`ipd_year`.csv: population-weighted county means by indicator
