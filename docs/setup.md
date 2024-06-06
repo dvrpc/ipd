@@ -5,8 +5,8 @@ This project automates DVRPC's Indicators of Potential Disadvantage (IPD) analys
 ## Getting the Code and Software
 
 1. Clone the [Github repository](https://github.com/dvrpc/ipd)
-2. [Download and install R](https://www.r-project.org/)
-3. [Download and install R Studio](https://www.rstudio.com/products/rstudio/#Desktop)
+2. [Download and install R](https://cran.rstudio.com/)
+3. [Download and install R Studio](https://posit.co/download/rstudio-desktop/)
 
 ## Installing Package Dependencies
 
