@@ -58,7 +58,7 @@ output_dir <- "data\\"
 ```
 
 ### Fields 
-The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. For each indicator, the table below shows the indicator name, its abbreviation used in the script, its universe, its count, and its percentage field if applicable. Some percentage fields are empty. This is okay: we will compute the percentages when they are not directly available from the ACS.
+The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. For each indicator, the table below shows the indicator name, its abbreviation used in the script, its universe, its count, and its percentage field if applicable. Percentage estimates will be calculated for indicators if they are not provided in the ACS.
 
 
 | Indicator | Abbreviation | Universe | Count | Percentage |
@@ -74,8 +74,7 @@ The base information we need for IPD analysis are universes, counts, and percent
 | Youth | y | B03002_001 | B09001_001 | N/A |
 
 
-The user should check that the field names point to the correct API request with every IPD update. The best way to check the field names is to visit [Census Developers](https://www.census.gov/developers/) and select the corresponding API. For a history of the ACS variables used in previous IPD results, see `variables.csv` in the `documentation` folder.
-
+The user should check that the field names point to the correct [API request](https://www.census.gov/data/developers/data-sets.html) For a history of the ACS variables used in previous IPD results, check prior [IPD releases](https://github.com/dvrpc/ipd/releases).
 
 
 ## Preparing Census Data
