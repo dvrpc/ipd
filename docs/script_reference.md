@@ -283,7 +283,7 @@ estimates_table_clean <- estimates_table %>%
 | 1 | Below Average | mean(pop) - (1.5 * stdev(pop)) <= p <  mean(pop) - (0.5 * stdev(pop))|
 | 2 | Average | mean(pop) - (0.5 * stdev(pop)) <= p < mean(pop) + (0.5 * stdev(pop))|
 | 3 | Above Average | mean(pop) + (0.5 * stdev(pop)) <= p < mean(pop) + (1.5 * stdev(pop))|
-| 4 | Well Above Average | p >= mean(pop) * (1.5 * stdev(pop))|
+| 4 | Well Above Average | p >= mean(pop) + (1.5 * stdev(pop))|
 
 ```
 # Define Test Table
