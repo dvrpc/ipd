@@ -32,7 +32,7 @@ For each indicator, percent estimates are split into five bins, which are detail
 | 1 | Below Average | mean(pop) - (1.5 * stdev(pop)) <= p <  mean(pop) - (0.5 * stdev(pop))|
 | 2 | Average | mean(pop) - (0.5 * stdev(pop)) <= p < mean(pop) + (0.5 * stdev(pop))|
 | 3 | Above Average | mean(pop) + (0.5 * stdev(pop)) <= p < mean(pop) + (1.5 * stdev(pop))|
-| 4 | Well Above Average | p >= mean(pop) * (1.5 * stdev(pop))|
+| 4 | Well Above Average | p >= mean(pop) + (1.5 * stdev(pop))|
 
 ### Composite IPD Score
 The composite IPD score is computed by summing the individual IPD scores. In theory, the composite IPD score can range from 0 to 36, since each indicator's IPD score can be as high as 4. In practice, the mean composite score in 2021 is 17.57, and the highest observed composite score is 32.
