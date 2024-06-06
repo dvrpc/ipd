@@ -197,7 +197,7 @@ estimates_table <- raw_data_combined %>%
 ### Calculate Racial Minority MOE
 The racial minority indicator is created by summing up several subgroups in ACS Table B03002. This means that the MOE for the count has to be computed. While the ACS has issued guidance on computing the MOE by aggregating subgroups, using the approximation formula can artificially deflate the derived MOE. Variance replicate tables are used instead to account for covariance and compute a more accurate MOE.
 
-See the Census Bureau's [Variance Replicate Tables Documentation](https://www.census.gov/programs-surveys/acs/technical-documentation/variance-tables.html) for additional guidance on working with variance replicates.
+See the Census Bureau's [Variance Replicate Tables Documentation](https://www.census.gov/programs-surveys/acs/data/variance-tables.html) for additional guidance on working with variance replicates.
 
 ```
 ipd_states_numeric <- fips_codes %>%
