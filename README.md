@@ -1,12 +1,12 @@
 # Indicators of Potential Disadvantage
 
-This project automates DVRPC's Indicators of Potential Disadvantage (IPD) analysis, including data download, processing, and export. For more on IPD analysis, see [Equity Analysis for the Greater Philadelphia Region v2.0](https://www.dvrpc.org/webmaps/ipd/).
+This project automates DVRPC's Indicators of Potential Disadvantage (IPD) analysis, including data download, processing, and export. For more on IPD analysis, see [Equity Analysis for the Greater Philadelphia Region](https://www.dvrpc.org/webmaps/ipd/).
 
 ## Getting the Code and Software
 
-1. Clone the repository.
-2. Download and install R from https://www.r-project.org/
-3. Download and install R Studio from https://www.rstudio.com/products/rstudio/#Desktop
+1. Clone the [Github repository](https://github.com/dvrpc/ipd)
+2. [Download and install R](https://cran.rstudio.com/)
+3. [Download and install R Studio](https://posit.co/download/rstudio-desktop/)
 
 ## Installing Package Dependencies
 
@@ -55,4 +55,3 @@ After the code has finished, outputs are saved in the /outputs subdirectory of w
 - counts_by_indicator_`ipd_year`.csv: census tract counts by bin and indicator
 - summary_by_indicator_`ipd_year`.csv: basic summary stats by indicator
 - means_by_county_`ipd_year`.csv: population-weighted county means by indicator
-
