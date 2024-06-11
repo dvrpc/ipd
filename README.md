@@ -56,7 +56,3 @@ After the code has finished, outputs are saved in the /outputs subdirectory of w
 - summary_by_indicator_`ipd_year`.csv: basic summary stats by indicator
 - means_by_county_`ipd_year`.csv: population-weighted county means by indicator
 
-## Additional Information
-
-- [documentation/discussion.pdf](https://github.com/dvrpc/ipd/blob/master/documentation/discussion.pdf) shows the essential math required to compute IPD scores.
-- [documentation/script_reference.pdf](https://github.com/dvrpc/ipd/blob/master/documentation/script_reference.pdf) is a companion document to the script and explains the way the script downloads data and implements IPD analysis, code chunk by code chunk.
