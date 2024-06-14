@@ -15,18 +15,10 @@ theme:
     - content.code.copy
   language: en
   palette:
-    - scheme: default
-      toggle:
-        icon: material/toggle-switch-off-outline
-        name: Switch to dark mode
-      primary: teal
+    - scheme: custom
       accent: purple
-    - scheme: slate
-      toggle:
-        icon: material/toggle-switch
-        name: Switch to light mode
-      primary: teal
-      accent: lime
+extra_css:
+  - stylesheets/extra.css
 markdown_extensions:
   - admonition
   - footnotes
