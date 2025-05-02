@@ -8,7 +8,7 @@ readRenviron(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/.Renv
 census_api_key <- Sys.getenv("CENSUS_API_KEY")
 
 # Inputs and settings
-ipd_year <- 2021
+ipd_year <- 2023
 ipd_states <- c("NJ", "PA")
 dvrpc_counties <- c('^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
@@ -98,69 +98,104 @@ raw_data_combined <- raw_dt_data %>%
   inner_join(raw_st_data) %>%
   inner_join(raw_dp_data)
 
-# Calculate percentages and MOEs, Drop Unnecessesary MOEs
-estimates_table <- raw_data_combined %>%
-  mutate(rm_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est) %>% # Racial minority calculation
-  select(-blk_est, -aia_est, -asn_est, -hpi_est, -oth_est, -two_est, -blk_est_MOE, -aia_est_MOE, -asn_est_MOE, -hpi_est_MOE, -oth_est_MOE, -two_est_MOE) %>%
-  mutate(rm_pct = round(100 * (rm_est/rm_uni), digits = 1)) %>%
-  mutate(em_pct = round(100 * (em_est/em_uni), digits = 1)) %>%
-  mutate(fb_pct = round(100 * (fb_est/fb_uni), digits = 1)) %>%
-  mutate(li_pct = round(100 * (li_est/li_uni), digits = 1)) %>%
-  mutate(y_pct = round(100 * (y_est/tot_pop), digits = 1)) %>%
-  mutate(em_pct_MOE = round(moe_prop(em_est,em_uni,em_est_MOE,em_uni_MOE) * 100,1)) %>%
-  mutate(fb_pct_MOE = round(moe_prop(fb_est,fb_uni,fb_est_MOE,fb_uni_MOE) * 100,1)) %>%
-  mutate(li_pct_MOE = round(moe_prop(li_est,li_uni,li_est_MOE,li_uni_MOE) * 100,1)) %>%
-  mutate(y_pct_MOE = round(moe_prop(y_est,tot_pop,y_est_MOE,tot_pop_MOE) * 100,1))
 
-# Use variance replicates to calc MOE for RM indicator
+estimates_table <- raw_data_combined %>%
+  mutate(
+    rm_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est
+  ) %>%
+  rowwise() %>%
+  mutate(
+    rm_est_MOE = moe_sum(
+      c_across(c(blk_est_MOE, aia_est_MOE, asn_est_MOE, hpi_est_MOE, oth_est_MOE, two_est_MOE))
+    )
+  ) %>%
+  ungroup() %>%
+  select(-blk_est, -aia_est, -asn_est, -hpi_est, -oth_est, -two_est, 
+         -blk_est_MOE, -aia_est_MOE, -asn_est_MOE, -hpi_est_MOE, -oth_est_MOE, -two_est_MOE) %>%
+  mutate(
+    rm_pct = round(100 * (rm_est / rm_uni), digits = 1),
+    em_pct = round(100 * (em_est / em_uni), digits = 1),
+    fb_pct = round(100 * (fb_est / fb_uni), digits = 1),
+    li_pct = round(100 * (li_est / li_uni), digits = 1),
+    y_pct = round(100 * (y_est / tot_pop), digits = 1),
+    em_pct_MOE = round(moe_prop(em_est, em_uni, em_est_MOE, em_uni_MOE) * 100, 1),
+    fb_pct_MOE = round(moe_prop(fb_est, fb_uni, fb_est_MOE, fb_uni_MOE) * 100, 1),
+    li_pct_MOE = round(moe_prop(li_est, li_uni, li_est_MOE, li_uni_MOE) * 100, 1),
+    y_pct_MOE = round(moe_prop(y_est, tot_pop, y_est_MOE, tot_pop_MOE) * 100, 1)
+  )
+
 ipd_states_numeric <- fips_codes %>%
   filter(state %in% ipd_states) %>%
-  select(state_code) %>% distinct(.) %>% pull(.)
+  select(state_code) %>%
+  distinct() %>%
+  pull()
+
 var_rep <- NULL
 
-for (i in 1:length(ipd_states)){
+for (i in seq_along(ipd_states)) {
   url <- paste0("https://www2.census.gov/programs-surveys/acs/replicate_estimates/",
-                ipd_year,
-                "/data/5-year/140/B02001_",
-                ipd_states_numeric[i],
-                ".csv.zip")
+                ipd_year, "/data/5-year/140/B02001_",
+                ipd_states_numeric[i], ".csv.zip")
+  
   temp <- tempfile()
-  download.file(url, temp)
-  var_rep_i <- read.csv(unzip(temp))
-  var_rep <- dplyr::bind_rows(var_rep, var_rep_i)
-} 
+  download.file(url, temp, quiet = TRUE)
+  
+  if (file.exists(temp)) {
+    var_rep_i <- tryCatch({
+      read.csv(unzip(temp))
+    }, error = function(e) NULL)  # Skip if file cannot be read
+    
+    if (!is.null(var_rep_i)) {
+      var_rep <- dplyr::bind_rows(var_rep, var_rep_i)
+    }
+  }
+}
 
-# function to calculate sqdiff
-sqdiff_fn <- function(v, e) (v - e) ^ 2
-
-var_rep <- var_rep %>%
-  mutate_at(vars(GEOID), ~(str_sub(., 10, 20))) %>%
-  filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
-  select(-TBLID, -NAME, -ORDER, -MOE, -CME, -SE) %>%
-  filter(TITLE %in% c("Black or African American alone",
-                      "American Indian and Alaska Native alone",
-                      "Asian alone",
-                      "Native Hawaiian and Other Pacific Islander alone",
-                      "Some other race alone",
-                      "Two or more races:")) %>%
-  group_by(GEOID) %>%
-  summarize_if(is.numeric, ~ sum(.))
-
-ids <- var_rep %>% select(GEOID) %>% pull(.)
-rep_estimates <- var_rep %>% select(ESTIMATE)
-replicates <- var_rep %>% select(-GEOID, -ESTIMATE)
-
-sqdiff <- mapply(sqdiff_fn, replicates, rep_estimates)
-sum_sqdiff <- rowSums(sqdiff, dims=1)
-moe <- round(sqrt(0.05 * sum_sqdiff) * 1.645, 0) #sqrt(variance) * 1.645
-rm_moe <- cbind(ids, moe) %>%
-  as_tibble(.) %>%
-  rename(GEOID = ids, rm_est_MOE = moe) %>%
-  mutate_at(vars(rm_est_MOE), as.numeric)
+if (!is.null(var_rep)) {
+  # Function to calculate squared differences
+  sqdiff_fn <- function(v, e) (v - e) ^ 2
+  
+  var_rep <- var_rep %>%
+    mutate(GEOID = str_sub(GEOID, 10, 20)) %>%
+    filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %>%
+    select(-TBLID, -NAME, -ORDER, -MOE, -CME, -SE) %>%
+    filter(TITLE %in% c("Black or African American alone",
+                        "American Indian and Alaska Native alone",
+                        "Asian alone",
+                        "Native Hawaiian and Other Pacific Islander alone",
+                        "Some other race alone",
+                        "Two or more races:")) %>%
+    group_by(GEOID) %>%
+    summarize(across(where(is.numeric), sum, na.rm = TRUE))
+  
+  ids <- var_rep$GEOID
+  rep_estimates <- var_rep$ESTIMATE
+  replicates <- var_rep %>% select(-GEOID, -ESTIMATE)
+  
+  # Compute squared differences
+  sqdiff <- mapply(sqdiff_fn, replicates, rep_estimates)
+  sum_sqdiff <- rowSums(sqdiff, dims = 1)
+  
+  # Compute MOE using replicate variance method
+  rm_moe <- tibble(
+    GEOID = ids,
+    rm_est_MOE_adv = round(sqrt(0.05 * sum_sqdiff) * 1.645, 0)  # MOE formula
+  ) %>%
+    mutate(across(rm_est_MOE_adv, as.numeric))
+  
+  estimates_table <- estimates_table %>%
+    left_join(rm_moe, by = "GEOID") %>%
+    mutate(
+      rm_est_MOE = coalesce(rm_est_MOE_adv, rm_est_MOE)  # Use advanced MOE if available
+    ) %>%
+    select(-rm_est_MOE_adv)  # Remove temporary column
+}
 
 estimates_table <- estimates_table %>%
-  left_join(., rm_moe) %>%
-  mutate(rm_pct_MOE = round(moe_prop(rm_est,rm_uni,rm_est_MOE,rm_uni_MOE) * 100,1))
+  mutate(
+    rm_pct_MOE = round(moe_prop(rm_est, rm_uni, rm_est_MOE, rm_uni_MOE) * 100, 1)
+  )
+
 
 
 # Drop Low Population Tracts
@@ -243,14 +278,37 @@ ipd_table <- ipd_table %>%
   mutate(NAME20 = str_sub(GEOID20, 6, 11)) %>%
   mutate(namelsad = paste(substr(GEOID20, 6, 9), substr(GEOID20, 10, 11), sep = "."))
 
-pa_tracts <- tracts("42", c("017", "029", "045", "091", "101"))
-nj_tracts <- tracts("34", c("005", "007", "015", "021"))
+local_shapefile_path <- "C:/Users/mruane/Documents/GitHub/dvrpc/ipd/data/shapefiles/census_tracts.shp"
+
+# Read the local Census Tract shapefile
+all_tracts <- st_read(local_shapefile_path, quiet = FALSE)
+
+# Function to filter tracts by state and county
+get_local_tracts <- function(tracts_sf, state_fips, county_fips) {
+  tracts_sf %>%
+    filter(statefp == state_fips, countyfp %in% county_fips) %>%
+    select(geoid, name, statefp, countyfp, geometry)  # Keep relevant fields
+}
+
+# Retrieve PA and NJ Census Tracts
+pa_tracts <- get_local_tracts(all_tracts, "42", c("017", "029", "045", "091", "101"))
+nj_tracts <- get_local_tracts(all_tracts, "34", c("005", "007", "015", "021"))
+
+
+
+
+
+
+
+
+pa_tracts <- tracts("42", c("017", "029", "045", "091", "101"), year = 2023)
+nj_tracts <- tracts("34", c("005", "007", "015", "021"), year = 2023)
 
 region_tracts <- rbind(pa_tracts, nj_tracts) %>%
   st_transform(., 26918)
 
 ipd_shapefile <- region_tracts %>%
-  left_join(ipd_table, by=c("GEOID"="GEOID20"))
+  left_join(ipd_table, by=c("geoid"="GEOID20"))
 
 # Import Tract to MCD Lookup
 tract_mcd_lookup <- st_read("U:\\_OngoingProjects\\Census\\_Geographies\\Census_Boundaries_2020.gdb", layer="TractToMCD_Lookup20") %>%
@@ -258,7 +316,7 @@ tract_mcd_lookup <- st_read("U:\\_OngoingProjects\\Census\\_Geographies\\Census_
 
 # Join IPD table with Lookup
 ipd_shapefile <- ipd_shapefile %>%
-  left_join(tract_mcd_lookup, by=c("GEOID"="geoid20"))
+  left_join(tract_mcd_lookup, by=c("geoid"="geoid20"))
 
 
 # Summary Tables ----
