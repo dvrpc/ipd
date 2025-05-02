@@ -8,7 +8,7 @@ readRenviron(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/.Renv
 census_api_key <- Sys.getenv("CENSUS_API_KEY")
 
 # Inputs and settings
-ipd_year <- 2022
+ipd_year <- 2023
 ipd_states <- c("NJ", "PA")
 dvrpc_counties <- c('^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
@@ -223,6 +223,19 @@ for (var in vars) {
 # Calculate Total IPD Score
 test_table$ipd_score <- rowSums(select(test_table, ends_with("_score")), na.rm = TRUE)
 
+# Add T6 Score: Max of RM and EM
+test_table <- test_table %>%
+  mutate(
+    t6_score = pmax(rm_pct_score, em_pct_score, na.rm = TRUE),
+    t6_class = case_when(
+      t6_score == 0 ~ "Well Below Average",
+      t6_score == 1 ~ "Below Average",
+      t6_score == 2 ~ "Average",
+      t6_score == 3 ~ "Above Average",
+      t6_score == 4 ~ "Well Above Average",
+      TRUE ~ NA_character_
+    )
+  )
 
 # Join table with all census tracts
 tracts <- estimates_table %>%
