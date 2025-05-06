@@ -12,6 +12,11 @@ ipd_year <- 2023
 ipd_states <- c("NJ", "PA")
 dvrpc_counties <- c('^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101')
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
+county_names <- data.frame(
+  ipd_counties,
+  co_name = c("Burlington", "Camden", "Gloucester", "Mercer", "Bucks", "Chester", "Delaware", "Montgomery", "Philadelphia"),
+  state = c("NJ", "NJ", "NJ", "NJ", "PA", "PA", "PA", "PA", "PA")
+)
 output_dir <- "data\\"
 
 # Fields
@@ -242,6 +247,8 @@ tracts <- estimates_table %>%
   select(GEOID)
 
 ipd_table <- tracts %>%
+  mutate(county_fips = str_sub(GEOID, 1, 5)) %>%
+  left_join(county_names, by = c("county_fips" = "ipd_counties"))  %>%
   left_join(test_table) %>%
   'colnames<-'(str_replace(colnames(.), "pct_score", "score")) %>%
   'colnames<-'(str_replace(colnames(.), "pct_class", "class")) %>%
@@ -260,14 +267,16 @@ region_tracts <- rbind(pa_tracts, nj_tracts) %>%
 
 ipd_shapefile <- region_tracts %>%
   left_join(ipd_table, by=c("GEOID"="GEOID")) %>%
-  select(-MTFCC, -FUNCSTAT, -ALAND, -AWATER, -INTPTLAT, -INTPTLON) %>%
+  select(-STATEFP, -COUNTYFP, -TRACTCE, -NAMELSAD, -MTFCC, -FUNCSTAT, -ALAND, -AWATER, -INTPTLAT, -INTPTLON) %>%
   rename(geoid20 = GEOID) %>%
   'colnames<-'(tolower(colnames(.))) %>%
   mutate(year = ipd_year) %>%
   select(year, geoid20, everything())
 
 # Import Tract to MCD Lookup
-tract_mcd_lookup <- st_read("U:\\_OngoingProjects\\Census\\_Geographies\\Census_Boundaries_2020.gdb", layer="TractToMCD_Lookup20") %>%
+lookup_url <- "https://arcgis.dvrpc.org/portal/rest/services/demographics/tracttomcd_lookup/FeatureServer/0/query?where=1=1&outfields=*&f=json"
+lookup_data <- jsonlite::fromJSON(lookup_url)
+tract_mcd_lookup <- as.data.frame(lookup_data$features$attributes) %>%
   select(geoid20, mun1, mun2, mun3, mcdgeo1, mcdgeo2, mcdgeo3)
 
 # Join IPD table with Lookup
