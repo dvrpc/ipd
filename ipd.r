@@ -2,6 +2,7 @@
 # Dependencies
 library(plyr); library(here); library(sf); library(summarytools);
 library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr)
+library(terra)
 
 # Census API Key
 readRenviron(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/.Renviron"))
@@ -390,7 +391,9 @@ means_table <- estimates_table %>%
 ## Tract-Level IPD Outputs
 
 write.csv(ipd_table, paste(output_dir,"ipd_", ipd_year, ".csv", sep=""))
-st_write(ipd_shapefile, paste(output_dir,"ipd_", ipd_year, ".shp", sep="")) 
+
+vect_shapefile <- vect(ipd_shapefile)
+writeVector(vect_shapefile, paste(output_dir,"ipd_", ipd_year, ".shp", sep=""), filetype = "ESRI Shapefile", overwrite = TRUE)
 
 ## Summary Tables
 
