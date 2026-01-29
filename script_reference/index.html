@@ -1,0 +1,2136 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../setup/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Documentation - DVRPC IPD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="custom" data-md-color-primary="indigo" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#about" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="DVRPC IPD" class="md-header__button md-logo" aria-label="DVRPC IPD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DVRPC IPD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Documentation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="custom" data-md-color-primary="indigo" data-md-color-accent="purple"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  About
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Documentation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../setup/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Code Setup
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="DVRPC IPD" class="md-nav__button md-logo" aria-label="DVRPC IPD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DVRPC IPD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#about" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        About
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="About">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#output-abbreviation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Abbreviation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#census-api-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Census API Key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inputs-and-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inputs and Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preparing-census-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preparing Census Data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Preparing Census Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-table-lists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Table Lists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pull-acs-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull ACS Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#combine-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combine Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-transformations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Transformations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Transformations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calculate-percentages-and-moes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calculate Percentages and MOEs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculate-racial-minority-moe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calculate Racial Minority MOE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#drop-exceptional-census-tracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drop Exceptional Census Tracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#calculate-ipd-score" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calculate IPD Score
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spatial-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spatial Data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Tables
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Summary Tables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#counts-by-indicator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Counts by Indicator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#breaks-by-indicator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaks by Indicator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-by-indicator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary by Indicator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#county-level-means-by-indicator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        County-Level Means by Indicator
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Export Data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metadata-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata Table
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Documentation</h1>
+
+<h2 id="about">About<a class="headerlink" href="#about" title="Permanent link">&para;</a></h2>
+<p>DVRPC's IPD analysis identifies populations of interest under Title VI of the Civil Rights Act and the Executive Order on Environmental Justice (#12898) using American Community Survey (ACS) five-year estimates from the U.S. Census Bureau. IPD analysis assists both DVRPC and outside organizations in equity work by identifying populations of interest, including youth, older adults, female, racial minority, ethnic minority, foreign-born, limited English proficiency, disabled, and low-income populations at the census tract level in DVRPC's nine-county region.</p>
+<p>There are many ways of identifying these populations of interest. This document discusses DVRPC's process, which is automated in an <code>R</code> script.</p>
+<h3 id="output-abbreviation">Output Abbreviation<a class="headerlink" href="#output-abbreviation" title="Permanent link">&para;</a></h3>
+<p>Components of field names that you'll see in <code>outputs</code> and throughout the script.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>d</td>
+<td>Disabled</td>
+</tr>
+<tr>
+<td>em</td>
+<td>Ethnic Minority</td>
+</tr>
+<tr>
+<td>f</td>
+<td>Female</td>
+</tr>
+<tr>
+<td>fb</td>
+<td>Foreign-Born</td>
+</tr>
+<tr>
+<td>lep</td>
+<td>Limited English Proficiency</td>
+</tr>
+<tr>
+<td>li</td>
+<td>Low-Income</td>
+</tr>
+<tr>
+<td>oa</td>
+<td>Older Adults</td>
+</tr>
+<tr>
+<td>rm</td>
+<td>Racial Minority</td>
+</tr>
+<tr>
+<td>y</td>
+<td>Youth</td>
+</tr>
+</tbody>
+</table>
+<p>Abbreviations of field names that you'll see in <code>outputs</code> <em>not</em> comprised of the above components.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Abbreviation</th>
+<th style="text-align: left;">Equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">GEOID</td>
+<td style="text-align: left;">Census Tract Identifier</td>
+</tr>
+<tr>
+<td style="text-align: left;">STATEFP</td>
+<td style="text-align: left;">State FIPS Code</td>
+</tr>
+<tr>
+<td style="text-align: left;">COUNTYFP</td>
+<td style="text-align: left;">County FIPS Code</td>
+</tr>
+<tr>
+<td style="text-align: left;">NAME</td>
+<td style="text-align: left;">Census Tract FIPS Code</td>
+</tr>
+</tbody>
+</table>
+<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<h3 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h3>
+<p>Packages required to run this script. If you don't have the packages, you'll get the warning <code>Error in library (&lt;name of package&gt;) : there is no package called '&lt;name of package&gt;'</code>, in which case you'll need to install the package before proceeding.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>library(plyr); library(here); library(sf); library(summarytools);
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>library(tidycensus); library(tidyverse); library(tigris); library(dplyr); library(descr);
+</span></code></pre></div>
+<h3 id="census-api-key">Census API Key<a class="headerlink" href="#census-api-key" title="Permanent link">&para;</a></h3>
+<p>Placeholder if you have never installed an API key before. If this is your first time accessing the Census API using <code>R</code>, see <code>getting_started.pdf</code> in the <code>documentation</code> folder.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a># Census API Key
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a># census_api_key(&quot;YOUR API KEY GOES HERE&quot;, install = TRUE)
+</span></code></pre></div>
+<h3 id="inputs-and-settings">Inputs and Settings<a class="headerlink" href="#inputs-and-settings" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ipd_year &lt;- 2022
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>ipd_states &lt;- c(&quot;NJ&quot;, &quot;PA&quot;)
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>dvrpc_counties &lt;- c(&#39;^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101&#39;)
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>ipd_counties &lt;- c(&quot;34005&quot;, &quot;34007&quot;, &quot;34015&quot;, &quot;34021&quot;, &quot;42017&quot;, &quot;42029&quot;, &quot;42045&quot;, &quot;42091&quot;, &quot;42101&quot;)
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>output_dir &lt;- &quot;data\\&quot;
+</span></code></pre></div>
+<h3 id="fields">Fields<a class="headerlink" href="#fields" title="Permanent link">&para;</a></h3>
+<p>The base information we need for IPD analysis are universes, counts, and percentages for nine indicators at the census tract level. For each indicator, the table below shows the indicator name, its abbreviation used in the script, its universe, its count, and its percentage field if applicable. Percentage estimates will be calculated for indicators if they are not provided in the ACS.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Indicator</th>
+<th style="text-align: center;">Abbreviation</th>
+<th style="text-align: center;">Universe</th>
+<th style="text-align: center;">Count</th>
+<th style="text-align: center;">Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Disabled</td>
+<td style="text-align: center;">d</td>
+<td style="text-align: center;">S1810_C01_001</td>
+<td style="text-align: center;">S1810_C02_001</td>
+<td style="text-align: center;">S1810_C03_001</td>
+</tr>
+<tr>
+<td style="text-align: left;">Ethnic Minority</td>
+<td style="text-align: center;">em</td>
+<td style="text-align: center;">B03002_001</td>
+<td style="text-align: center;">B03002_012</td>
+<td style="text-align: center;">N/A</td>
+</tr>
+<tr>
+<td style="text-align: left;">Female</td>
+<td style="text-align: center;">f</td>
+<td style="text-align: center;">S0101_C01_001</td>
+<td style="text-align: center;">S0101_C05_001</td>
+<td style="text-align: center;">DP05_0003PE</td>
+</tr>
+<tr>
+<td style="text-align: left;">Foreign-Born</td>
+<td style="text-align: center;">fb</td>
+<td style="text-align: center;">B05012_001</td>
+<td style="text-align: center;">B05012_003</td>
+<td style="text-align: center;">N/A</td>
+</tr>
+<tr>
+<td style="text-align: left;">Limited English Proficiency</td>
+<td style="text-align: center;">lep</td>
+<td style="text-align: center;">S1601_C01_001</td>
+<td style="text-align: center;">S1601_C05_001</td>
+<td style="text-align: center;">S1601_C06_001</td>
+</tr>
+<tr>
+<td style="text-align: left;">Low-Income</td>
+<td style="text-align: center;">li</td>
+<td style="text-align: center;">S1701_C01_001</td>
+<td style="text-align: center;">S1701_C01_042</td>
+<td style="text-align: center;">N/A</td>
+</tr>
+<tr>
+<td style="text-align: left;">Older Adults</td>
+<td style="text-align: center;">oa</td>
+<td style="text-align: center;">S0101_C01_001</td>
+<td style="text-align: center;">S0101_C01_030</td>
+<td style="text-align: center;">S0101_C02_030</td>
+</tr>
+<tr>
+<td style="text-align: left;">Racial Minority</td>
+<td style="text-align: center;">rm</td>
+<td style="text-align: center;">B02001_001</td>
+<td style="text-align: center;">B02001_003...008</td>
+<td style="text-align: center;">N/A</td>
+</tr>
+<tr>
+<td style="text-align: left;">Youth</td>
+<td style="text-align: center;">y</td>
+<td style="text-align: center;">B03002_001</td>
+<td style="text-align: center;">B09001_001</td>
+<td style="text-align: center;">N/A</td>
+</tr>
+</tbody>
+</table>
+<p>The user should check that the field names point to the correct <a href="https://www.census.gov/data/developers/data-sets.html">API request</a>. For a history of the ACS variables used in previous IPD results, check prior <a href="https://github.com/dvrpc/ipd/releases">IPD releases</a>.</p>
+<h2 id="preparing-census-data">Preparing Census Data<a class="headerlink" href="#preparing-census-data" title="Permanent link">&para;</a></h2>
+<h3 id="data-table-lists">Data Table Lists<a class="headerlink" href="#data-table-lists" title="Permanent link">&para;</a></h3>
+<p>Fields are organized in vectors based on the data table it is located in. This will make it easier to pull the data using the <code>get_acs</code> function.</p>
+<p><code>dt</code> = Detailed Tables<br />
+<code>st</code> = Subject Tables<br />
+<code>dp</code> = Data Profiles  </p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>acs5_dt_list &lt;- c(
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  tot_pop = &quot;B01003_001&quot;, # Total Population
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  em_uni = &quot;B03002_001&quot;, # Ethnic Minority
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  em_est = &quot;B03002_012&quot;,
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  fb_uni = &quot;B05012_001&quot;, # Foreign-born
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  fb_est = &quot;B05012_003&quot;,
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  rm_uni = &quot;B02001_001&quot;, # Racial minority
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  blk_est = &quot;B02001_003&quot;, # Black or African American alone
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>  aia_est = &quot;B02001_004&quot;, # American Indian and Alaska Native alone
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>  asn_est = &quot;B02001_005&quot;, # Asian alone
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>  hpi_est = &quot;B02001_006&quot;, # Native Hawaiian and Other Pacific Islander alone
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>  oth_est = &quot;B02001_007&quot;, # Some other race alone
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>  two_est = &quot;B02001_008&quot;, # Two or more races
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>  y_est = &quot;B09001_001&quot; # Youth
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>)
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>acs5_st_list &lt;- c(
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>  lep_uni = &quot;S1601_C01_001&quot;, # Limited English Proficiency
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>  lep_est = &quot;S1601_C05_001&quot;,
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>  lep_pct = &quot;S1601_C06_001&quot;,
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>  d_uni = &quot;S1810_C01_001&quot;,  # Disabled
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>  d_est = &quot;S1810_C02_001&quot;,  
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>  d_pct = &quot;S1810_C03_001&quot;, 
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>  f_uni = &quot;S0101_C01_001&quot;,
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>  f_est = &quot;S0101_C05_001&quot;, # Female
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>  li_uni = &quot;S1701_C01_001&quot;, # Low Income
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>  li_est = &quot;S1701_C01_042&quot;,
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>  oa_uni = &quot;S0101_C01_001&quot;, # Older Population
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>  oa_est = &quot;S0101_C01_030&quot;,
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>  oa_pct = &quot;S0101_C02_030&quot;
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>)
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>acs5_dp_list &lt;- c(
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>  f_pct = &quot;DP05_0003P&quot;
+</span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>)
+</span></code></pre></div>
+<h3 id="pull-acs-data">Pull ACS Data<a class="headerlink" href="#pull-acs-data" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>raw_dt_data &lt;- get_acs(geography = &quot;tract&quot;,
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>                       variables = acs5_dt_list,
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>                       year = ipd_year,
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>                       state = ipd_states,
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>                       survey = &quot;acs5&quot;,
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>                       output = &quot;wide&quot;
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>) %&gt;%
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>  mutate(year = ipd_year) %&gt;%
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>  filter(str_detect(GEOID, dvrpc_counties)) %&gt;%
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>  dplyr::select(-NAME) %&gt;%
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>  &#39;colnames&lt;-&#39;(str_replace(colnames(.), &quot;E$&quot;, &quot;&quot;)) %&gt;%
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>  &#39;colnames&lt;-&#39;(str_replace(colnames(.), &quot;M$&quot;, &quot;_MOE&quot;))
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>raw_st_data &lt;- get_acs(geography = &quot;tract&quot;,
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>                       variables = acs5_st_list,
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>                       year = ipd_year,
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>                       state = ipd_states,
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>                       survey = &quot;acs5&quot;,
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>                       output = &quot;wide&quot;
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>) %&gt;%
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>  mutate(year = ipd_year) %&gt;%
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>  filter(str_detect(GEOID, dvrpc_counties)) %&gt;%
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>  dplyr::select(-NAME) %&gt;%
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>  &#39;colnames&lt;-&#39;(str_replace(colnames(.), &quot;E$&quot;, &quot;&quot;)) %&gt;%
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>  &#39;colnames&lt;-&#39;(str_replace(colnames(.), &quot;M$&quot;, &quot;_MOE&quot;))
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>raw_dp_data &lt;- get_acs(geography = &quot;tract&quot;,
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>                       variables = acs5_dp_list,
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>                       year = ipd_year,
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>                       state = ipd_states,
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>                       survey = &quot;acs5&quot;,
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>                       output = &quot;wide&quot;
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>) %&gt;%
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>  mutate(year = ipd_year) %&gt;%
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>  filter(str_detect(GEOID, dvrpc_counties)) %&gt;%
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>  dplyr::select(-NAME) %&gt;%
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>  &#39;colnames&lt;-&#39;(str_replace(colnames(.), &quot;E$&quot;, &quot;&quot;)) %&gt;%
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>  &#39;colnames&lt;-&#39;(str_replace(colnames(.), &quot;M$&quot;, &quot;_MOE&quot;))
+</span></code></pre></div>
+<h3 id="combine-tables">Combine Tables<a class="headerlink" href="#combine-tables" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>raw_data_combined &lt;- raw_dt_data %&gt;%
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  inner_join(raw_st_data) %&gt;%
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  inner_join(raw_dp_data)
+</span></code></pre></div>
+<h2 id="data-transformations">Data Transformations<a class="headerlink" href="#data-transformations" title="Permanent link">&para;</a></h2>
+<p>Before calculating IPD scores, the raw ACS data needs to be transformed. This includes calculating percent and margin of error (MOE) estimates that are not provided by the ACS and removing census tract geographies to reduce data skew.</p>
+<h3 id="calculate-percentages-and-moes">Calculate Percentages and MOEs<a class="headerlink" href="#calculate-percentages-and-moes" title="Permanent link">&para;</a></h3>
+<p>The ACS does not provide percent or MOE estimates for the following IPD fields: Ethnic Minority, Foreign-Born, Low-Income, Youth. The percent estimates are calculated by dividing the count estimate for each variable by its population estimate. The MOE is calculated using the <code>moe_prop</code> function in R.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>estimates_table &lt;- raw_data_combined %&gt;%
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  mutate(rm_est = blk_est + aia_est + asn_est + hpi_est + oth_est + two_est) %&gt;% # Racial minority calculation
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  select(-blk_est, -aia_est, -asn_est, -hpi_est, -oth_est, -two_est, -blk_est_MOE, -aia_est_MOE, -asn_est_MOE, -hpi_est_MOE, -oth_est_MOE, -two_est_MOE) %&gt;%
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  mutate(rm_pct = round(100 * (rm_est/rm_uni), digits = 1)) %&gt;%
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  mutate(em_pct = round(100 * (em_est/em_uni), digits = 1)) %&gt;%
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>  mutate(fb_pct = round(100 * (fb_est/fb_uni), digits = 1)) %&gt;%
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>  mutate(li_pct = round(100 * (li_est/li_uni), digits = 1)) %&gt;%
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>  mutate(y_pct = round(100 * (y_est/tot_pop), digits = 1)) %&gt;%
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>  mutate(em_pct_MOE = round(moe_prop(em_est,em_uni,em_est_MOE,em_uni_MOE) * 100,1)) %&gt;%
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>  mutate(fb_pct_MOE = round(moe_prop(fb_est,fb_uni,fb_est_MOE,fb_uni_MOE) * 100,1)) %&gt;%
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>  mutate(li_pct_MOE = round(moe_prop(li_est,li_uni,li_est_MOE,li_uni_MOE) * 100,1)) %&gt;%
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>  mutate(y_pct_MOE = round(moe_prop(y_est,tot_pop,y_est_MOE,tot_pop_MOE) * 100,1))
+</span></code></pre></div>
+<h3 id="calculate-racial-minority-moe">Calculate Racial Minority MOE<a class="headerlink" href="#calculate-racial-minority-moe" title="Permanent link">&para;</a></h3>
+<p>The racial minority indicator is created by summing up several subgroups in ACS Table B03002. This means that the MOE for the count has to be computed. While the ACS has issued guidance on computing the MOE by aggregating subgroups, using the approximation formula can artificially deflate the derived MOE. Variance replicate tables are used instead to account for covariance and compute a more accurate MOE.</p>
+<p>See the Census Bureau's <a href="https://www.census.gov/programs-surveys/acs/data/variance-tables.html">Variance Replicate Tables Documentation</a> for additional guidance on working with variance replicates.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>ipd_states_numeric &lt;- fips_codes %&gt;%
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  filter(state %in% ipd_states) %&gt;%
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  select(state_code) %&gt;% distinct(.) %&gt;% pull(.)
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>var_rep &lt;- NULL
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>for (i in 1:length(ipd_states)){
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>  url &lt;- paste0(&quot;https://www2.census.gov/programs-surveys/acs/replicate_estimates/&quot;,
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>                ipd_year,
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>                &quot;/data/5-year/140/B02001_&quot;,
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>                ipd_states_numeric[i],
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>                &quot;.csv.zip&quot;)
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>  temp &lt;- tempfile()
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>  download.file(url, temp)
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>  var_rep_i &lt;- read.csv(unzip(temp))
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>  var_rep &lt;- dplyr::bind_rows(var_rep, var_rep_i)
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>} 
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a># function to calculate sqdiff
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>sqdiff_fn &lt;- function(v, e) (v - e) ^ 2
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>var_rep &lt;- var_rep %&gt;%
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>  mutate_at(vars(GEOID), ~(str_sub(., 10, 20))) %&gt;%
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>  filter(str_sub(GEOID, 1, 5) %in% ipd_counties) %&gt;%
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>  select(-TBLID, -NAME, -ORDER, -MOE, -CME, -SE) %&gt;%
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>  filter(TITLE %in% c(&quot;Black or African American alone&quot;,
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>                      &quot;American Indian and Alaska Native alone&quot;,
+</span><span id="__span-7-27"><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a>                      &quot;Asian alone&quot;,
+</span><span id="__span-7-28"><a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a>                      &quot;Native Hawaiian and Other Pacific Islander alone&quot;,
+</span><span id="__span-7-29"><a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a>                      &quot;Some other race alone&quot;,
+</span><span id="__span-7-30"><a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a>                      &quot;Two or more races:&quot;)) %&gt;%
+</span><span id="__span-7-31"><a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a>  group_by(GEOID) %&gt;%
+</span><span id="__span-7-32"><a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a>  summarize_if(is.numeric, ~ sum(.))
+</span><span id="__span-7-33"><a id="__codelineno-7-33" name="__codelineno-7-33" href="#__codelineno-7-33"></a>
+</span><span id="__span-7-34"><a id="__codelineno-7-34" name="__codelineno-7-34" href="#__codelineno-7-34"></a>ids &lt;- var_rep %&gt;% select(GEOID) %&gt;% pull(.)
+</span><span id="__span-7-35"><a id="__codelineno-7-35" name="__codelineno-7-35" href="#__codelineno-7-35"></a>rep_estimates &lt;- var_rep %&gt;% select(ESTIMATE)
+</span><span id="__span-7-36"><a id="__codelineno-7-36" name="__codelineno-7-36" href="#__codelineno-7-36"></a>replicates &lt;- var_rep %&gt;% select(-GEOID, -ESTIMATE)
+</span><span id="__span-7-37"><a id="__codelineno-7-37" name="__codelineno-7-37" href="#__codelineno-7-37"></a>
+</span><span id="__span-7-38"><a id="__codelineno-7-38" name="__codelineno-7-38" href="#__codelineno-7-38"></a>sqdiff &lt;- mapply(sqdiff_fn, replicates, rep_estimates)
+</span><span id="__span-7-39"><a id="__codelineno-7-39" name="__codelineno-7-39" href="#__codelineno-7-39"></a>sum_sqdiff &lt;- rowSums(sqdiff, dims=1)
+</span><span id="__span-7-40"><a id="__codelineno-7-40" name="__codelineno-7-40" href="#__codelineno-7-40"></a>moe &lt;- round(sqrt(0.05 * sum_sqdiff) * 1.645, 0) #sqrt(variance) * 1.645
+</span><span id="__span-7-41"><a id="__codelineno-7-41" name="__codelineno-7-41" href="#__codelineno-7-41"></a>rm_moe &lt;- cbind(ids, moe) %&gt;%
+</span><span id="__span-7-42"><a id="__codelineno-7-42" name="__codelineno-7-42" href="#__codelineno-7-42"></a>  as_tibble(.) %&gt;%
+</span><span id="__span-7-43"><a id="__codelineno-7-43" name="__codelineno-7-43" href="#__codelineno-7-43"></a>  rename(GEOID = ids, rm_est_MOE = moe) %&gt;%
+</span><span id="__span-7-44"><a id="__codelineno-7-44" name="__codelineno-7-44" href="#__codelineno-7-44"></a>  mutate_at(vars(rm_est_MOE), as.numeric)
+</span><span id="__span-7-45"><a id="__codelineno-7-45" name="__codelineno-7-45" href="#__codelineno-7-45"></a>
+</span><span id="__span-7-46"><a id="__codelineno-7-46" name="__codelineno-7-46" href="#__codelineno-7-46"></a>estimates_table &lt;- estimates_table %&gt;%
+</span><span id="__span-7-47"><a id="__codelineno-7-47" name="__codelineno-7-47" href="#__codelineno-7-47"></a>  left_join(., rm_moe) %&gt;%
+</span><span id="__span-7-48"><a id="__codelineno-7-48" name="__codelineno-7-48" href="#__codelineno-7-48"></a>  mutate(rm_pct_MOE = round(moe_prop(rm_est,rm_uni,rm_est_MOE,rm_uni_MOE) * 100,1))
+</span></code></pre></div>
+<h3 id="drop-exceptional-census-tracts">Drop Exceptional Census Tracts<a class="headerlink" href="#drop-exceptional-census-tracts" title="Permanent link">&para;</a></h3>
+<p>There are 33 census tracts dropped from the IPD calculation. These tracts either have low population counts or contain correctional facilities or military bases. These tracts are removed from the IPD calculation to avoid skewing the standard deviation results.  </p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>low_pop_tracts &lt;- c(&quot;34005981802&quot;,&quot;34005982200&quot;,&quot;34021980000&quot;,&quot;42017980000&quot;,
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>                    &quot;42045980300&quot;,&quot;42045980000&quot;,&quot;42045980200&quot;,&quot;42091980100&quot;,
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>                    &quot;42091980000&quot;,&quot;42091980200&quot;,&quot;42091980300&quot;,&quot;42101036901&quot;,
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>                    &quot;42101980001&quot;,&quot;42101980002&quot;,&quot;42101980003&quot;,&quot;42101980300&quot;,
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>                    &quot;42101980701&quot;,&quot;42101980702&quot;,&quot;42101980800&quot;,&quot;42101980100&quot;,
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>                    &quot;42101980200&quot;, &quot;42101980400&quot;,&quot;42101980500&quot;,&quot;42101980600&quot;,
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>                    &quot;42101980901&quot;,&quot;42101980902&quot;,&quot;42101980903&quot;,&quot;42101980904&quot;,
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>                    &quot;42101980905&quot;,&quot;42101980906&quot;, &quot;42101989100&quot;,&quot;42101989200&quot;,
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>                    &quot;42101989300&quot;)
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>estimates_table_clean &lt;- estimates_table %&gt;%
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>  select(-matches(&quot;_uni&quot;)) %&gt;%
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>  filter(!GEOID %in% low_pop_tracts)
+</span></code></pre></div>
+<h2 id="calculate-ipd-score">Calculate IPD Score<a class="headerlink" href="#calculate-ipd-score" title="Permanent link">&para;</a></h2>
+<p><code>p</code> = percent estimate<br />
+<code>mean(pop)</code> = mean for indicator population<br />
+<code>stdev(pop)</code> = standard deviation for indicator population  </p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">IPD Score</th>
+<th style="text-align: center;">IPD Classification</th>
+<th style="text-align: center;">Standard Deviations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">Well Below Average</td>
+<td style="text-align: center;">p &lt; mean(pop) - (1.5 * stdev(pop))</td>
+</tr>
+<tr>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">Below Average</td>
+<td style="text-align: center;">mean(pop) - (1.5 * stdev(pop)) &lt;= p &lt;  mean(pop) - (0.5 * stdev(pop))</td>
+</tr>
+<tr>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">Average</td>
+<td style="text-align: center;">mean(pop) - (0.5 * stdev(pop)) &lt;= p &lt; mean(pop) + (0.5 * stdev(pop))</td>
+</tr>
+<tr>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">Above Average</td>
+<td style="text-align: center;">mean(pop) + (0.5 * stdev(pop)) &lt;= p &lt; mean(pop) + (1.5 * stdev(pop))</td>
+</tr>
+<tr>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">Well Above Average</td>
+<td style="text-align: center;">p &gt;= mean(pop) + (1.5 * stdev(pop))</td>
+</tr>
+</tbody>
+</table>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a># Define Test Table
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>test_table &lt;- estimates_table_clean
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a># Variables
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>vars &lt;- list(&quot;lep_pct&quot;, &quot;d_pct&quot;, &quot;oa_pct&quot;, &quot;rm_pct&quot;, &quot;f_pct&quot;, &quot;em_pct&quot;, &quot;fb_pct&quot;, &quot;li_pct&quot;, &quot;y_pct&quot;)
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a># Function to calculate indicator percentile and score
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>calculate_score &lt;- function(data, var) {
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>  means &lt;- mean(data[[var]], na.rm = TRUE)
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>  stdev &lt;- sd(data[[var]], na.rm = TRUE)
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>  score_col &lt;- paste0(var, &quot;_score&quot;)
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>  class_col &lt;- paste0(var, &quot;_class&quot;)
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>  pctile_col &lt;- paste0(var, &quot;_pctile&quot;)
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>  data &lt;- data %&gt;%
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>    mutate(!!score_col := case_when(
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>      data[[var]] &lt; ifelse(means - (1.5 * stdev) &lt; 0, 0.1, means - (1.5 * stdev)) ~ 0,
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>      data[[var]] &gt;= means - (1.5 * stdev) &amp; data[[var]] &lt; means - (0.5 * stdev) ~ 1,
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a>      data[[var]] &gt;= means - (0.5 * stdev) &amp; data[[var]] &lt; means + (0.5 * stdev) ~ 2,
+</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>      data[[var]] &gt;= means + (0.5 * stdev) &amp; data[[var]] &lt; means + (1.5 * stdev) ~ 3,
+</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a>      data[[var]] &gt;= means + (1.5 * stdev) ~ 4
+</span><span id="__span-9-23"><a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a>    )) %&gt;%
+</span><span id="__span-9-24"><a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a>    mutate(!!class_col := case_when(
+</span><span id="__span-9-25"><a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a>      data[[var]] &lt; ifelse(means - (1.5 * stdev) &lt; 0, 0.1, means - (1.5 * stdev)) ~ &quot;Well Below Average&quot;,
+</span><span id="__span-9-26"><a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a>      data[[var]] &gt;= means - (1.5 * stdev) &amp; data[[var]] &lt; means - (0.5 * stdev) ~ &quot;Below Average&quot;,
+</span><span id="__span-9-27"><a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a>      data[[var]] &gt;= means - (0.5 * stdev) &amp; data[[var]] &lt; means + (0.5 * stdev) ~ &quot;Average&quot;,
+</span><span id="__span-9-28"><a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a>      data[[var]] &gt;= means + (0.5 * stdev) &amp; data[[var]] &lt; means + (1.5 * stdev) ~ &quot;Above Average&quot;,
+</span><span id="__span-9-29"><a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a>      data[[var]] &gt;= means + (1.5 * stdev) ~ &quot;Well Above Average&quot;
+</span><span id="__span-9-30"><a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a>    )) %&gt;%
+</span><span id="__span-9-31"><a id="__codelineno-9-31" name="__codelineno-9-31" href="#__codelineno-9-31"></a>    mutate(!!pctile_col := round(percent_rank(data[[var]]), 2))
+</span><span id="__span-9-32"><a id="__codelineno-9-32" name="__codelineno-9-32" href="#__codelineno-9-32"></a>  return(data)
+</span><span id="__span-9-33"><a id="__codelineno-9-33" name="__codelineno-9-33" href="#__codelineno-9-33"></a>}
+</span><span id="__span-9-34"><a id="__codelineno-9-34" name="__codelineno-9-34" href="#__codelineno-9-34"></a>
+</span><span id="__span-9-35"><a id="__codelineno-9-35" name="__codelineno-9-35" href="#__codelineno-9-35"></a># Applying the function to each variable
+</span><span id="__span-9-36"><a id="__codelineno-9-36" name="__codelineno-9-36" href="#__codelineno-9-36"></a>for (var in vars) {
+</span><span id="__span-9-37"><a id="__codelineno-9-37" name="__codelineno-9-37" href="#__codelineno-9-37"></a>  test_table &lt;- calculate_score(test_table, var)
+</span><span id="__span-9-38"><a id="__codelineno-9-38" name="__codelineno-9-38" href="#__codelineno-9-38"></a>}
+</span><span id="__span-9-39"><a id="__codelineno-9-39" name="__codelineno-9-39" href="#__codelineno-9-39"></a>
+</span><span id="__span-9-40"><a id="__codelineno-9-40" name="__codelineno-9-40" href="#__codelineno-9-40"></a># Calculate Total IPD Score
+</span><span id="__span-9-41"><a id="__codelineno-9-41" name="__codelineno-9-41" href="#__codelineno-9-41"></a>test_table$ipd_score &lt;- rowSums(select(test_table, ends_with(&quot;_score&quot;)), na.rm = TRUE)
+</span></code></pre></div>
+<h2 id="spatial-data">Spatial Data<a class="headerlink" href="#spatial-data" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>ipd_table &lt;- ipd_table %&gt;%
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  rename(GEOID20 = GEOID) %&gt;%
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  mutate(STATEFP20 = str_sub(GEOID20, 1, 2)) %&gt;%
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  mutate(COUNTYFP20 = str_sub(GEOID20, 3, 5)) %&gt;%
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>  mutate(NAME20 = str_sub(GEOID20, 6, 11)) %&gt;%
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>  mutate(namelsad = paste(substr(GEOID20, 6, 9), substr(GEOID20, 10, 11), sep = &quot;.&quot;))
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>pa_tracts &lt;- tracts(&quot;42&quot;, c(&quot;017&quot;, &quot;029&quot;, &quot;045&quot;, &quot;091&quot;, &quot;101&quot;))
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>nj_tracts &lt;- tracts(&quot;34&quot;, c(&quot;005&quot;, &quot;007&quot;, &quot;015&quot;, &quot;021&quot;))
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>region_tracts &lt;- rbind(pa_tracts, nj_tracts) %&gt;%
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>  st_transform(., 26918)
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>ipd_shapefile &lt;- region_tracts %&gt;%
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>  left_join(ipd_table, by=c(&quot;GEOID&quot;=&quot;GEOID20&quot;))
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a># Import Tract to MCD Lookup
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>tract_mcd_lookup &lt;- st_read(&quot;U:\\_OngoingProjects\\Census\\_Geographies\\Census_Boundaries_2020.gdb&quot;, layer=&quot;TractToMCD_Lookup20&quot;) %&gt;%
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>  select(geoid20, mun1, mun2, mun3, mcdgeo1, mcdgeo2, mcdgeo3)
+</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>
+</span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a># Join IPD table with Lookup
+</span><span id="__span-10-22"><a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a>ipd_shapefile &lt;- ipd_shapefile %&gt;%
+</span><span id="__span-10-23"><a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a>  left_join(tract_mcd_lookup, by=c(&quot;GEOID&quot;=&quot;geoid20&quot;))
+</span></code></pre></div>
+<h2 id="summary-tables">Summary Tables<a class="headerlink" href="#summary-tables" title="Permanent link">&para;</a></h2>
+<p>This section generates a handful of other deliverables, including:</p>
+<h3 id="counts-by-indicator">Counts by Indicator<a class="headerlink" href="#counts-by-indicator" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>counts &lt;- ipd_table %&gt;% select(ends_with(&quot;_class&quot;))
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>export_counts &lt;- apply(counts, 2, function(i) plyr::count(i))
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>for(i in 1:length(export_counts)){
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>  export_counts[[i]]$var &lt;- names(export_counts)[i]
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>}
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>export_counts &lt;- map_dfr(export_counts, `[`, c(&quot;var&quot;, &quot;x&quot;, &quot;freq&quot;))
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>colnames(export_counts) &lt;- c(&quot;Variable&quot;, &quot;Classification&quot;, &quot;Count&quot;)
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>export_counts$Classification &lt;- factor(export_counts$Classification,
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>                                       levels = c(&quot;Well Below Average&quot;,
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>                                                  &quot;Below Average&quot;,
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>                                                  &quot;Average&quot;,
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>                                                  &quot;Above Average&quot;,
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>                                                  &quot;Well Above Average&quot;,
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>                                                  &quot;NA&quot;))
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>export_counts &lt;- arrange(export_counts, Variable, Classification)
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a>counts_table &lt;- export_counts %&gt;%
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a>  spread(Classification, Count) %&gt;%
+</span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a>  mutate(TOTAL = rowSums(.[2:7], na.rm = TRUE))
+</span></code></pre></div>
+<h3 id="breaks-by-indicator">Breaks by Indicator<a class="headerlink" href="#breaks-by-indicator" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>breaks_table &lt;- ipd_table  %&gt;%
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>  select(ends_with(&quot;_pct&quot;))
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>calculate_class_breaks &lt;- function(input_df) {
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>  breaks_df &lt;- data.frame(matrix(NA, nrow = 6, ncol = ncol(input_df) + 1))
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>  colnames(breaks_df) &lt;- c(&quot;Break&quot;, colnames(input_df))
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>  breaks_df$Break &lt;- c(&quot;Min&quot;, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;Max&quot;)
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>  for (i in 1:ncol(input_df)) {
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    x &lt;- input_df[[i]]
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>    mean_x &lt;- mean(x, na.rm = TRUE)
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>    sd_x &lt;- sd(x, na.rm = TRUE)
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>    min_break &lt;- 0
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>    b1 &lt;- round(mean_x - (1.5 * sd_x), 1)
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>    if (b1 &lt; 0) {
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>      b1 &lt;- 0.1
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>    }    
+</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>    b2 &lt;- round(mean_x - (0.5 * sd_x), 1)
+</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>    b3 &lt;- round(mean_x + (0.5 * sd_x), 1)
+</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a>    b4 &lt;- round(mean_x + (1.5 * sd_x), 1)
+</span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a>    max_break &lt;- round(max(x, na.rm = TRUE), 1)
+</span><span id="__span-12-24"><a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a>
+</span><span id="__span-12-25"><a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a>    breaks_df[, i + 1] &lt;- c(min_break, b1, b2, b3, b4, max_break)
+</span><span id="__span-12-26"><a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a>  }
+</span><span id="__span-12-27"><a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a>
+</span><span id="__span-12-28"><a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a>  return(breaks_df)
+</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a>}
+</span><span id="__span-12-30"><a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a>
+</span><span id="__span-12-31"><a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a>
+</span><span id="__span-12-32"><a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a>class_breaks_table &lt;- calculate_class_breaks(breaks_table)
+</span></code></pre></div>
+<h3 id="summary-by-indicator">Summary by Indicator<a class="headerlink" href="#summary-by-indicator" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>description &lt;- function(i) {
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>  des &lt;- as.numeric(summarytools::descr(i, na.rm = TRUE,
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>                                        stats = c(&quot;min&quot;, &quot;med&quot;, &quot;mean&quot;, &quot;sd&quot;, &quot;max&quot;)))
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>  des &lt;- c(des[1:4], des[4] / 2, des[5])
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>  return(des)
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>}
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>pcts &lt;- ipd_table %&gt;% select(ends_with(&quot;_pct&quot;))
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>round_1 &lt;- function(i) round(i, 1)
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>round_2 &lt;- function(i) round(i, 2)
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>summary_data &lt;- apply(pcts, MARGIN=2, description)
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>summary_table &lt;- as_tibble(summary_data) %&gt;%
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>  mutate_all(round_2) %&gt;%
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>  mutate(Statistic = c(&quot;Minimum&quot;, &quot;Median&quot;, &quot;Mean&quot;, &quot;SD&quot;, &quot;Half-SD&quot;, &quot;Maximum&quot;)) %&gt;%
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>  select(Statistic, tidyselect::peek_vars())
+</span></code></pre></div>
+<h3 id="county-level-means-by-indicator">County-Level Means by Indicator<a class="headerlink" href="#county-level-means-by-indicator" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>means_table &lt;- estimates_table %&gt;%
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>  mutate(county_fips = str_sub(GEOID, 1, 5)) %&gt;%
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>  select(-GEOID, tot_pop, ends_with(&quot;_est&quot;), ends_with(&quot;_uni&quot;), -matches(&quot;MOE&quot;), -year) %&gt;%
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>  group_by(county_fips) %&gt;%
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>  summarise(
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    d_pctest = sum(d_est)/sum(d_uni),
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>    em_pctest = sum(em_est)/sum(em_uni),
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>    f_pctest = sum(f_est)/sum(f_uni),
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>    fb_pctest = sum(fb_est)/sum(fb_uni),
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>    lep_pctest = sum(lep_est)/sum(lep_uni),
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>    li_pctest = sum(li_est)/sum(li_uni),
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>    oa_pctest = sum(oa_est)/sum(tot_pop),
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>    rm_pctest = sum(rm_est)/sum(rm_uni),
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>    y_pctest = sum(y_est)/sum(tot_pop)
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>  ) %&gt;%
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>  mutate_if(is.numeric, ~ . * 100) %&gt;%
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>  mutate_if(is.numeric, round_1)
+</span></code></pre></div>
+<h2 id="export-data">Export Data<a class="headerlink" href="#export-data" title="Permanent link">&para;</a></h2>
+<p>Results are saved in <code>outputs</code>.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>write.csv(ipd_table, paste(output_dir,&quot;ipd_&quot;, ipd_year, &quot;.csv&quot;, sep=&quot;&quot;))
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>st_write(ipd_shapefile, paste(output_dir,&quot;ipd_&quot;, ipd_year, &quot;.shp&quot;, sep=&quot;&quot;))  
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>write.csv(counts_table, paste(output_dir,&quot;counts_by_indicator_&quot;, ipd_year, &quot;.csv&quot;, sep=&quot;&quot;))
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>write.csv(class_breaks_table, paste(output_dir,&quot;breaks_by_indicator_&quot;, ipd_year, &quot;.csv&quot;, sep=&quot;&quot;))
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>write.csv(summary_table, paste(output_dir,&quot;summary_by_indicator_&quot;, ipd_year, &quot;.csv&quot;, sep=&quot;&quot;))
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>write.csv(means_table, paste(output_dir,&quot;means_by_county_&quot;, ipd_year, &quot;.csv&quot;, sep=&quot;&quot;))
+</span></code></pre></div>
+<h2 id="metadata-table">Metadata Table<a class="headerlink" href="#metadata-table" title="Permanent link">&para;</a></h2>
+<p>This is a table of the final output with some additional data such as municipality name and area added through GIS processes but not included in the R script.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Concept</th>
+<th>acs table</th>
+<th>acs variable</th>
+<th>data source</th>
+<th>Source Type</th>
+<th>Universe Variable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>geoid20</td>
+<td>11-digit tract GEOID</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>ACS 5-year</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>statefp20</td>
+<td>2-digit state GEOID</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>ACS 5-year</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>countyfp20</td>
+<td>3-digit county GEOID</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>ACS 5-year</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>name20</td>
+<td>Tract and county name</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>ACS 5-year</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>d_class</td>
+<td>Disabled percentile class</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1810_C01_001</td>
+</tr>
+<tr>
+<td>d_cntest</td>
+<td>Disabled count estimate</td>
+<td>S1810_C02_001_E</td>
+<td>acs variable</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1810_C01_001</td>
+</tr>
+<tr>
+<td>d_cntmoe</td>
+<td>Disabled count margin of error</td>
+<td>S1810_C02_001_M</td>
+<td>acs variable</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1810_C01_001</td>
+</tr>
+<tr>
+<td>d_pctest</td>
+<td>Disabled percent estimate</td>
+<td>S1810_C03_001_E</td>
+<td>acs variable</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1810_C01_001</td>
+</tr>
+<tr>
+<td>d_pctile</td>
+<td>Disabled percentile</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1810_C01_001</td>
+</tr>
+<tr>
+<td>d_pctmoe</td>
+<td>Disabled percent margin of error</td>
+<td>S1810_C03_001_M</td>
+<td>acs variable</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1810_C01_001</td>
+</tr>
+<tr>
+<td>d_score</td>
+<td>Disabled percentile score</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1810_C01_001</td>
+</tr>
+<tr>
+<td>em_class</td>
+<td>Ethnic minority percentile class</td>
+<td>B03002</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>em_cntest</td>
+<td>Ethnic minority count estimate</td>
+<td>B03002</td>
+<td>B03002_012_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>em_cntmoe</td>
+<td>Ethnic minority count margin of error</td>
+<td>B03002</td>
+<td>B03002_012_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>em_pctest</td>
+<td>Ethnic minority percent estimate</td>
+<td>B03002</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>em_pctile</td>
+<td>Ethnic minority percentile</td>
+<td>B03002</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>em_pctmoe</td>
+<td>Ethnic minority percent margin of error</td>
+<td>B03002</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>em_score</td>
+<td>Ethnic minority percentile score</td>
+<td>B03002</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>f_class</td>
+<td>Female percentile class</td>
+<td>S0101</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S0101_C01_001</td>
+</tr>
+<tr>
+<td>f_cntest</td>
+<td>Female count estimate</td>
+<td>S0101</td>
+<td>S0101_C05_001_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S0101_C01_001</td>
+</tr>
+<tr>
+<td>f_cntmoe</td>
+<td>Female count margin of error</td>
+<td>S0101</td>
+<td>S0101_C05_001_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S0101_C01_001</td>
+</tr>
+<tr>
+<td>f_pctest</td>
+<td>Female percent estimate</td>
+<td>S0101</td>
+<td>DP05_0003PE_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S0101_C01_001</td>
+</tr>
+<tr>
+<td>f_pctile</td>
+<td>Female percentile</td>
+<td>S0101</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S0101_C01_001</td>
+</tr>
+<tr>
+<td>f_pctmoe</td>
+<td>Female percent margin of error</td>
+<td>S0101</td>
+<td>DP05_0003PE_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S0101_C01_001</td>
+</tr>
+<tr>
+<td>f_score</td>
+<td>Female percentile score</td>
+<td>S0101</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S0101_C01_001</td>
+</tr>
+<tr>
+<td>fb_class</td>
+<td>Foreign-born percentile class</td>
+<td>B05012</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B05012_001</td>
+</tr>
+<tr>
+<td>fb_cntest</td>
+<td>Foreign-born count estimate</td>
+<td>B05012</td>
+<td>B05012_003_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B05012_001</td>
+</tr>
+<tr>
+<td>fb_cntmoe</td>
+<td>Foreign-born count margin of error</td>
+<td>B05012</td>
+<td>B05012_003_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B05012_001</td>
+</tr>
+<tr>
+<td>fb_pctest</td>
+<td>Foreign-born percent estimate</td>
+<td>B05012</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B05012_001</td>
+</tr>
+<tr>
+<td>fb_pctile</td>
+<td>Foreign-born percentile</td>
+<td>B05012</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B05012_001</td>
+</tr>
+<tr>
+<td>fb_pctmoe</td>
+<td>Foreign-born percent margin of error</td>
+<td>B05012</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B05012_001</td>
+</tr>
+<tr>
+<td>fb_score</td>
+<td>Foreign-born percentile score</td>
+<td>B05012</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>lep_class</td>
+<td>Limited English proficiency percentile class</td>
+<td>S1601</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>lep_cntest</td>
+<td>Limited English proficiency count estimate</td>
+<td>S1601</td>
+<td>S1601_C05_001_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>lep_cntmoe</td>
+<td>Limited English proficiency count margin of error</td>
+<td>S1601</td>
+<td>S1601_C05_001_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>lep_pctest</td>
+<td>Limited English proficiency percent estimate</td>
+<td>S1601</td>
+<td>S1601_C06_001_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>lep_pctile</td>
+<td>Limited English proficiency percentile</td>
+<td>S1601</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>lep_pctmoe</td>
+<td>Limited English proficiency percent margin of error</td>
+<td>S1601</td>
+<td>S1601_C06_001_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>lep_score</td>
+<td>Limited English proficiency percentile score</td>
+<td>S1601</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>li_class</td>
+<td>Low-income percentile class</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1701_C01_001</td>
+</tr>
+<tr>
+<td>li_cntest</td>
+<td>Low-income count estimate</td>
+<td>S1701</td>
+<td>S1701_C01_042_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1701_C01_001</td>
+</tr>
+<tr>
+<td>li_cntmoe</td>
+<td>Low-income count margin of error</td>
+<td>S1701</td>
+<td>S1701_C01_042_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1701_C01_001</td>
+</tr>
+<tr>
+<td>li_pctest</td>
+<td>Low-income percent estimate</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1701_C01_001</td>
+</tr>
+<tr>
+<td>li_pctile</td>
+<td>Low-income percentile</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1701_C01_001</td>
+</tr>
+<tr>
+<td>li_pctmoe</td>
+<td>Low-income percent margin of error</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1701_C01_001</td>
+</tr>
+<tr>
+<td>li_score</td>
+<td>Low-income percentile score</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>S1701_C01_001</td>
+</tr>
+<tr>
+<td>oa_class</td>
+<td>Older adult percentile class</td>
+<td>S0101</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>oa_cntest</td>
+<td>Older adult count estimate</td>
+<td>S0101</td>
+<td>S0101_C01_001_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>oa_cntmoe</td>
+<td>Older adult count margin of error</td>
+<td>S0101</td>
+<td>S0101_C01_001_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>oa_pctest</td>
+<td>Older adult percent estimate</td>
+<td>S0101</td>
+<td>S0101_C02_030_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>oa_pctile</td>
+<td>Older adult percentile</td>
+<td>S0101</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>oa_pctmoe</td>
+<td>Older adult percent margin of error</td>
+<td>S0101</td>
+<td>S0101_C02_030_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>oa_score</td>
+<td>Older adult percentile score</td>
+<td>S0101</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>rm_class</td>
+<td>Racial minority percentile class</td>
+<td>B02001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>rm_cntest</td>
+<td>Racial minority count estimate</td>
+<td>B02001</td>
+<td>B02001_002_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>rm_cntmoe</td>
+<td>Racial minority count margin of error</td>
+<td>B02001</td>
+<td>B02001_002_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>rm_pctest</td>
+<td>Racial minority percent estimate</td>
+<td>B02001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>rm_pctile</td>
+<td>Racial minority percentile</td>
+<td>B02001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>rm_pctmoe</td>
+<td>Racial minority percent margin of error</td>
+<td>B02001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>rm_score</td>
+<td>Racial minority percentile score</td>
+<td>B02001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>y_class</td>
+<td>Youth percentile class</td>
+<td>B09001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>y_cntest</td>
+<td>Youth count estimate</td>
+<td>B09001</td>
+<td>B09001_001</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>y_cntmoe</td>
+<td>Youth count margin of error</td>
+<td>B09001</td>
+<td>B09001_001</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>y_pctest</td>
+<td>Youth population percentage estimate</td>
+<td>B09001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>y_pctile</td>
+<td>Youth population percentile</td>
+<td>B09001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>y_pctmoe</td>
+<td>Youth population percentage margin of error</td>
+<td>B09001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>y_score</td>
+<td>Youth percentile score</td>
+<td>B09001</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>B03002_001</td>
+</tr>
+<tr>
+<td>ipd_score</td>
+<td>Indicator of potential disadvantage score</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>u_tpopest</td>
+<td>Total population estimate</td>
+<td>B02001</td>
+<td>B02001_001_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>u_tpopmoe</td>
+<td>Total population margin of error</td>
+<td>B02001</td>
+<td>B02001_001_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>B02001_001</td>
+</tr>
+<tr>
+<td>u_pop6est</td>
+<td>Population over 6 years of age estimate</td>
+<td>S1601</td>
+<td>S1601_C01_001_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>u_pop6moe</td>
+<td>Population over 6 years of age margin of error</td>
+<td>S1601</td>
+<td>S1601_C01_001_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1601_C01_001</td>
+</tr>
+<tr>
+<td>u_ppovest</td>
+<td>Total population poverty rate estimate</td>
+<td>S1701</td>
+<td>S1701_C01_001_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1701_C01_001</td>
+</tr>
+<tr>
+<td>u_ppovmoe</td>
+<td>Total population poverty rate margin of error</td>
+<td>S1701</td>
+<td>S1701_C01_001_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1701_C01_001</td>
+</tr>
+<tr>
+<td>u_pnicest</td>
+<td>Disabled universe total estimate</td>
+<td>S1810</td>
+<td>S1810_C01_001_E</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1810_C01_001</td>
+</tr>
+<tr>
+<td>u_pnicmoe</td>
+<td>Disabled universe total margin of error</td>
+<td>S1810</td>
+<td>S1810_C01_001_M</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>S1810_C01_001</td>
+</tr>
+<tr>
+<td>namelsad</td>
+<td>Geography name</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>ACS 5-year</td>
+<td>acs variable</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>mun1</td>
+<td>First municipality name</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>mun2</td>
+<td>Second municipality name</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>mun3</td>
+<td>Third municipality name</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>co_name</td>
+<td>County Name</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>calculated</td>
+<td>calculated</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>state</td>
+<td>State name</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>ACS 5-year</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>st_area(shape)</td>
+<td>Area of a geometry</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>ACS 5-year</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>st_perimeter(shape)</td>
+<td>Perimeter of the geometry</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>ACS 5-year</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "toc.integrate", "toc.follow", "navigation.top", "navigation.path", "navigation.tabs", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

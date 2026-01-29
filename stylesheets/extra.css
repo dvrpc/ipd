@@ -1,0 +1,8 @@
+[data-md-color-scheme="custom"] {
+    --md-primary-fg-color: rgb(88, 34, 103);
+    --md-primary-bg-color: rgb(255, 255, 255);
+    --md-accent-fg-color: rgb(89, 89, 89);
+    --md-default-fg-color: rgb(88, 34, 103);
+    --md-typeset-a-color: rgb(88, 34, 103);
+    --md-code-hl-color--light: rgb(89, 89, 89);
+}
