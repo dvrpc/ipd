@@ -1,0 +1,56 @@
+site_name: DVRPC IPD
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - toc.integrate
+    - toc.follow
+    - navigation.top
+    - navigation.path
+    - navigation.tabs
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: custom
+      accent: purple
+extra_css:
+  - stylesheets/extra.css
+markdown_extensions:
+  - admonition
+  - footnotes
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - attr_list
+  - def_list
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.details
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.critic
+  - pymdownx.mark
+  - pymdownx.details
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+nav:
+  - About: index.md
+  - Documentation: script_reference.md
+  - Code Setup: setup.md
