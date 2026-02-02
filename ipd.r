@@ -13,13 +13,14 @@ library(tigris)
 library(dplyr)
 library(descr)
 library(terra)
+library(gpkg)
 
 # Load Census API Key
 readRenviron(paste0(dirname(rstudioapi::getActiveDocumentContext()$path), "/.Renviron"))
 census_api_key <- Sys.getenv("CENSUS_API_KEY")
 
 # Inputs and settings
-ipd_year <- 2023
+ipd_year <- 2024
 ipd_states <- c("NJ", "PA")
 dvrpc_counties <- c("^34005|^34007|^34015|^34021|^42017|^42029|^42045|^42091|^42101")
 ipd_counties <- c("34005", "34007", "34015", "34021", "42017", "42029", "42045", "42091", "42101")
@@ -33,7 +34,11 @@ county_names <- data.frame(
   state = c("NJ", "NJ", "NJ", "NJ", "PA", "PA", "PA", "PA", "PA")
 )
 
-output_dir <- "data\\"
+output_dir <- "data"
+
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
 
 ## ---------------------------------------------------------------------------
 ## VARIABLES
@@ -437,6 +442,8 @@ writeVector(
   filetype = "ESRI Shapefile",
   overwrite = TRUE
 )
+
+ipd_gpkg <- st_write(ipd_shapefile, dsn = file.path(output_dir, paste0("ipd_", ipd_year, ".gpkg")), layer = paste0("ipd_", ipd_year))
 
 # Summary tables
 write.csv(counts_table,        file.path(output_dir, paste0("counts_by_indicator_",  ipd_year, ".csv")), row.names = FALSE)
